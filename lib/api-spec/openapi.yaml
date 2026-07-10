@@ -1,0 +1,839 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: ZOIKO Bible Explorer API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: daily
+    description: Daily content
+  - name: questions
+    description: Bible trivia questions
+  - name: categories
+    description: Question categories
+  - name: sessions
+    description: Multiplayer game sessions
+  - name: achievements
+    description: Player achievements
+  - name: stats
+    description: Platform statistics
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /daily/content:
+    get:
+      operationId: getDailyContent
+      tags: [daily]
+      summary: Get daily devotional content
+      description: Returns today's verse, challenge, and memory verse — rotates by date
+      responses:
+        "200":
+          description: Daily content
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailyContent"
+
+  /daily/challenge:
+    get:
+      operationId: getDailyChallenge
+      tags: [daily]
+      summary: Get daily challenge questions (5 seeded by date)
+      responses:
+        "200":
+          description: Daily challenge questions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Question"
+
+  /categories:
+    get:
+      operationId: listCategories
+      tags: [categories]
+      summary: List all question categories
+      responses:
+        "200":
+          description: Categories list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Category"
+
+  /questions:
+    get:
+      operationId: listQuestions
+      tags: [questions]
+      summary: List questions with optional filters
+      parameters:
+        - name: difficulty
+          in: query
+          schema:
+            type: string
+            enum: [easy, medium, hard]
+        - name: categoryId
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: Questions list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuestionList"
+    post:
+      operationId: createQuestion
+      tags: [questions]
+      summary: Create a new question
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuestionInput"
+      responses:
+        "201":
+          description: Created question
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Question"
+
+  /questions/generate:
+    post:
+      operationId: generateQuestions
+      tags: [questions]
+      summary: AI-generate Bible questions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerateQuestionsInput"
+      responses:
+        "200":
+          description: Generated questions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Question"
+
+  /questions/generate/save:
+    post:
+      operationId: saveGeneratedQuestions
+      tags: [questions]
+      summary: Save AI-generated questions to the database
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SaveQuestionsInput"
+      responses:
+        "201":
+          description: Saved questions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Question"
+
+  /questions/{id}:
+    get:
+      operationId: getQuestion
+      tags: [questions]
+      summary: Get a question by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Question
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Question"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteQuestion
+      tags: [questions]
+      summary: Delete a question by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /sessions:
+    post:
+      operationId: createSession
+      tags: [sessions]
+      summary: Create a new hosted session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SessionInput"
+      responses:
+        "201":
+          description: Created session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+
+  /sessions/join:
+    post:
+      operationId: joinSession
+      tags: [sessions]
+      summary: Join a session by PIN
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JoinSessionInput"
+      responses:
+        "200":
+          description: Joined session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+        "404":
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /sessions/duel:
+    post:
+      operationId: createDuel
+      tags: [sessions]
+      summary: Create a 1v1 duel and get back a code for the opponent to join
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DuelInput"
+      responses:
+        "201":
+          description: Created duel
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+
+  /sessions/duel/join:
+    post:
+      operationId: joinDuel
+      tags: [sessions]
+      summary: Join a 1v1 duel using its code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JoinSessionInput"
+      responses:
+        "200":
+          description: Joined duel
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+        "404":
+          description: Duel not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /sessions/recent:
+    get:
+      operationId: listRecentSessions
+      tags: [sessions]
+      summary: List recent completed sessions
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 5
+      responses:
+        "200":
+          description: Recent sessions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Session"
+
+  /sessions/{id}:
+    get:
+      operationId: getSession
+      tags: [sessions]
+      summary: Get session by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateSession
+      tags: [sessions]
+      summary: Update session state (start, advance question, end)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SessionUpdate"
+      responses:
+        "200":
+          description: Updated session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+
+  /sessions/{id}/leaderboard:
+    get:
+      operationId: getSessionLeaderboard
+      tags: [sessions]
+      summary: Get leaderboard for a session
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Leaderboard entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LeaderboardEntry"
+
+  /sessions/{id}/answers:
+    post:
+      operationId: submitAnswer
+      tags: [sessions]
+      summary: Submit an answer for a session question
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnswerInput"
+      responses:
+        "200":
+          description: Answer result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnswerResult"
+
+  /achievements:
+    get:
+      operationId: listAchievements
+      tags: [achievements]
+      summary: List achievements, optionally filtered by player
+      parameters:
+        - name: playerName
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Achievements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Achievement"
+
+  /players/{name}:
+    get:
+      operationId: getPlayer
+      tags: [players]
+      summary: Get a player's aggregate stats, creating a record if it doesn't exist
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Player stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Player"
+    put:
+      operationId: upsertPlayer
+      tags: [players]
+      summary: Sync a player's aggregate stats (upserts to the max of existing vs incoming values)
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlayerInput"
+      responses:
+        "200":
+          description: Updated player stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Player"
+
+  /stats/overview:
+    get:
+      operationId: getStatsOverview
+      tags: [stats]
+      summary: Get platform-wide stats for the dashboard
+      responses:
+        "200":
+          description: Stats overview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatsOverview"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+
+    DailyContent:
+      type: object
+      required: [verse, verseReference, challenge, memoryVerse, date]
+      properties:
+        verse:
+          type: string
+        verseReference:
+          type: string
+        challenge:
+          type: string
+        memoryVerse:
+          type: string
+        date:
+          type: string
+
+    Category:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        questionCount:
+          type: integer
+
+    Question:
+      type: object
+      required: [id, text, options, correctAnswer, difficulty, categoryId]
+      properties:
+        id:
+          type: integer
+        text:
+          type: string
+        options:
+          type: array
+          items:
+            type: string
+        correctAnswer:
+          type: string
+        difficulty:
+          type: string
+          enum: [easy, medium, hard]
+        categoryId:
+          type: integer
+        explanation:
+          type: ["string", "null"]
+        book:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    Player:
+      type: object
+      required: [name, correctAnswers, totalAnswers, sessionsPlayed, sessionsWon, sessionsHosted, streakCurrent, streakLongest, updatedAt, createdAt]
+      properties:
+        name:
+          type: string
+        correctAnswers:
+          type: integer
+        totalAnswers:
+          type: integer
+        sessionsPlayed:
+          type: integer
+        sessionsWon:
+          type: integer
+        sessionsHosted:
+          type: integer
+        streakCurrent:
+          type: integer
+        streakLongest:
+          type: integer
+        updatedAt:
+          type: string
+        createdAt:
+          type: string
+
+    PlayerInput:
+      type: object
+      properties:
+        correctAnswers:
+          type: integer
+        totalAnswers:
+          type: integer
+        sessionsPlayed:
+          type: integer
+        sessionsWon:
+          type: integer
+        sessionsHosted:
+          type: integer
+        streakCurrent:
+          type: integer
+        streakLongest:
+          type: integer
+
+    QuestionList:
+      type: object
+      required: [questions, total]
+      properties:
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Question"
+        total:
+          type: integer
+
+    QuestionInput:
+      type: object
+      required: [text, options, correctAnswer, difficulty, categoryId]
+      properties:
+        text:
+          type: string
+        options:
+          type: array
+          items:
+            type: string
+        correctAnswer:
+          type: string
+        difficulty:
+          type: string
+          enum: [easy, medium, hard]
+        categoryId:
+          type: integer
+        explanation:
+          type: string
+        book:
+          type: string
+
+    GenerateQuestionsInput:
+      type: object
+      required: [difficulty, count]
+      properties:
+        difficulty:
+          type: string
+          enum: [easy, medium, hard, mixed]
+        count:
+          type: integer
+          default: 5
+        topic:
+          type: string
+
+    SaveQuestionsInput:
+      type: object
+      required: [questions]
+      properties:
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/QuestionInput"
+
+    Session:
+      type: object
+      required: [id, pin, hostCode, status, difficulty, participants, currentQuestionIndex, createdAt]
+      properties:
+        id:
+          type: string
+        pin:
+          type: string
+        hostCode:
+          type: string
+        status:
+          type: string
+          enum: [waiting, active, completed]
+        type:
+          type: string
+          enum: [group, duel]
+        difficulty:
+          type: string
+          enum: [easy, medium, hard, mixed]
+        playStyle:
+          type: ["string", "null"]
+        participants:
+          type: array
+          items:
+            type: string
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Question"
+        currentQuestionIndex:
+          type: integer
+        totalQuestions:
+          type: integer
+        createdAt:
+          type: string
+        completedAt:
+          type: ["string", "null"]
+        myDisplayName:
+          description: >-
+            The authenticated caller's own display name for this session, if
+            they have joined it. Never populated from client input — resolved
+            server-side from the verified session_participants record — so
+            the client can show "you" vs "opponent" without guessing.
+          type: ["string", "null"]
+
+    SessionInput:
+      type: object
+      required: [difficulty, participants]
+      properties:
+        difficulty:
+          type: string
+          enum: [easy, medium, hard, mixed]
+        playStyle:
+          type: string
+        participants:
+          type: array
+          items:
+            type: string
+        totalQuestions:
+          type: integer
+          default: 10
+
+    SessionUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [active, completed]
+        currentQuestionIndex:
+          type: integer
+
+    JoinSessionInput:
+      type: object
+      required: [pin, playerName]
+      properties:
+        pin:
+          type: string
+        playerName:
+          type: string
+
+    DuelInput:
+      type: object
+      required: [difficulty, hostName]
+      properties:
+        difficulty:
+          type: string
+          enum: [easy, medium, hard, mixed]
+        totalQuestions:
+          type: integer
+          default: 10
+        hostName:
+          type: string
+
+    AnswerInput:
+      type: object
+      required: [questionId, answer]
+      properties:
+        questionId:
+          type: integer
+        answer:
+          type: string
+
+    AnswerResult:
+      type: object
+      required: [correct, correctAnswer, score, totalScore]
+      properties:
+        correct:
+          type: boolean
+        correctAnswer:
+          type: string
+        score:
+          type: integer
+        totalScore:
+          type: integer
+        explanation:
+          type: ["string", "null"]
+
+    LeaderboardEntry:
+      type: object
+      required: [rank, playerName, score, correctAnswers, totalAnswers]
+      properties:
+        rank:
+          type: integer
+        playerName:
+          type: string
+        score:
+          type: integer
+        correctAnswers:
+          type: integer
+        totalAnswers:
+          type: integer
+
+    Achievement:
+      type: object
+      required: [id, playerName, type, title, description, earnedAt]
+      properties:
+        id:
+          type: integer
+        playerName:
+          type: string
+        type:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        earnedAt:
+          type: string
+
+    StatsOverview:
+      type: object
+      required: [totalQuestions, totalSessions, totalPlayers, questionsThisWeek, averageScore]
+      properties:
+        totalQuestions:
+          type: integer
+        totalSessions:
+          type: integer
+        totalPlayers:
+          type: integer
+        questionsThisWeek:
+          type: integer
+        averageScore:
+          type: number
+        topDifficulty:
+          type: string
+        recentActivity:
+          type: array
+          items:
+            $ref: "#/components/schemas/ActivityItem"
+
+    ActivityItem:
+      type: object
+      required: [type, description, createdAt]
+      properties:
+        type:
+          type: string
+        description:
+          type: string
+        createdAt:
+          type: string
+
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string

@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/"
+title = "ZOIKO Bible Explorer"
+version = "1.0.0"
+id = "artifacts/bible-explorer"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24116
+
+[services.development]
+run = "pnpm --filter @workspace/bible-explorer run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/bible-explorer", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/bible-explorer/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24116"
+BASE_PATH = "/"

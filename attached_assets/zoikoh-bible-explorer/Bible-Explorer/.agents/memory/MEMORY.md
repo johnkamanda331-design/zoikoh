@@ -1,0 +1,4 @@
+- [ZOIKO architecture](zoiko-architecture.md) — OpenAPI-first Bible platform; scoring formula, session PIN/hostCode pattern, daily content rotation approach.
+- [ZOIKO brand system](zoiko-brand.md) — Brand colors, light/dark mode CSS vars, logo variants, fonts.
+- [ZOIKO Bible API](zoiko-bible-api.md) — bolls.life API (not getbible.net, which is broken). URL format, clean translations, text sanitization.
+- [ZOIKO sidebar rail](zoiko-sidebar-rail.md) — Collapsible icon rail sidebar: 64px collapsed, 240px expanded, hover+focus expand, pin toggle.

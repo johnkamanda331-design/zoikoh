@@ -1,0 +1,6 @@
+- [ZOIKO architecture](zoiko-architecture.md) — Full-stack Bible engagement platform; OpenAPI-first, Express backend, React+Vite frontend, PostgreSQL with Drizzle ORM.
+- [ZOIKO brand system](zoiko-brand.md) — Brand colors, dark-mode-first CSS vars, ZOIKO colored logo, Poppins + Plus Jakarta Sans fonts.
+- [ZOIKO Bible API](zoiko-bible-api.md) — bolls.life API (not getbible.net), URL format, cleanVerse() sanitizer, translations.
+- [ZOIKO db rebuild pattern](zoiko-db-rebuild.md) — After adding new tables to lib/db/src/schema/, always run pnpm run typecheck:libs before api-server typecheck or the new exports won't be found.
+- [ZOIKO solo hub & achievements](zoiko-solo-achievements.md) — All 8 solo modes implemented; 20 achievements; pickUnseen() dedup pattern; achievement tracking via localStorage + POST /achievements.
+- [ZOIKO Gemini & player persistence](zoiko-gemini-and-players.md) — Gemini via direct REST with user's own key (integration upgrade declined); mixed difficulty is session-level only, never a per-question value; players table trust model.

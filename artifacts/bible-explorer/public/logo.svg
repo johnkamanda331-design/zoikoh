@@ -1,0 +1,8 @@
+<svg width="160" height="48" viewBox="0 0 160 48" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    text { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 30px; letter-spacing: -0.5px; }
+  </style>
+  <text x="0" y="34">
+    <tspan fill="#6C3AED">Z</tspan><tspan fill="#2563EB">O</tspan><tspan fill="#10B981">I</tspan><tspan fill="#F59E0B">K</tspan><tspan fill="#2563EB">O</tspan><tspan fill="#6C3AED">H</tspan>
+  </text>
+</svg>
