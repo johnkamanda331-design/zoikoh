@@ -22,8 +22,8 @@ NEON_DATABASE_URL: postgresql://neondb_owner:npg_L7jHUKuhVZ1A@ep-flat-morning-as
 
 ### Clerk Authentication - Backend
 ```
-CLERK_SECRET_KEY: sk_test_ajqpr2374ulmjqoIbrVoYNkvSoqEKrcP4nqjcimpYb
-CLERK_PUBLISHABLE_KEY: pk_test_ZXhwZXJ0LW1hbi00Ni5jbGVyay5hY2NvdW50cy5kZXYk
+CLERK_SECRET_KEY: sk_test_...
+CLERK_PUBLISHABLE_KEY: pk_test_...
 ```
 ✅ **Status**: VALID
 - Secret Key format: ✅ Correct (sk_test_ prefix, test environment)
@@ -38,7 +38,7 @@ CLERK_PUBLISHABLE_KEY: pk_test_ZXhwZXJ0LW1hbi00Ni5jbGVyay5hY2NvdW50cy5kZXYk
 
 ### Clerk Authentication - Frontend
 ```
-VITE_CLERK_PUBLISHABLE_KEY: pk_test_ZXhwZXJ0LW1hbi00Ni5jbGVyay5hY2NvdW50cy5kZXYk
+VITE_CLERK_PUBLISHABLE_KEY: pk_test_...
 VITE_CLERK_PROXY_URL: /api/auth
 BASE_PATH: /
 ```
@@ -52,8 +52,8 @@ BASE_PATH: /
 
 ### AI/LLM Configuration
 ```
-GEMINI_API_KEY: AQ.Ab8RN6IaIHrCka1vUZju3wwh5X7lrmrNTZsf9UQaQKAplIKsFQ
-OPENAI_API_KEY: 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
+GEMINI_API_KEY: AQ...
+OPENAI_API_KEY: sk-proj_...
 ```
 ✅ **Status**: VALID
 - Gemini Key format: ✅ Correct (AQ. prefix is Google Generative AI format)

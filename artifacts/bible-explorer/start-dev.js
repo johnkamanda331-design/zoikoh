@@ -12,9 +12,9 @@ const __dirname = path.dirname(__filename);
 
 // Set up environment
 process.env.NODE_ENV = 'development';
-process.env.VITE_CLERK_PUBLISHABLE_KEY = 'pk_test_ZXhwZXJ0LW1hbi00Ni5jbGVyay5hY2NvdW50cy5kZXYk';
-process.env.VITE_CLERK_PROXY_URL = '/api/auth';
-process.env.BASE_PATH = '/';
+process.env.VITE_CLERK_PUBLISHABLE_KEY = process.env.VITE_CLERK_PUBLISHABLE_KEY || 'pk_test_...';
+process.env.VITE_CLERK_PROXY_URL = process.env.VITE_CLERK_PROXY_URL || '/api/auth';
+process.env.BASE_PATH = process.env.BASE_PATH || '/';
 
 const PORT = process.env.PORT || 24116;
 const HOST = '0.0.0.0';

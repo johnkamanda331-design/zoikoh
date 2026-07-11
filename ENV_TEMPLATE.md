@@ -25,12 +25,12 @@ NEON_DATABASE_URL=postgresql://neondb_owner:npg_L7jHUKuhVZ1A@ep-flat-morning-asj
 # Clerk Secret Key (Server-side only, NEVER expose to frontend)
 # Get from: https://dashboard.clerk.com → API Keys → Secret Key
 # Format: sk_test_XXXXXXX... or sk_live_XXXXXXX...
-CLERK_SECRET_KEY=sk_test_ajqpr2374ulmjqoIbrVoYNkvSoqEKrcP4nqjcimpYb
+CLERK_SECRET_KEY=sk_test_...
 
 # Clerk Publishable Key (Safe to expose to frontend)
 # Get from: https://dashboard.clerk.com → API Keys → Publishable Key
 # Format: pk_test_XXXXXXX... or pk_live_XXXXXXX...
-CLERK_PUBLISHABLE_KEY=pk_test_ZXhwZXJ0LW1hbi00Ni5jbGVyay5hY2NvdW50cy5kZXYk
+CLERK_PUBLISHABLE_KEY=pk_test_...
 
 # ============================================================================
 # AI/LLM CONFIGURATION (Question Generation)
@@ -40,13 +40,13 @@ CLERK_PUBLISHABLE_KEY=pk_test_ZXhwZXJ0LW1hbi00Ni5jbGVyay5hY2NvdW50cy5kZXYk
 # Model: gemini-2.5-flash
 # Get from: https://aistudio.google.com/apikey
 # Usage: POST /api/questions/generate for AI-powered Bible trivia
-GEMINI_API_KEY=AQ.Ab8RN6IaIHrCka1vUZju3wwh5X7lrmrNTZsf9UQaQKAplIKsFQ
+GEMINI_API_KEY=AQ...
 
 # OpenAI API Key (Fallback provider, optional)
 # Model: gpt-4o-mini
 # Get from: https://platform.openai.com/api-keys
 # Note: Not currently used, Gemini is primary
-OPENAI_API_KEY=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
+OPENAI_API_KEY=sk-proj_...
 
 # ============================================================================
 # SERVER CONFIGURATION
@@ -79,7 +79,7 @@ Create a file at `artifacts/bible-explorer/.env.local`:
 # Clerk Publishable Key for Vite
 # Must be prefixed with VITE_ to be bundled into the frontend
 # Get from: https://dashboard.clerk.com → API Keys → Publishable Key
-VITE_CLERK_PUBLISHABLE_KEY=pk_test_ZXhwZXJ0LW1hbi00Ni5jbGVyay5hY2NvdW50cy5kZXYk
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
 
 # Clerk Proxy URL (optional)
 # Used for custom domain support in production
