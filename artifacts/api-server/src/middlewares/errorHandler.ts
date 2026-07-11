@@ -71,6 +71,6 @@ export function asyncHandler<T>(
   fn: (req: Request, res: Response, next: NextFunction) => Promise<T>,
 ) {
   return (req: Request, res: Response, next: NextFunction) => {
-    fn(req, res, next).catch((err) => next(err));
+    fn(req, res, next).catch((err) => (next as any)(err));
   };
 }
