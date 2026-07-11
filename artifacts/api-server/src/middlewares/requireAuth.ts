@@ -11,8 +11,8 @@ export interface AuthedRequest extends Request {
  * identity used by session/duel/player routes, since it can't be spoofed
  * by a client-supplied name or id in the request body.
  */
-export function requireAuth(req: Request, res: Response, next: NextFunction) {
-  const auth = getAuth(req);
+export function requireAuth(req: any, res: any, next: any) {
+  const auth = getAuth(req as Request);
   const userId = auth?.userId;
   if (!userId) {
     res.status(401).json({ error: "Sign in required" });
@@ -28,8 +28,8 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
  * that want to additionally tell an authenticated caller which participant
  * record is theirs, without requiring sign-in to view the resource at all.
  */
-export function optionalAuth(req: Request, _res: Response, next: NextFunction) {
-  const auth = getAuth(req);
+export function optionalAuth(req: any, _res: any, next: any) {
+  const auth = getAuth(req as Request);
   if (auth?.userId) {
     (req as AuthedRequest).auth = { userId: auth.userId };
   }
