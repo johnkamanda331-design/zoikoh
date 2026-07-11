@@ -20,7 +20,7 @@
  */
 
 import type { IncomingHttpHeaders, IncomingMessage } from 'http';
-import type { Request, RequestHandler } from 'express';
+import type { RequestHandler, Response } from 'express';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import { config } from '../config.js';
 
@@ -44,25 +44,28 @@ export const CLERK_PROXY_PATH = '/api/__clerk';
  * hostname is canonical — otherwise multi-domain/custom-domain flows
  * break.
  */
-export function getClerkProxyHost(req: Request | IncomingMessage | { headers: IncomingHttpHeaders }): string | undefined {
-  const forwarded = req.headers['x-forwarded-host'];
+export function getClerkProxyHost(req: IncomingMessage | { headers: IncomingHttpHeaders }): string | undefined {
+  const headers = 'headers' in req ? req.headers : undefined;
+  if (!headers) return undefined;
+
+  const forwarded = headers['x-forwarded-host'];
   const raw = Array.isArray(forwarded) ? forwarded[0] : forwarded;
   const firstHop = raw?.split(',')[0]?.trim();
-  return firstHop || req.headers.host?.trim() || undefined;
+  return firstHop || headers.host?.trim() || undefined;
 }
 
 export function clerkProxyMiddleware(): RequestHandler {
   // Only run proxy in production — Clerk proxying doesn't work for dev instances
   if (config.nodeEnv !== 'production') {
-    return (_req, _res, next) => next();
+    return (_req: IncomingMessage, _res: any, next: () => void) => next();
   }
 
   const secretKey = config.clerk.secretKey;
   if (!secretKey) {
-    return (_req, _res, next) => next();
+    return (_req: IncomingMessage, _res: any, next: () => void) => next();
   }
 
-  return createProxyMiddleware({
+  return createProxyMiddleware<IncomingMessage, Response>({
     target: CLERK_FAPI,
     changeOrigin: true,
     // Take over the response so it can be re-sent with a Content-Length (see
