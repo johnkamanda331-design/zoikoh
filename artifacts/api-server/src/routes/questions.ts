@@ -141,7 +141,7 @@ router.post("/questions/generate", generateLimiter, async (req: any, res: any) =
 });
 
 async function generateWithOpenAI(apiKey: string, prompt: string): Promise<{ questions: unknown[] } | null> {
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+  const response: any = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -168,7 +168,7 @@ async function generateWithOpenAI(apiKey: string, prompt: string): Promise<{ que
 }
 
 async function generateWithGemini(apiKey: string, prompt: string): Promise<{ questions: unknown[] } | null> {
-  const response = await fetch(
+  const response: any = await fetch(
     "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
     {
       method: "POST",
