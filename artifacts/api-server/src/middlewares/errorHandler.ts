@@ -23,7 +23,7 @@ export function errorHandler(
 ): void {
   // Zod validation errors → 400 with field details
   if (err instanceof ZodError) {
-    res.status(400).json({
+    (res as any).status(400).json({
       error: 'Validation failed',
       code: 'VALIDATION_ERROR',
       details: err.flatten().fieldErrors,
@@ -38,7 +38,7 @@ export function errorHandler(
     'type' in err &&
     (err as { type: string }).type === 'entity.too.large'
   ) {
-    res.status(413).json({ error: 'Request body too large', code: 'PAYLOAD_TOO_LARGE' });
+    (res as any).status(413).json({ error: 'Request body too large', code: 'PAYLOAD_TOO_LARGE' });
     return;
   }
 
@@ -51,7 +51,7 @@ export function errorHandler(
   ) {
     const typed = err as { status: number; message: string; code?: string };
     const status = typeof typed.status === 'number' ? typed.status : 500;
-    res.status(status).json({
+    (res as any).status(status).json({
       error: typed.message,
       code: typed.code,
     } satisfies ApiError);
@@ -60,8 +60,8 @@ export function errorHandler(
 
   // Generic unknown errors — log details, hide internals from client
   const message = err instanceof Error ? err.message : 'Internal server error';
-  logger.error({ err, url: req.url, method: req.method }, 'Unhandled error');
-  res.status(500).json({ error: 'Internal server error', code: 'INTERNAL_ERROR' } satisfies ApiError);
+  logger.error({ err, url: (req as any).url, method: (req as any).method }, 'Unhandled error');
+  (res as any).status(500).json({ error: 'Internal server error', code: 'INTERNAL_ERROR' } satisfies ApiError);
 }
 
 /**
@@ -71,6 +71,6 @@ export function asyncHandler<T>(
   fn: (req: Request, res: Response, next: NextFunction) => Promise<T>,
 ) {
   return (req: Request, res: Response, next: NextFunction) => {
-    fn(req, res, next).catch(next);
+    fn(req, res, next).catch((err) => next(err));
   };
 }
