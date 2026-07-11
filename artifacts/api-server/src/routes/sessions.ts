@@ -4,6 +4,7 @@ import { sessionsTable, sessionAnswersTable, sessionParticipantsTable, questions
 import { eq, desc, and } from "drizzle-orm";
 import crypto from "crypto";
 import { requireAuth, optionalAuth, type AuthedRequest } from "../middlewares/requireAuth";
+import { sessionLimiter } from "../middlewares/rateLimiter";
 
 const router = Router();
 
@@ -78,7 +79,7 @@ async function pickQuestions(difficulty: string, totalQuestions: number) {
   return shuffled.slice(0, Math.min(totalQuestions, shuffled.length));
 }
 
-router.post("/sessions", requireAuth, async (req, res) => {
+router.post("/sessions", sessionLimiter, requireAuth, async (req, res) => {
   try {
     const auth = (req as AuthedRequest).auth!;
     const { difficulty = "medium", playStyle, participants = [], totalQuestions = 10 } = req.body;
@@ -120,7 +121,7 @@ router.post("/sessions", requireAuth, async (req, res) => {
 // verified Clerk session — never from a client-supplied name — so a player
 // can't submit answers or claim wins on the other participant's behalf.
 
-router.post("/sessions/duel", requireAuth, async (req, res) => {
+router.post("/sessions/duel", sessionLimiter, requireAuth, async (req, res) => {
   try {
     const auth = (req as AuthedRequest).auth!;
     const { difficulty = "medium", totalQuestions = 10, hostName = "Player" } = req.body;
@@ -156,7 +157,7 @@ router.post("/sessions/duel", requireAuth, async (req, res) => {
   }
 });
 
-router.post("/sessions/duel/join", requireAuth, async (req, res) => {
+router.post("/sessions/duel/join", sessionLimiter, requireAuth, async (req, res) => {
   try {
     const auth = (req as AuthedRequest).auth!;
     const { pin, playerName = "Player" } = req.body;
@@ -225,7 +226,7 @@ router.post("/sessions/duel/join", requireAuth, async (req, res) => {
   }
 });
 
-router.post("/sessions/join", requireAuth, async (req, res) => {
+router.post("/sessions/join", sessionLimiter, requireAuth, async (req, res) => {
   try {
     const auth = (req as AuthedRequest).auth!;
     const { pin, playerName = "Player" } = req.body;

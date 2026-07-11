@@ -3,6 +3,7 @@ import { db } from "../lib/db";
 import { questionsTable } from "@workspace/db";
 import { eq, and, count, sql } from "drizzle-orm";
 import { config } from "../config";
+import { generateLimiter } from "../middlewares/rateLimiter";
 
 const router = Router();
 
@@ -75,7 +76,7 @@ router.post("/questions", async (req, res) => {
   }
 });
 
-router.post("/questions/generate", async (req, res) => {
+router.post("/questions/generate", generateLimiter, async (req, res) => {
   try {
     const { difficulty = "medium", count: qCount = 5, topic } = req.body;
 

@@ -1,59 +1,70 @@
 /**
- * Semantic design tokens for the mobile app.
+ * ZOIKO Design Tokens — Mobile
  *
- * These tokens mirror the naming conventions used in web artifacts (index.css)
- * so that multi-artifact projects share a cohesive visual identity.
+ * Mirrors the CSS custom properties in the web artifact (bible-explorer/src/index.css)
+ * so both platforms share the same visual identity.
  *
- * Replace the placeholder values below with values that match the project's
- * brand. If a sibling web artifact exists, read its index.css and convert the
- * HSL values to hex so both artifacts use the same palette.
- *
- * To add dark mode, add a `dark` key with the same token names.
- * The useColors() hook will automatically pick it up.
+ * Dark-mode-first: ZOIKO uses a deep dark-purple palette as its default.
+ * The `light` key here represents the dark-mode palette used on mobile
+ * (matching the web's dark theme).  A genuine light palette can be added
+ * under a `light_mode` key if ever needed.
  */
 
 const colors = {
   light: {
-    // Legacy aliases (kept for backward compatibility)
-    text: '#0a0a0a',
-    tint: '#2f95dc',
+    // ── Core surfaces ──────────────────────────────────────────────────────
+    background: '#0D0B1E',       // deepest background
+    surface: '#151426',          // cards / modals
+    surface2: '#1E1B34',         // elevated surfaces, inputs
+    surface3: '#2A2548',         // hover / pressed state
 
-    // Core surfaces
-    background: '#ffffff',
-    foreground: '#0a0a0a',
+    // ── Foreground / text ──────────────────────────────────────────────────
+    foreground: '#F1F0FB',       // primary text
+    text: '#F1F0FB',             // alias (for legacy compatibility)
+    muted: '#9CA3B8',            // secondary / placeholder text
+    mutedForeground: '#9CA3B8',
 
-    // Cards / elevated surfaces
-    card: '#f9f9f9',
-    cardForeground: '#0a0a0a',
+    // ── Brand primary ──────────────────────────────────────────────────────
+    primary: '#6C3AED',          // ZOIKO purple
+    primaryDark: '#5B2FD4',      // pressed / active state
+    primaryLight: '#8B5CF6',     // lighter accent
+    primaryForeground: '#FFFFFF',
+    tint: '#6C3AED',             // alias for tab bar / icon tints
 
-    // Primary action color (buttons, links, active states)
-    primary: '#2f95dc',
-    primaryForeground: '#ffffff',
+    // ── Secondary ──────────────────────────────────────────────────────────
+    secondary: '#1E1B34',
+    secondaryForeground: '#F1F0FB',
 
-    // Secondary / less-emphasis interactive surfaces
-    secondary: '#f0f0f0',
-    secondaryForeground: '#1a1a1a',
+    // ── Accent ─────────────────────────────────────────────────────────────
+    accent: '#7C3AED',
+    accentForeground: '#FFFFFF',
 
-    // Muted / subdued elements (dividers, timestamps, placeholders)
-    muted: '#f0f0f0',
-    mutedForeground: '#737373',
+    // ── Borders / separators ───────────────────────────────────────────────
+    border: '#332F52',
+    input: '#1E1B34',
 
-    // Accent highlights (badges, selected items, focus rings)
-    accent: '#f0f0f0',
-    accentForeground: '#1a1a1a',
+    // ── Semantic states ────────────────────────────────────────────────────
+    success: '#22C55E',
+    successBg: '#14532D',
+    warning: '#F59E0B',
+    warningBg: '#78350F',
+    destructive: '#EF4444',
+    destructiveForeground: '#FFFFFF',
+    danger: '#EF4444',
 
-    // Destructive actions (delete, error states)
-    destructive: '#ef4444',
-    destructiveForeground: '#ffffff',
+    // ── Game / gamification ────────────────────────────────────────────────
+    gold: '#F59E0B',             // achievements / rankings
+    silver: '#9CA3B8',
+    bronze: '#B45309',
+    score: '#6C3AED',
 
-    // Borders and input outlines
-    border: '#e5e5e5',
-    input: '#e5e5e5',
+    // ── Cards ──────────────────────────────────────────────────────────────
+    card: '#151426',
+    cardForeground: '#F1F0FB',
   },
 
-  // Border radius (in px). Sync from the sibling web artifact's --radius
-  // CSS variable. This value applies to cards, buttons, inputs, and modals.
-  radius: 8,
+  // Radius in pixels (matches --radius in web CSS)
+  radius: 12,
 };
 
 export default colors;

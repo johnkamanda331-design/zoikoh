@@ -58,3 +58,8 @@ timeoutMs = 20000
 
 [nix]
 channel = "stable-25_05"
+
+[userenv]
+
+[userenv.shared]
+EXPO_PUBLIC_DOMAIN = "932798a6-80c0-42f7-92aa-674403f0cf5b-00-agy0jtp2c2ys.picard.replit.dev"

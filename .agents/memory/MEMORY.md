@@ -4,3 +4,4 @@
 - [ZOIKO db rebuild pattern](zoiko-db-rebuild.md) — After adding new tables to lib/db/src/schema/, always run pnpm run typecheck:libs before api-server typecheck or the new exports won't be found.
 - [ZOIKO solo hub & achievements](zoiko-solo-achievements.md) — All 8 solo modes implemented; 20 achievements; pickUnseen() dedup pattern; achievement tracking via localStorage + POST /achievements.
 - [ZOIKO Gemini & player persistence](zoiko-gemini-and-players.md) — Gemini via direct REST with user's own key (integration upgrade declined); mixed difficulty is session-level only, never a per-question value; players table trust model.
+- [ZOIKO Clerk Expo custom auth](zoiko-clerk-expo-auth.md) — @clerk/expo v3 useSignIn/useSignUp use the new Future signals API, not the classic shape; the classic API's `/legacy` subpath fails to resolve in Metro.
