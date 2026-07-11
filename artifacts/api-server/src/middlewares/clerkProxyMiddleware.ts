@@ -19,7 +19,7 @@
  *   app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
  */
 
-import type { IncomingHttpHeaders } from 'http';
+import type { IncomingHttpHeaders, IncomingMessage } from 'http';
 import type { RequestHandler } from 'express';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import { config } from '../config.js';
@@ -44,9 +44,7 @@ export const CLERK_PROXY_PATH = '/api/__clerk';
  * hostname is canonical — otherwise multi-domain/custom-domain flows
  * break.
  */
-export function getClerkProxyHost(req: {
-  headers: IncomingHttpHeaders;
-}): string | undefined {
+export function getClerkProxyHost(req: IncomingMessage | { headers: IncomingHttpHeaders }): string | undefined {
   const forwarded = req.headers['x-forwarded-host'];
   const raw = Array.isArray(forwarded) ? forwarded[0] : forwarded;
   const firstHop = raw?.split(',')[0]?.trim();
