@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { db } from "../lib/db.js";
-import { questionsTable } from "@workspace/db";
+import { questionsTable } from "@workspace/db/schema";
+import type { Request, Response } from 'express';
 
 const router = Router();
 
@@ -91,7 +92,7 @@ const DAILY_VERSES = [
   },
 ];
 
-router.get("/daily/content", async (req, res) => {
+router.get("/daily/content", async (req: Request, res: Response) => {
   const today = new Date();
   const dayOfYear = Math.floor(
     (today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000
@@ -99,13 +100,13 @@ router.get("/daily/content", async (req, res) => {
   const index = dayOfYear % DAILY_VERSES.length;
   const content = DAILY_VERSES[index];
 
-  res.json({
+  (res as any).json({
     ...content,
     date: today.toISOString().split("T")[0],
   });
 });
 
-router.get("/daily/challenge", async (req, res) => {
+router.get("/daily/challenge", async (req: Request, res: Response) => {
   try {
     const today = new Date();
     const seed = Math.floor(today.getTime() / 86400000);
@@ -131,10 +132,10 @@ router.get("/daily/challenge", async (req, res) => {
       createdAt: q.createdAt.toISOString(),
     }));
 
-    res.json(daily);
+    (res as any).json(daily);
   } catch (err) {
-    req.log.error({ err }, "Failed to get daily challenge");
-    res.status(500).json({ error: "Failed to get daily challenge" });
+    (req as any).log.error({ err }, "Failed to get daily challenge");
+    (res as any).status(500).json({ error: "Failed to get daily challenge" });
   }
 });
 
