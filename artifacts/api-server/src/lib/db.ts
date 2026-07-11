@@ -7,6 +7,6 @@
  * string always comes from config rather than process.env.
  */
 import { createDb } from "@workspace/db";
-import { config } from "../config";
+import { config } from "../config.js";
 
 export const { db, pool } = createDb(config.databaseUrl);

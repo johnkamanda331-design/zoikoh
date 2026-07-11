@@ -1,10 +1,10 @@
 import { Router } from "express";
-import { db } from "../lib/db";
+import { db } from "../lib/db.js";
 import { sessionsTable, sessionAnswersTable, sessionParticipantsTable, questionsTable } from "@workspace/db";
 import { eq, desc, and } from "drizzle-orm";
 import crypto from "crypto";
-import { requireAuth, optionalAuth, type AuthedRequest } from "../middlewares/requireAuth";
-import { sessionLimiter } from "../middlewares/rateLimiter";
+import { requireAuth, optionalAuth, type AuthedRequest } from "../middlewares/requireAuth.js";
+import { sessionLimiter } from "../middlewares/rateLimiter.js";
 
 const router = Router();
 

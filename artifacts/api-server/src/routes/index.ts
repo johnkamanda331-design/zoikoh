@@ -1,12 +1,12 @@
 import { Router, type IRouter } from "express";
-import healthRouter from "./health";
-import dailyRouter from "./daily";
-import categoriesRouter from "./categories";
-import questionsRouter from "./questions";
-import sessionsRouter from "./sessions";
-import achievementsRouter from "./achievements";
-import statsRouter from "./stats";
-import playersRouter from "./players";
+import healthRouter from "./health.js";
+import dailyRouter from "./daily.js";
+import categoriesRouter from "./categories.js";
+import questionsRouter from "./questions.js";
+import sessionsRouter from "./sessions.js";
+import achievementsRouter from "./achievements.js";
+import statsRouter from "./stats.js";
+import playersRouter from "./players.js";
 
 const router: IRouter = Router();
 

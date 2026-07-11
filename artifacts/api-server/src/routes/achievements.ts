@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db } from "../lib/db";
+import { db } from "../lib/db.js";
 import { achievementsTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 

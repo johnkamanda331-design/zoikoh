@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { db } from "../lib/db";
+import { db } from "../lib/db.js";
 import { questionsTable } from "@workspace/db";
 import { eq, and, count, sql } from "drizzle-orm";
-import { config } from "../config";
-import { generateLimiter } from "../middlewares/rateLimiter";
+import { config } from "../config.js";
+import { generateLimiter } from "../middlewares/rateLimiter.js";
 
 const router = Router();
 

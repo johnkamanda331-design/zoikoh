@@ -3,32 +3,33 @@ import cors from "cors";
 import helmet from "helmet";
 import pinoHttp from "pino-http";
 import { clerkMiddleware } from "@clerk/express";
+const pinoHttpMiddleware = pinoHttp as unknown as any;
 import { publishableKeyFromHost } from "@clerk/shared/keys";
 import {
   CLERK_PROXY_PATH,
   clerkProxyMiddleware,
   getClerkProxyHost,
 } from "./middlewares/clerkProxyMiddleware";
-import { apiLimiter } from "./middlewares/rateLimiter";
-import { errorHandler } from "./middlewares/errorHandler";
-import router from "./routes";
-import { logger } from "./lib/logger";
-import { config } from "./config";
+import { apiLimiter } from "./middlewares/rateLimiter.js";
+import { errorHandler } from "./middlewares/errorHandler.js";
+import router from "./routes/index.js";
+import { logger } from "./lib/logger.js";
+import { config } from "./config.js";
 
 const app = express();
 
 app.use(
-  pinoHttp({
+  pinoHttpMiddleware({
     logger,
     serializers: {
-      req(req: Request) {
+      req(req: any) {
         return {
           id: req.id,
           method: req.method,
           url: req.url?.split("?")[0],
         };
       },
-      res(res: Response) {
+      res(res: any) {
         return {
           statusCode: res.statusCode,
         };
@@ -68,7 +69,7 @@ app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 // server can serve multiple Clerk custom domains. Falls back to
 // CLERK_PUBLISHABLE_KEY when the host doesn't map to a custom domain.
 app.use(
-  clerkMiddleware((req) => ({
+  clerkMiddleware((req: Request) => ({
     publishableKey: publishableKeyFromHost(
       getClerkProxyHost(req) ?? "",
       config.clerk.publishableKey,
