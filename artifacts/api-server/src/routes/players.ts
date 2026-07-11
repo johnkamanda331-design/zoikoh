@@ -1,4 +1,4 @@
-import { Router, type Request, type Response } from "express";
+import { Router } from "express";
 import { db } from "../lib/db.js";
 import { requireAuth, type AuthedRequest } from "../middlewares/requireAuth.js";
 
@@ -19,7 +19,7 @@ function mapPlayer(p: any) {
   };
 }
 
-router.get("/players/:name", async (req: Request, res: Response) => {
+router.get("/players/:name", async (req: any, res: any) => {
   try {
     const name = req.params.name as string;
     const existingResult = await (db as any).$client.query(
@@ -49,9 +49,9 @@ function isValidCounter(v: unknown): v is number {
   return typeof v === "number" && Number.isInteger(v) && v >= 0 && v <= MAX_REASONABLE_VALUE;
 }
 
-router.put("/players/:name", requireAuth, async (req: Request, res: Response) => {
+router.put("/players/:name", requireAuth, async (req: any, res: any) => {
   try {
-    const auth = (req as AuthedRequest).auth!;
+    const auth = (req as unknown as AuthedRequest).auth!;
     const name = req.params.name as string;
     if (!name || name.length > 64) {
       (res as any).status(400).json({ error: "Invalid player name" });

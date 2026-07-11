@@ -1,4 +1,4 @@
-import { Router, type Request, type Response } from "express";
+import { Router } from "express";
 import { db, pool } from "../lib/db.js";
 import crypto from "crypto";
 import { requireAuth, optionalAuth, type AuthedRequest } from "../middlewares/requireAuth.js";
@@ -79,7 +79,7 @@ async function getSessionQuestions(questionIds: string[], client?: any) {
   return ids.map((id) => questionMap.get(id)).filter(Boolean);
 }
 
-router.post("/sessions", sessionLimiter, requireAuth, async (req: Request, res: Response) => {
+router.post("/sessions", sessionLimiter, requireAuth, async (req: any, res: any) => {
   try {
     const auth = (req as AuthedRequest).auth!;
     const { difficulty = "medium", playStyle, participants = [], totalQuestions = 10 } = req.body;
@@ -101,7 +101,7 @@ router.post("/sessions", sessionLimiter, requireAuth, async (req: Request, res: 
   }
 });
 
-router.post("/sessions/duel", sessionLimiter, requireAuth, async (req: Request, res: Response) => {
+router.post("/sessions/duel", sessionLimiter, requireAuth, async (req: any, res: any) => {
   try {
     const auth = (req as AuthedRequest).auth!;
     const { difficulty = "medium", totalQuestions = 10, hostName = "Player" } = req.body;
@@ -129,7 +129,7 @@ router.post("/sessions/duel", sessionLimiter, requireAuth, async (req: Request, 
   }
 });
 
-router.post("/sessions/duel/join", sessionLimiter, requireAuth, async (req: Request, res: Response) => {
+router.post("/sessions/duel/join", sessionLimiter, requireAuth, async (req: any, res: any) => {
   let client: any;
   try {
     const auth = (req as AuthedRequest).auth!;
@@ -199,7 +199,7 @@ router.post("/sessions/duel/join", sessionLimiter, requireAuth, async (req: Requ
   }
 });
 
-router.post("/sessions/join", sessionLimiter, requireAuth, async (req: Request, res: Response) => {
+router.post("/sessions/join", sessionLimiter, requireAuth, async (req: any, res: any) => {
   try {
     const auth = (req as AuthedRequest).auth!;
     const { pin, playerName = "Player" } = req.body;
@@ -260,7 +260,7 @@ router.post("/sessions/join", sessionLimiter, requireAuth, async (req: Request, 
   }
 });
 
-router.get("/sessions/recent", async (req: Request, res: Response) => {
+router.get("/sessions/recent", async (req: any, res: any) => {
   try {
     const limit = Math.min(Number(req.query.limit ?? 5), 20);
     const sessionsResult = await (db as any).$client.query(
@@ -274,7 +274,7 @@ router.get("/sessions/recent", async (req: Request, res: Response) => {
   }
 });
 
-router.get("/sessions/:id", optionalAuth, async (req: Request, res: Response) => {
+router.get("/sessions/:id", optionalAuth, async (req: any, res: any) => {
   try {
     const sessionResult = await (db as any).$client.query(
       `SELECT id, pin, host_code AS "hostCode", status, type, difficulty, play_style AS "playStyle", participants, host_user_id AS "hostUserId", question_ids AS "questionIds", total_questions AS "totalQuestions", current_question_index AS "currentQuestionIndex", created_at AS "createdAt", completed_at AS "completedAt" FROM sessions WHERE id = $1`,
@@ -306,7 +306,7 @@ router.get("/sessions/:id", optionalAuth, async (req: Request, res: Response) =>
   }
 });
 
-router.patch("/sessions/:id", requireAuth, async (req: Request, res: Response) => {
+router.patch("/sessions/:id", requireAuth, async (req: any, res: any) => {
   try {
     const auth = (req as AuthedRequest).auth!;
     const sessionResult = await (db as any).$client.query(
@@ -361,7 +361,7 @@ router.patch("/sessions/:id", requireAuth, async (req: Request, res: Response) =
   }
 });
 
-router.get("/sessions/:id/leaderboard", async (req: Request, res: Response) => {
+router.get("/sessions/:id/leaderboard", async (req: any, res: any) => {
   try {
     const leaderboardResult = await (db as any).$client.query(
       `SELECT player_name AS "playerName", SUM(score) AS "totalScore", SUM(CASE WHEN is_correct THEN 1 ELSE 0 END) AS "correctAnswers", COUNT(*) AS "totalAnswers" FROM session_answers WHERE session_id = $1 GROUP BY player_name ORDER BY "totalScore" DESC`,
@@ -383,7 +383,7 @@ router.get("/sessions/:id/leaderboard", async (req: Request, res: Response) => {
   }
 });
 
-router.post("/sessions/:id/answers", requireAuth, async (req: Request, res: Response) => {
+router.post("/sessions/:id/answers", requireAuth, async (req: any, res: any) => {
   try {
     const auth = (req as AuthedRequest).auth!;
     const { questionId, answer } = req.body;

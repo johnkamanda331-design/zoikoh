@@ -1,9 +1,9 @@
-import { Router, type Request, type Response } from "express";
+import { Router } from "express";
 import { db } from "../lib/db.js";
 
 const router = Router();
 
-router.get("/categories", async (req: Request, res: Response) => {
+router.get("/categories", async (req: any, res: any) => {
   try {
     const categoriesResult = await (db as any).$client.query(
       `SELECT id, name, description FROM categories ORDER BY id`

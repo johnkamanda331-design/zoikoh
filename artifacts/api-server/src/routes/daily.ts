@@ -93,7 +93,7 @@ const DAILY_VERSES = [
   },
 ];
 
-router.get("/daily/content", async (req: Request, res: Response) => {
+router.get("/daily/content", async (req: any, res: any) => {
   const today = new Date();
   const dayOfYear = Math.floor(
     (today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000
@@ -107,7 +107,7 @@ router.get("/daily/content", async (req: Request, res: Response) => {
   });
 });
 
-router.get("/daily/challenge", async (req: Request, res: Response) => {
+router.get("/daily/challenge", async (req: any, res: any) => {
   try {
     const today = new Date();
     const seed = Math.floor(today.getTime() / 86400000);

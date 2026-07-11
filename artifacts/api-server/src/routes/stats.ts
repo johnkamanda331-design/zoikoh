@@ -1,9 +1,9 @@
-import { Router, type Request, type Response } from "express";
+import { Router } from "express";
 import { db } from "../lib/db.js";
 
 const router = Router();
 
-router.get("/stats/overview", async (req: Request, res: Response) => {
+router.get("/stats/overview", async (req: any, res: any) => {
   try {
     const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 

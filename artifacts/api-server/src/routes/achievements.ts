@@ -1,9 +1,9 @@
-import { Router, type Request, type Response } from "express";
+import { Router } from "express";
 import { db } from "../lib/db.js";
 
 const router = Router();
 
-router.get("/achievements", async (req: Request, res: Response) => {
+router.get("/achievements", async (req: any, res: any) => {
   try {
     const playerName = req.query.playerName as string | undefined;
     const query = playerName
@@ -28,7 +28,7 @@ router.get("/achievements", async (req: Request, res: Response) => {
   }
 });
 
-router.post("/achievements", async (req: Request, res: Response) => {
+router.post("/achievements", async (req: any, res: any) => {
   try {
     const { playerName, type, title, description } = req.body;
     if (!playerName || !type || !title || !description) {

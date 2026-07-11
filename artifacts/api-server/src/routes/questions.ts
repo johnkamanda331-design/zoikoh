@@ -1,4 +1,4 @@
-import { Router, type Request, type Response } from "express";
+import { Router } from "express";
 import { db } from "../lib/db.js";
 import { config } from "../config.js";
 import { generateLimiter } from "../middlewares/rateLimiter.js";
@@ -19,7 +19,7 @@ function mapQuestion(q: any) {
   };
 }
 
-router.get("/questions", async (req: Request, res: Response) => {
+router.get("/questions", async (req: any, res: any) => {
   try {
     const difficulty = req.query.difficulty as string | undefined;
     const categoryId = req.query.categoryId ? Number(req.query.categoryId) : undefined;
@@ -65,7 +65,7 @@ router.get("/questions", async (req: Request, res: Response) => {
   }
 });
 
-router.post("/questions", async (req: Request, res: Response) => {
+router.post("/questions", async (req: any, res: any) => {
   try {
     const { text, options, correctAnswer, difficulty, categoryId, explanation, book } = req.body;
 
@@ -88,7 +88,7 @@ router.post("/questions", async (req: Request, res: Response) => {
   }
 });
 
-router.post("/questions/generate", generateLimiter, async (req, res) => {
+router.post("/questions/generate", generateLimiter, async (req: any, res: any) => {
   try {
     const { difficulty = "medium", count: qCount = 5, topic } = req.body;
 
@@ -200,7 +200,7 @@ async function generateWithGemini(apiKey: string, prompt: string): Promise<{ que
   return JSON.parse(text);
 }
 
-router.post("/questions/generate/save", async (req: Request, res: Response) => {
+router.post("/questions/generate/save", async (req: any, res: any) => {
   try {
     const { questions } = req.body as { questions: Array<{ text: string; options: string[]; correctAnswer: string; difficulty: string; categoryId: number; explanation?: string; book?: string }> };
 
@@ -228,7 +228,7 @@ router.post("/questions/generate/save", async (req: Request, res: Response) => {
   }
 });
 
-router.get("/questions/:id", async (req: Request, res: Response) => {
+router.get("/questions/:id", async (req: any, res: any) => {
   try {
     const id = Number(req.params.id);
     const questionResult = await (db as any).$client.query(
@@ -251,7 +251,7 @@ router.get("/questions/:id", async (req: Request, res: Response) => {
   }
 });
 
-router.delete("/questions/:id", async (req: Request, res: Response) => {
+router.delete("/questions/:id", async (req: any, res: any) => {
   try {
     const id = Number(req.params.id);
     await (db as any).$client.query(`DELETE FROM questions WHERE id = $1`, [id]);
