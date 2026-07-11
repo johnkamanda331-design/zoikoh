@@ -1,4 +1,4 @@
-import { Router, type IRouter } from "express";
+import { Router } from "express";
 import healthRouter from "./health.js";
 import dailyRouter from "./daily.js";
 import categoriesRouter from "./categories.js";
@@ -8,7 +8,7 @@ import achievementsRouter from "./achievements.js";
 import statsRouter from "./stats.js";
 import playersRouter from "./players.js";
 
-const router: IRouter = Router();
+const router = Router();
 
 router.use(healthRouter);
 router.use(dailyRouter);
