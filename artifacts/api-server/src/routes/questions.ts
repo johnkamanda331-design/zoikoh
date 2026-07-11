@@ -1,13 +1,11 @@
-import { Router } from "express";
+import { Router, type Request, type Response } from "express";
 import { db } from "../lib/db.js";
-import { questionsTable } from "@workspace/db";
-import { eq, and, count, sql } from "drizzle-orm";
 import { config } from "../config.js";
 import { generateLimiter } from "../middlewares/rateLimiter.js";
 
 const router = Router();
 
-function mapQuestion(q: typeof questionsTable.$inferSelect) {
+function mapQuestion(q: any) {
   return {
     id: q.id,
     text: q.text,
@@ -21,58 +19,72 @@ function mapQuestion(q: typeof questionsTable.$inferSelect) {
   };
 }
 
-router.get("/questions", async (req, res) => {
+router.get("/questions", async (req: Request, res: Response) => {
   try {
     const difficulty = req.query.difficulty as string | undefined;
     const categoryId = req.query.categoryId ? Number(req.query.categoryId) : undefined;
     const limit = Math.min(Number(req.query.limit ?? 10), 100);
     const offset = Number(req.query.offset ?? 0);
 
-    const conditions = [];
-    if (difficulty) conditions.push(eq(questionsTable.difficulty, difficulty));
-    if (categoryId) conditions.push(eq(questionsTable.categoryId, categoryId));
+    const whereClauses: string[] = [];
+    const values: any[] = [];
+    let paramIndex = 1;
 
-    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+    if (difficulty) {
+      whereClauses.push(`difficulty = $${paramIndex++}`);
+      values.push(difficulty);
+    }
+    if (categoryId) {
+      whereClauses.push(`category_id = $${paramIndex++}`);
+      values.push(categoryId);
+    }
 
-    const [questions, [totalResult]] = await Promise.all([
-      db
-        .select()
-        .from(questionsTable)
-        .where(whereClause)
-        .limit(limit)
-        .offset(offset)
-        .orderBy(questionsTable.id),
-      db.select({ count: count() }).from(questionsTable).where(whereClause),
-    ]);
+    const whereSql = whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
 
-    res.json({
-      questions: questions.map(mapQuestion),
-      total: totalResult?.count ?? 0,
+    const questionsResult = await (db as any).$client.query(
+      `SELECT id, text, options, correct_answer AS "correctAnswer", difficulty, category_id AS "categoryId", explanation, book, created_at AS "createdAt"
+       FROM questions ${whereSql}
+       ORDER BY id
+       LIMIT $${paramIndex}
+       OFFSET $${paramIndex + 1}`,
+      [...values, limit, offset]
+    );
+
+    const totalResult = await (db as any).$client.query(
+      `SELECT COUNT(*)::int AS count FROM questions ${whereSql}`,
+      values
+    );
+
+    (res as any).json({
+      questions: questionsResult.rows.map(mapQuestion),
+      total: totalResult.rows?.[0]?.count ?? 0,
     });
   } catch (err) {
-    req.log.error({ err }, "Failed to list questions");
-    res.status(500).json({ error: "Failed to list questions" });
+    (req as any).log.error({ err }, "Failed to list questions");
+    (res as any).status(500).json({ error: "Failed to list questions" });
   }
 });
 
-router.post("/questions", async (req, res) => {
+router.post("/questions", async (req: Request, res: Response) => {
   try {
     const { text, options, correctAnswer, difficulty, categoryId, explanation, book } = req.body;
 
     if (!text || !options || !correctAnswer || !difficulty || !categoryId) {
-      res.status(400).json({ error: "Missing required fields" });
+      (res as any).status(400).json({ error: "Missing required fields" });
       return;
     }
 
-    const [created] = await db
-      .insert(questionsTable)
-      .values({ text, options, correctAnswer, difficulty, categoryId, explanation, book })
-      .returning();
+    const createdResult = await (db as any).$client.query(
+      `INSERT INTO questions (text, options, correct_answer, difficulty, category_id, explanation, book)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING id, text, options, correct_answer AS "correctAnswer", difficulty, category_id AS "categoryId", explanation, book, created_at AS "createdAt"`,
+      [text, options, correctAnswer, difficulty, categoryId, explanation ?? null, book ?? null]
+    );
 
-    res.status(201).json(mapQuestion(created));
+    (res as any).status(201).json(mapQuestion(createdResult.rows[0]));
   } catch (err) {
-    req.log.error({ err }, "Failed to create question");
-    res.status(500).json({ error: "Failed to create question" });
+    (req as any).log.error({ err }, "Failed to create question" );
+    (res as any).status(500).json({ error: "Failed to create question" });
   }
 });
 
@@ -188,62 +200,65 @@ async function generateWithGemini(apiKey: string, prompt: string): Promise<{ que
   return JSON.parse(text);
 }
 
-router.post("/questions/generate/save", async (req, res) => {
+router.post("/questions/generate/save", async (req: Request, res: Response) => {
   try {
     const { questions } = req.body as { questions: Array<{ text: string; options: string[]; correctAnswer: string; difficulty: string; categoryId: number; explanation?: string; book?: string }> };
 
     if (!questions || !Array.isArray(questions) || questions.length === 0) {
-      res.status(400).json({ error: "No questions provided" });
+      (res as any).status(400).json({ error: "No questions provided" });
       return;
     }
 
-    const inserted = await db
-      .insert(questionsTable)
-      .values(
-        questions.map((q) => ({
-          text: q.text,
-          options: q.options,
-          correctAnswer: q.correctAnswer,
-          difficulty: q.difficulty,
-          categoryId: q.categoryId ?? 1,
-          explanation: q.explanation,
-          book: q.book,
-        }))
-      )
-      .returning();
+    const inserted = await Promise.all(
+      questions.map(async (q) => {
+        const result = await (db as any).$client.query(
+          `INSERT INTO questions (text, options, correct_answer, difficulty, category_id, explanation, book)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)
+           RETURNING id, text, options, correct_answer AS "correctAnswer", difficulty, category_id AS "categoryId", explanation, book, created_at AS "createdAt"`,
+          [q.text, q.options, q.correctAnswer, q.difficulty, q.categoryId ?? 1, q.explanation ?? null, q.book ?? null]
+        );
+        return mapQuestion(result.rows[0]);
+      })
+    );
 
-    res.status(201).json(inserted.map(mapQuestion));
+    (res as any).status(201).json(inserted);
   } catch (err) {
-    req.log.error({ err }, "Failed to save generated questions");
-    res.status(500).json({ error: "Failed to save questions" });
+    (req as any).log.error({ err }, "Failed to save generated questions");
+    (res as any).status(500).json({ error: "Failed to save questions" });
   }
 });
 
-router.get("/questions/:id", async (req, res) => {
+router.get("/questions/:id", async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
-    const [question] = await db.select().from(questionsTable).where(eq(questionsTable.id, id));
+    const questionResult = await (db as any).$client.query(
+      `SELECT id, text, options, correct_answer AS "correctAnswer", difficulty, category_id AS "categoryId", explanation, book, created_at AS "createdAt"
+       FROM questions
+       WHERE id = $1`,
+      [id]
+    );
 
+    const question = questionResult.rows[0];
     if (!question) {
-      res.status(404).json({ error: "Question not found" });
+      (res as any).status(404).json({ error: "Question not found" });
       return;
     }
 
-    res.json(mapQuestion(question));
+    (res as any).json(mapQuestion(question));
   } catch (err) {
-    req.log.error({ err }, "Failed to get question");
-    res.status(500).json({ error: "Failed to get question" });
+    (req as any).log.error({ err }, "Failed to get question");
+    (res as any).status(500).json({ error: "Failed to get question" });
   }
 });
 
-router.delete("/questions/:id", async (req, res) => {
+router.delete("/questions/:id", async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
-    await db.delete(questionsTable).where(eq(questionsTable.id, id));
-    res.status(204).send();
+    await (db as any).$client.query(`DELETE FROM questions WHERE id = $1`, [id]);
+    (res as any).status(204).send();
   } catch (err) {
-    req.log.error({ err }, "Failed to delete question");
-    res.status(500).json({ error: "Failed to delete question" });
+    (req as any).log.error({ err }, "Failed to delete question");
+    (res as any).status(500).json({ error: "Failed to delete question" });
   }
 });
 

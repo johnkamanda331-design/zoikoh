@@ -1,51 +1,59 @@
-import { Router } from "express";
+import { Router, type Request, type Response } from "express";
 import { db } from "../lib/db.js";
-import { questionsTable, sessionsTable, sessionAnswersTable } from "@workspace/db";
-import { eq, count, avg, gte, desc } from "drizzle-orm";
 
 const router = Router();
 
-router.get("/stats/overview", async (req, res) => {
+router.get("/stats/overview", async (req: Request, res: Response) => {
   try {
     const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
-    const [[totalQuestions], [totalSessions], [totalPlayers], [questionsThisWeek], completedSessions, recentAnswers] =
-      await Promise.all([
-        db.select({ count: count() }).from(questionsTable),
-        db.select({ count: count() }).from(sessionsTable),
-        db.select({ count: count() }).from(sessionsTable).where(eq(sessionsTable.status, "completed")),
-        db.select({ count: count() }).from(questionsTable).where(gte(questionsTable.createdAt, oneWeekAgo)),
-        db.select().from(sessionsTable).where(eq(sessionsTable.status, "completed")).orderBy(desc(sessionsTable.completedAt)).limit(5),
-        db.select().from(sessionAnswersTable).orderBy(desc(sessionAnswersTable.createdAt)).limit(50),
-      ]);
+    const totalQuestionsResult = await (db as any).$client.query(
+      `SELECT COUNT(*)::int AS count FROM questions`
+    );
+    const totalSessionsResult = await (db as any).$client.query(
+      `SELECT COUNT(*)::int AS count FROM sessions`
+    );
+    const totalPlayersResult = await (db as any).$client.query(
+      `SELECT COUNT(*)::int AS count FROM sessions WHERE status = 'completed'`
+    );
+    const questionsThisWeekResult = await (db as any).$client.query(
+      `SELECT COUNT(*)::int AS count FROM questions WHERE created_at >= $1`,
+      [oneWeekAgo]
+    );
+    const completedSessionsResult = await (db as any).$client.query(
+      `SELECT id, participants, difficulty, completed_at, created_at FROM sessions WHERE status = 'completed' ORDER BY completed_at DESC LIMIT 5`
+    );
+    const recentAnswersResult = await (db as any).$client.query(
+      `SELECT is_correct AS "isCorrect" FROM session_answers ORDER BY created_at DESC LIMIT 50`
+    );
+    const allSessionsResult = await (db as any).$client.query(
+      `SELECT participants FROM sessions`
+    );
 
-    // Calculate average score
-    const correctAnswers = recentAnswers.filter((a) => a.isCorrect).length;
+    const recentAnswers = recentAnswersResult.rows;
+    const correctAnswers = recentAnswers.filter((a: any) => a.isCorrect).length;
     const avgScore = recentAnswers.length > 0 ? Math.round((correctAnswers / recentAnswers.length) * 100) : 0;
 
-    // Count unique players from all sessions
-    const allSessions = await db.select().from(sessionsTable);
-    const uniquePlayers = new Set(allSessions.flatMap((s) => s.participants)).size;
+    const uniquePlayers = new Set(allSessionsResult.rows.flatMap((s: any) => s.participants ?? [])).size;
 
-    // Recent activity
-    const recentActivity = completedSessions.map((s) => ({
+    const recentActivity = completedSessionsResult.rows.map((s: any) => ({
       type: "session",
-      description: `Session with ${s.participants.length} players completed — ${s.difficulty} difficulty`,
-      createdAt: (s.completedAt ?? s.createdAt).toISOString(),
+      description: `Session with ${s.participants?.length ?? 0} players completed — ${s.difficulty} difficulty`,
+      createdAt: (s.completed_at ?? s.created_at).toISOString(),
     }));
 
-    res.json({
-      totalQuestions: totalQuestions?.count ?? 0,
-      totalSessions: totalSessions?.count ?? 0,
+    (res as any).json({
+      totalQuestions: totalQuestionsResult.rows?.[0]?.count ?? 0,
+      totalSessions: totalSessionsResult.rows?.[0]?.count ?? 0,
       totalPlayers: uniquePlayers,
-      questionsThisWeek: questionsThisWeek?.count ?? 0,
+      questionsThisWeek: questionsThisWeekResult.rows?.[0]?.count ?? 0,
       averageScore: avgScore,
       topDifficulty: "medium",
       recentActivity,
     });
   } catch (err) {
-    req.log.error({ err }, "Failed to get stats");
-    res.status(500).json({ error: "Failed to get stats" });
+    (req as any).log.error({ err }, "Failed to get stats");
+    (res as any).status(500).json({ error: "Failed to get stats" });
   }
 });
 

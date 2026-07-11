@@ -1,62 +1,60 @@
-import { Router } from "express";
+import { Router, type Request, type Response } from "express";
 import { db } from "../lib/db.js";
-import { playersTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
 import { requireAuth, type AuthedRequest } from "../middlewares/requireAuth.js";
 
 const router = Router();
 
-function mapPlayer(p: typeof playersTable.$inferSelect) {
+function mapPlayer(p: any) {
   return {
     name: p.name,
-    correctAnswers: p.correctAnswers,
-    totalAnswers: p.totalAnswers,
-    sessionsPlayed: p.sessionsPlayed,
-    sessionsWon: p.sessionsWon,
-    sessionsHosted: p.sessionsHosted,
-    streakCurrent: p.streakCurrent,
-    streakLongest: p.streakLongest,
-    updatedAt: p.updatedAt.toISOString(),
-    createdAt: p.createdAt.toISOString(),
+    correctAnswers: p.correct_answers,
+    totalAnswers: p.total_answers,
+    sessionsPlayed: p.sessions_played,
+    sessionsWon: p.sessions_won,
+    sessionsHosted: p.sessions_hosted,
+    streakCurrent: p.streak_current,
+    streakLongest: p.streak_longest,
+    updatedAt: new Date(p.updated_at).toISOString(),
+    createdAt: new Date(p.created_at).toISOString(),
   };
 }
 
-router.get("/players/:name", async (req, res) => {
+router.get("/players/:name", async (req: Request, res: Response) => {
   try {
-    const name = (req.params.name as string);
-    const [existing] = await db.select().from(playersTable).where(eq(playersTable.name, name));
+    const name = req.params.name as string;
+    const existingResult = await (db as any).$client.query(
+      `SELECT name, clerk_user_id AS "clerkUserId", correct_answers, total_answers, sessions_played, sessions_won, sessions_hosted, streak_current, streak_longest, updated_at, created_at FROM players WHERE name = $1`,
+      [name]
+    );
 
-    if (existing) {
-      res.json(mapPlayer(existing));
+    if (existingResult.rows.length > 0) {
+      (res as any).json(mapPlayer(existingResult.rows[0]));
       return;
     }
 
-    const [created] = await db.insert(playersTable).values({ name }).returning();
-    res.json(mapPlayer(created));
+    const createdResult = await (db as any).$client.query(
+      `INSERT INTO players (name) VALUES ($1) RETURNING name, clerk_user_id AS "clerkUserId", correct_answers, total_answers, sessions_played, sessions_won, sessions_hosted, streak_current, streak_longest, updated_at, created_at`,
+      [name]
+    );
+    (res as any).json(mapPlayer(createdResult.rows[0]));
   } catch (err) {
-    req.log.error({ err }, "Failed to get player");
-    res.status(500).json({ error: "Failed to get player" });
+    (req as any).log.error({ err }, "Failed to get player");
+    (res as any).status(500).json({ error: "Failed to get player" });
   }
 });
 
-// Sanity caps on any single sync as defense-in-depth alongside identity
-// verification below.
 const MAX_REASONABLE_VALUE = 1_000_000;
 
 function isValidCounter(v: unknown): v is number {
   return typeof v === "number" && Number.isInteger(v) && v >= 0 && v <= MAX_REASONABLE_VALUE;
 }
 
-// Signing in is required to write player stats: the record is "claimed" by
-// the caller's verified Clerk user id on first write, and any further write
-// to that name from a different account is rejected. This is what stops one
-// player from spoofing another's name to inflate/reset their stats.
-router.put("/players/:name", requireAuth, async (req, res) => {
+router.put("/players/:name", requireAuth, async (req: Request, res: Response) => {
   try {
     const auth = (req as AuthedRequest).auth!;
-    const name = (req.params.name as string);
+    const name = req.params.name as string;
     if (!name || name.length > 64) {
-      res.status(400).json({ error: "Invalid player name" });
+      (res as any).status(400).json({ error: "Invalid player name" });
       return;
     }
 
@@ -73,44 +71,74 @@ router.put("/players/:name", requireAuth, async (req, res) => {
     const fields = { correctAnswers, totalAnswers, sessionsPlayed, sessionsWon, sessionsHosted, streakCurrent, streakLongest };
     for (const [key, value] of Object.entries(fields)) {
       if (!isValidCounter(value)) {
-        res.status(400).json({ error: `Invalid value for ${key}: must be a non-negative integer` });
+        (res as any).status(400).json({ error: `Invalid value for ${key}: must be a non-negative integer` });
         return;
       }
     }
     if (totalAnswers < correctAnswers) {
-      res.status(400).json({ error: "totalAnswers cannot be less than correctAnswers" });
+      (res as any).status(400).json({ error: "totalAnswers cannot be less than correctAnswers" });
       return;
     }
 
-    const [existing] = await db.select().from(playersTable).where(eq(playersTable.name, name));
+    const existingResult = await (db as any).$client.query(
+      `SELECT name, clerk_user_id AS "clerkUserId", correct_answers, total_answers, sessions_played, sessions_won, sessions_hosted, streak_current, streak_longest, updated_at, created_at FROM players WHERE name = $1`,
+      [name]
+    );
+    const existing = existingResult.rows[0];
 
     if (existing?.clerkUserId && existing.clerkUserId !== auth.userId) {
-      res.status(403).json({ error: "This player name is already claimed by another account" });
+      (res as any).status(403).json({ error: "This player name is already claimed by another account" });
       return;
     }
 
-    // Merge by taking the max of existing vs incoming so syncs from multiple
-    // devices/tabs never regress a player's recorded progress.
     const merged = {
-      clerkUserId: auth.userId, // claims an unclaimed legacy row, or re-affirms ownership
-      correctAnswers: Math.max(existing?.correctAnswers ?? 0, correctAnswers),
-      totalAnswers: Math.max(existing?.totalAnswers ?? 0, totalAnswers),
-      sessionsPlayed: Math.max(existing?.sessionsPlayed ?? 0, sessionsPlayed),
-      sessionsWon: Math.max(existing?.sessionsWon ?? 0, sessionsWon),
-      sessionsHosted: Math.max(existing?.sessionsHosted ?? 0, sessionsHosted),
-      streakCurrent,
-      streakLongest: Math.max(existing?.streakLongest ?? 0, streakLongest),
-      updatedAt: new Date(),
+      clerk_user_id: auth.userId,
+      correct_answers: Math.max(existing?.correct_answers ?? 0, correctAnswers),
+      total_answers: Math.max(existing?.total_answers ?? 0, totalAnswers),
+      sessions_played: Math.max(existing?.sessions_played ?? 0, sessionsPlayed),
+      sessions_won: Math.max(existing?.sessions_won ?? 0, sessionsWon),
+      sessions_hosted: Math.max(existing?.sessions_hosted ?? 0, sessionsHosted),
+      streak_current: streakCurrent,
+      streak_longest: Math.max(existing?.streak_longest ?? 0, streakLongest),
+      updated_at: new Date(),
     };
 
-    const [updated] = existing
-      ? await db.update(playersTable).set(merged).where(eq(playersTable.name, name)).returning()
-      : await db.insert(playersTable).values({ name, ...merged }).returning();
+    const updatedResult = existing
+      ? await (db as any).$client.query(
+          `UPDATE players SET clerk_user_id = $1, correct_answers = $2, total_answers = $3, sessions_played = $4, sessions_won = $5, sessions_hosted = $6, streak_current = $7, streak_longest = $8, updated_at = $9 WHERE name = $10 RETURNING name, clerk_user_id AS "clerkUserId", correct_answers, total_answers, sessions_played, sessions_won, sessions_hosted, streak_current, streak_longest, updated_at, created_at`,
+          [
+            merged.clerk_user_id,
+            merged.correct_answers,
+            merged.total_answers,
+            merged.sessions_played,
+            merged.sessions_won,
+            merged.sessions_hosted,
+            merged.streak_current,
+            merged.streak_longest,
+            merged.updated_at,
+            name,
+          ]
+        )
+      : await (db as any).$client.query(
+          `INSERT INTO players (name, clerk_user_id, correct_answers, total_answers, sessions_played, sessions_won, sessions_hosted, streak_current, streak_longest, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING name, clerk_user_id AS "clerkUserId", correct_answers, total_answers, sessions_played, sessions_won, sessions_hosted, streak_current, streak_longest, updated_at, created_at`,
+          [
+            name,
+            merged.clerk_user_id,
+            merged.correct_answers,
+            merged.total_answers,
+            merged.sessions_played,
+            merged.sessions_won,
+            merged.sessions_hosted,
+            merged.streak_current,
+            merged.streak_longest,
+            merged.updated_at,
+          ]
+        );
 
-    res.json(mapPlayer(updated));
+    (res as any).json(mapPlayer(updatedResult.rows[0]));
   } catch (err) {
-    req.log.error({ err }, "Failed to sync player");
-    res.status(500).json({ error: "Failed to sync player" });
+    (req as any).log.error({ err }, "Failed to sync player");
+    (res as any).status(500).json({ error: "Failed to sync player" });
   }
 });
 
