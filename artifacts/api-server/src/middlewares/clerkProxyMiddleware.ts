@@ -19,8 +19,8 @@
  *   app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
  */
 
-import type { IncomingHttpHeaders } from 'http';
-import type { RequestHandler, Response } from 'express';
+import type { IncomingHttpHeaders, IncomingMessage, ServerResponse } from 'http';
+import type { RequestHandler as ProxyRequestHandler } from 'http-proxy-middleware';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import { config } from '../config.js';
 
@@ -54,18 +54,18 @@ export function getClerkProxyHost(req: unknown): string | undefined {
   return firstHop || headers.host?.trim() || undefined;
 }
 
-export function clerkProxyMiddleware(): RequestHandler {
+export function clerkProxyMiddleware(): ProxyRequestHandler<IncomingMessage, ServerResponse> {
   // Only run proxy in production — Clerk proxying doesn't work for dev instances
   if (config.nodeEnv !== 'production') {
-    return (_req: IncomingMessage, _res: any, next: () => void) => next();
+    return async (_req: IncomingMessage, _res: ServerResponse, next: (err?: any) => void) => next();
   }
 
   const secretKey = config.clerk.secretKey;
   if (!secretKey) {
-    return (_req: IncomingMessage, _res: any, next: () => void) => next();
+    return async (_req: IncomingMessage, _res: ServerResponse, next: (err?: any) => void) => next();
   }
 
-  return createProxyMiddleware<IncomingMessage, Response>({
+  return createProxyMiddleware<IncomingMessage, ServerResponse>({
     target: CLERK_FAPI,
     changeOrigin: true,
     // Take over the response so it can be re-sent with a Content-Length (see
@@ -144,5 +144,5 @@ export function clerkProxyMiddleware(): RequestHandler {
         });
       },
     },
-  }) as RequestHandler;
+  });
 }
