@@ -17,19 +17,27 @@ const currentDir = path.dirname(fileURLToPath(import.meta.url));
 const workspaceRoot = path.resolve(currentDir, "..", "..", "..");
 const envFile = path.join(workspaceRoot, ".env");
 
-if (existsSync(envFile)) {
-  const envContent = readFileSync(envFile, "utf8");
-  for (const line of envContent.split(/\r?\n/)) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#") || !trimmed.includes("=")) {
-      continue;
-    }
+// Safely load .env file if it exists (skips in serverless environments)
+try {
+  if (existsSync(envFile)) {
+    const envContent = readFileSync(envFile, "utf8");
+    for (const line of envContent.split(/\r?\n/)) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#") || !trimmed.includes("=")) {
+        continue;
+      }
 
-    const [key, ...rest] = trimmed.split("=");
-    const value = rest.join("=").trim();
-    if (!process.env[key]) {
-      process.env[key] = value;
+      const [key, ...rest] = trimmed.split("=");
+      const value = rest.join("=").trim();
+      if (!process.env[key]) {
+        process.env[key] = value;
+      }
     }
+  }
+} catch (err) {
+  // Silently ignore errors loading .env in serverless/production environments
+  if (process.env.NODE_ENV === "development") {
+    console.warn("Failed to load .env file:", err instanceof Error ? err.message : String(err));
   }
 }
 

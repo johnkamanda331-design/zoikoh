@@ -129,6 +129,36 @@ Then the environment variable wasn't set correctly. Go back to Step 3 and verify
    - Multiple domains: `https://domain1.com,https://domain2.com`
 2. Redeploy
 
+### Issue: FUNCTION_INVOCATION_FAILED (500 Error)
+
+**Cause:** Serverless function crashed during initialization
+
+**Solution:**
+1. Check diagnostic endpoint:
+   ```bash
+   curl https://yourdomain.vercel.app/api/healthz/config
+   ```
+   Should return configuration status
+
+2. If database is the issue, verify:
+   ```bash
+   curl https://yourdomain.vercel.app/api/healthz/db
+   ```
+   
+3. Check Vercel logs:
+   - Click the error message link
+   - Look for specific error in Function Logs
+   - Common issues:
+     - Database connection timeout (check connection string)
+     - Memory exceeded (unlikely with 512MB)
+     - Missing environment variables
+
+4. If you see "Database pool not initialized":
+   - Environment variable is definitely not set
+   - Go back to Step 3 in this guide
+   - Ensure `NEON_DATABASE_URL` is exactly in Vercel settings
+   - Redeploy
+
 ## Monitoring & Debugging
 
 ### View Logs

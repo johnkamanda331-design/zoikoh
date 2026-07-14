@@ -2,6 +2,7 @@
 import { Router } from "express";
 import type { Request, Response } from 'express';
 import { db, pool } from "../lib/db.js";
+import { config } from "../config.js";
 
 const router = Router();
 
@@ -21,6 +22,23 @@ router.get("/healthz/db", async (_req: Request, res: Response) => {
     const message = err instanceof Error ? err.message : String(err);
     (res as any).status(503).json({ status: 'error', database: 'failed', message });
   }
+});
+
+router.get("/healthz/config", (_req: Request, res: Response) => {
+  (res as any).json({
+    status: 'ok',
+    environment: config.nodeEnv,
+    port: config.port,
+    database: {
+      configured: !!config.databaseUrl,
+      urlPrefix: config.databaseUrl?.substring(0, 20) + '...' || 'not set',
+    },
+    clerk: {
+      secretKeyConfigured: !!config.clerk.secretKey,
+      publishableKeyConfigured: !!config.clerk.publishableKey,
+    },
+    poolInitialized: !!pool,
+  });
 });
 
 export default router;
