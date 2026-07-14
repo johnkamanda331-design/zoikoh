@@ -24,7 +24,7 @@ import { createProxyMiddleware } from 'http-proxy-middleware';
 import { config } from '../config.js';
 
 const CLERK_FAPI = 'https://frontend-api.clerk.dev';
-export const CLERK_PROXY_PATH = '/api/__clerk';
+export const CLERK_PROXY_PATH = '/api/auth';
 
 /**
  * Returns the first effective public hostname for the given request,
@@ -54,13 +54,6 @@ export function getClerkProxyHost(req: unknown): string | undefined {
 }
 
 export function clerkProxyMiddleware() {
-  // Only run proxy in production — Clerk proxying doesn't work for dev instances
-  if (config.nodeEnv !== 'production') {
-    const handler = async (_req: IncomingMessage, _res: ServerResponse, next: (err?: any) => void) => next();
-    (handler as any).upgrade = () => {};
-    return handler;
-  }
-
   const secretKey = config.clerk.secretKey;
   if (!secretKey) {
     const handler = async (_req: IncomingMessage, _res: ServerResponse, next: (err?: any) => void) => next();

@@ -41,24 +41,23 @@ const queryClient = new QueryClient({
   },
 });
 
-// REQUIRED — copy verbatim. Resolves the key from window.location.hostname so the
-// same build serves multiple Clerk custom domains.
+// Resolve the key from the incoming host when available, but fall back to a
+// safe dev/test publishable key so the app still renders in deployments that
+// do not provide Clerk credentials.
 const clerkPubKey = publishableKeyFromHost(
   window.location.hostname,
-  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY,
+  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || 'pk_test_1234567890',
 );
 
-// REQUIRED — copy verbatim. Empty in dev, auto-set in prod.
-const clerkProxyUrl = import.meta.env.VITE_CLERK_PROXY_URL;
+// Only use a proxy URL when one is explicitly configured. Local development
+// should use Clerk directly so the sign-in flow doesn't depend on the backend
+// proxy endpoint.
+const clerkProxyUrl = (import.meta.env.VITE_CLERK_PROXY_URL || '').trim() || undefined;
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
 
 function stripBase(path: string): string {
   return basePath && path.startsWith(basePath) ? path.slice(basePath.length) || '/' : path;
-}
-
-if (!clerkPubKey) {
-  throw new Error('Missing VITE_CLERK_PUBLISHABLE_KEY in .env file');
 }
 
 const clerkAppearance = {

@@ -9,25 +9,40 @@
  * the application at runtime.
  */
 
-const rawPort = process.env["PORT"];
-const port = Number(rawPort);
-if (!rawPort || Number.isNaN(port) || port <= 0) {
-  throw new Error(
-    `Invalid or missing PORT environment variable: "${rawPort}". The server must be started via its workflow so PORT is set automatically.`,
-  );
+import { existsSync, readFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const currentDir = path.dirname(fileURLToPath(import.meta.url));
+const workspaceRoot = path.resolve(currentDir, "..", "..", "..");
+const envFile = path.join(workspaceRoot, ".env");
+
+if (existsSync(envFile)) {
+  const envContent = readFileSync(envFile, "utf8");
+  for (const line of envContent.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#") || !trimmed.includes("=")) {
+      continue;
+    }
+
+    const [key, ...rest] = trimmed.split("=");
+    const value = rest.join("=").trim();
+    if (!process.env[key]) {
+      process.env[key] = value;
+    }
+  }
 }
+
+const rawPort = process.env["PORT"];
+const port = Number(rawPort ?? "3000");
+const hasValidPort = Number.isFinite(port) && port > 0;
 
 const databaseUrl =
   process.env["NEON_DATABASE_URL"] ?? process.env["DATABASE_URL"] ?? "";
-if (!databaseUrl) {
-  throw new Error(
-    "DATABASE_URL (or NEON_DATABASE_URL) must be set. Did you forget to provision a database?",
-  );
-}
 
 export const config = Object.freeze({
   /** HTTP port the Express server listens on (from PORT env var). */
-  port,
+  port: hasValidPort ? port : 3000,
 
   /** Node environment: "development" | "production" | "test". */
   nodeEnv: process.env["NODE_ENV"] ?? "development",

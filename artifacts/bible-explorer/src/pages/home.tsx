@@ -57,7 +57,7 @@ export function Home() {
   }, []);
 
   const verseRef = dailyContent?.verseReference ?? "";
-  const summary = VERSE_SUMMARIES[verseRef] ?? "";
+  const summary = dailyContent?.summary ?? VERSE_SUMMARIES[verseRef] ?? (dailyContent?.verse ? "Take a moment to meditate on this verse and reflect on how it applies to your day." : "");
 
   return (
     <div className="p-4 md:p-8 lg:p-10 max-w-7xl mx-auto space-y-6">

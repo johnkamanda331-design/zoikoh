@@ -140,6 +140,11 @@ router.post("/sessions/duel/join", sessionLimiter, requireAuth, async (req: any,
       return;
     }
 
+    if (!pool) {
+      (res as any).status(503).json({ error: "Database is not configured" });
+      return;
+    }
+
     client = await pool.connect();
     await client.query("BEGIN");
 

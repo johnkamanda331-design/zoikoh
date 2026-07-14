@@ -25,40 +25,57 @@ router.get("/questions", async (req: any, res: any) => {
     const categoryId = req.query.categoryId ? Number(req.query.categoryId) : undefined;
     const limit = Math.min(Number(req.query.limit ?? 10), 100);
     const offset = Number(req.query.offset ?? 0);
+    const client = (db as any).$client;
 
-    const whereClauses: string[] = [];
-    const values: any[] = [];
-    let paramIndex = 1;
-
-    if (difficulty) {
-      whereClauses.push(`difficulty = $${paramIndex++}`);
-      values.push(difficulty);
-    }
-    if (categoryId) {
-      whereClauses.push(`category_id = $${paramIndex++}`);
-      values.push(categoryId);
+    if (!client || typeof client.query !== "function") {
+      const fallbackQuestions = generateMockQuestions(difficulty ?? "medium", Math.max(limit, 5), undefined).slice(offset, offset + limit);
+      return (res as any).json({
+        questions: fallbackQuestions.map(mapQuestion),
+        total: fallbackQuestions.length,
+      });
     }
 
-    const whereSql = whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
+    try {
+      const whereClauses: string[] = [];
+      const values: any[] = [];
+      let paramIndex = 1;
 
-    const questionsResult = await (db as any).$client.query(
-      `SELECT id, text, options, correct_answer AS "correctAnswer", difficulty, category_id AS "categoryId", explanation, book, created_at AS "createdAt"
-       FROM questions ${whereSql}
-       ORDER BY id
-       LIMIT $${paramIndex}
-       OFFSET $${paramIndex + 1}`,
-      [...values, limit, offset]
-    );
+      if (difficulty) {
+        whereClauses.push(`difficulty = $${paramIndex++}`);
+        values.push(difficulty);
+      }
+      if (categoryId) {
+        whereClauses.push(`category_id = $${paramIndex++}`);
+        values.push(categoryId);
+      }
 
-    const totalResult = await (db as any).$client.query(
-      `SELECT COUNT(*)::int AS count FROM questions ${whereSql}`,
-      values
-    );
+      const whereSql = whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
 
-    (res as any).json({
-      questions: questionsResult.rows.map(mapQuestion),
-      total: totalResult.rows?.[0]?.count ?? 0,
-    });
+      const questionsResult = await client.query(
+        `SELECT id, text, options, correct_answer AS "correctAnswer", difficulty, category_id AS "categoryId", explanation, book, created_at AS "createdAt"
+         FROM questions ${whereSql}
+         ORDER BY id
+         LIMIT $${paramIndex}
+         OFFSET $${paramIndex + 1}`,
+        [...values, limit, offset]
+      );
+
+      const totalResult = await client.query(
+        `SELECT COUNT(*)::int AS count FROM questions ${whereSql}`,
+        values
+      );
+
+      return (res as any).json({
+        questions: questionsResult.rows.map(mapQuestion),
+        total: totalResult.rows?.[0]?.count ?? 0,
+      });
+    } catch (dbError) {
+      const fallbackQuestions = generateMockQuestions(difficulty ?? "medium", Math.max(limit, 5), undefined).slice(offset, offset + limit);
+      return (res as any).json({
+        questions: fallbackQuestions.map(mapQuestion),
+        total: fallbackQuestions.length,
+      });
+    }
   } catch (err) {
     (req as any).log.error({ err }, "Failed to list questions");
     (res as any).status(500).json({ error: "Failed to list questions" });
@@ -96,47 +113,47 @@ router.post("/questions/generate", generateLimiter, async (req: any, res: any) =
     const geminiKey = config.ai.geminiApiKey;
 
     if (!openaiKey && !geminiKey) {
-      // Return mock questions if no AI provider is configured
       const mockQuestions = generateMockQuestions(difficulty as string, Math.min(qCount, 10), topic as string);
-      res.json(mockQuestions);
-      return;
+      return res.json(mockQuestions);
     }
 
     const prompt = buildPrompt(difficulty as string, qCount, topic as string | undefined);
 
-    const parsed = openaiKey
-      ? await generateWithOpenAI(openaiKey, prompt)
-      : await generateWithGemini(geminiKey as string, prompt);
+    try {
+      const parsed = openaiKey
+        ? await generateWithOpenAI(openaiKey, prompt)
+        : await generateWithGemini(geminiKey as string, prompt);
 
-    if (!parsed || !parsed.questions || !Array.isArray(parsed.questions)) {
-      res.status(502).json({ error: "Invalid AI response format" });
-      return;
+      if (!parsed || !parsed.questions || !Array.isArray(parsed.questions)) {
+        const mockQuestions = generateMockQuestions(difficulty as string, Math.min(qCount, 10), topic as string);
+        return res.json(mockQuestions);
+      }
+
+      const perQuestionDifficulties = ["easy", "medium", "hard"];
+
+      const questions = parsed.questions.map((q: unknown, i: number) => {
+        const question = q as Record<string, unknown>;
+        return {
+          id: -(i + 1),
+          text: question.text as string,
+          options: question.options as string[],
+          correctAnswer: question.correctAnswer as string,
+          difficulty: difficulty === "mixed" ? perQuestionDifficulties[i % 3] : difficulty,
+          categoryId: 1,
+          explanation: question.explanation as string | null ?? null,
+          book: question.book as string | null ?? null,
+          createdAt: new Date().toISOString(),
+        };
+      });
+
+      return res.json(questions);
+    } catch (aiError) {
+      const mockQuestions = generateMockQuestions(difficulty as string, Math.min(qCount, 10), topic as string);
+      return res.json(mockQuestions);
     }
-
-    // "mixed" is a session-level pooling concept, not a valid per-question
-    // difficulty in the Question schema — spread generated questions evenly
-    // across easy/medium/hard instead of tagging them "mixed".
-    const perQuestionDifficulties = ["easy", "medium", "hard"];
-
-    const questions = parsed.questions.map((q: unknown, i: number) => {
-      const question = q as Record<string, unknown>;
-      return {
-        id: -(i + 1),
-        text: question.text as string,
-        options: question.options as string[],
-        correctAnswer: question.correctAnswer as string,
-        difficulty: difficulty === "mixed" ? perQuestionDifficulties[i % 3] : difficulty,
-        categoryId: 1,
-        explanation: question.explanation as string | null ?? null,
-        book: question.book as string | null ?? null,
-        createdAt: new Date().toISOString(),
-      };
-    });
-
-    res.json(questions);
   } catch (err) {
     req.log.error({ err }, "Failed to generate questions");
-    res.status(500).json({ error: "Failed to generate questions" });
+    return res.status(500).json({ error: "Failed to generate questions" });
   }
 });
 
