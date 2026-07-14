@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useBiblePanelStore } from '@/hooks/use-bible-panel';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight, List } from 'lucide-react';
@@ -91,29 +91,46 @@ export function BiblePanel() {
     scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   }, [book, chapter]);
 
-  /* Fetch chapter */
+  const fetchChapter = useCallback(async () => {
+    if (!isOpen) return;
+
+    setIsLoading(true);
+    setError('');
+    setVerses([]);
+
+    const idx = BIBLE_BOOKS.indexOf(book) + 1;
+    if (idx === 0) {
+      setError('Unknown book selected.');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const res = await fetch(`https://bolls.life/get-chapter/${translation}/${idx}/${chapter}/`);
+      if (!res.ok) {
+        if (res.status === 429) {
+          throw new Error('Rate limited by the Bible source. Please try again shortly.');
+        }
+        throw new Error(`${res.status} – failed to load chapter`);
+      }
+
+      const data = await res.json();
+      if (!Array.isArray(data)) {
+        throw new Error('Unexpected response from Bible source.');
+      }
+
+      setVerses(data);
+    } catch (err: any) {
+      setError(err.message ?? 'Something went wrong while loading the chapter.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isOpen, translation, book, chapter]);
+
   useEffect(() => {
     if (!isOpen) return;
-    let cancelled = false;
-    async function load() {
-      setIsLoading(true);
-      setError('');
-      try {
-        const idx = BIBLE_BOOKS.indexOf(book) + 1;
-        if (idx === 0) throw new Error('Unknown book');
-        const res = await fetch(`https://bolls.life/get-chapter/${translation}/${idx}/${chapter}/`);
-        if (!res.ok) throw new Error(`${res.status} – failed to load chapter`);
-        const data: VerseData[] = await res.json();
-        if (!cancelled) setVerses(data);
-      } catch (err: any) {
-        if (!cancelled) setError(err.message ?? 'Something went wrong.');
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    }
-    load();
-    return () => { cancelled = true; };
-  }, [isOpen, translation, book, chapter]);
+    fetchChapter();
+  }, [isOpen, fetchChapter]);
 
   useEffect(() => {
     savePreferences({ translation });
@@ -314,7 +331,7 @@ export function BiblePanel() {
                   <div className="text-center py-10 font-medium text-sm" style={{ color: 'hsl(var(--destructive))' }}>
                     {error}
                     <button
-                      onClick={() => setError('')}
+                      onClick={fetchChapter}
                       className="block mx-auto mt-4 text-xs underline"
                       style={{ color: 'hsl(var(--muted-foreground))' }}
                     >

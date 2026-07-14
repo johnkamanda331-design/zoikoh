@@ -214,7 +214,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             animate={{ y: 0 }}
             exit={{ y: 80 }}
             transition={{ type: 'spring', damping: 28, stiffness: 260 }}
-            className="fixed bottom-0 left-0 right-0 z-50 w-full px-0 pb-[env(safe-area-inset-bottom)] supports-[backdrop-filter]:bg-transparent"
+            className="fixed bottom-0 left-0 right-0 z-40 w-full px-0 pb-[env(safe-area-inset-bottom)] supports-[backdrop-filter]:bg-transparent"
           >
             {/* FAB overlay backdrop */}
             <AnimatePresence>
