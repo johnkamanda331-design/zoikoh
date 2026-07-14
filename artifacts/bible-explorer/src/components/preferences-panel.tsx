@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   Volume2, VolumeX, Moon, Sun, Settings as SettingsIcon,
-  Type, Eye, Language, Zap, RotateCcw,
+  Type, Eye, Zap, RotateCcw,
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -241,7 +241,6 @@ export function PreferencesPanel() {
             </CardHeader>
             <CardContent>
               <Badge variant="secondary" className="flex items-center gap-2 w-fit">
-                <Language className="w-4 h-4" />
                 English (EN)
               </Badge>
               <p className="text-xs text-muted-foreground mt-3">More languages coming soon</p>

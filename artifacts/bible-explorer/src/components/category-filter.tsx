@@ -74,11 +74,7 @@ export function CategoryFilter({ selected, onChange, categories }: CategoryFilte
                   onChange(null);
                   setIsOpen(false);
                 }}
-                className="
-                  w-full text-left px-3 py-2 rounded-lg mb-1 transition-colors
-                  hover:bg-secondary/60 text-sm
-                  ${!selected ? 'bg-brand-purple/20 text-brand-purple' : 'text-foreground'}
-                "
+                className={`w-full text-left px-3 py-2 rounded-lg mb-1 transition-colors hover:bg-secondary/60 text-sm ${selected == null ? 'bg-brand-purple/20 text-brand-purple' : 'text-foreground'}`}
               >
                 All Categories
               </motion.button>
