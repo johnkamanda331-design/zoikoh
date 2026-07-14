@@ -335,15 +335,17 @@ export function BiblePanel() {
                     </h1>
 
                     {verses.map(v => (
-                      <p key={v.pk} className="group">
+                      <div key={v.pk} className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1 text-sm leading-relaxed">
                         <span
-                          className="font-bold text-xs align-super mr-1.5 select-none"
+                          className="font-semibold text-sm text-brand-purple select-none pt-1"
                           style={{ color: 'hsl(var(--brand-purple))' }}
                         >
                           {v.verse}
                         </span>
-                        <span className="bible-verse-text">{cleanVerse(v.text)}</span>
-                      </p>
+                        <span className="bible-verse-text text-base text-foreground">
+                          {cleanVerse(v.text)}
+                        </span>
+                      </div>
                     ))}
 
                     <div className="flex justify-between pt-10 pb-4 border-t mt-10" style={{ borderColor: 'hsl(var(--border))' }}>

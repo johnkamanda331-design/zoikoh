@@ -200,7 +200,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </header>
 
       {/* ── Page content ─────────────────────────────────────────────── */}
-      <main className={`flex-1 overflow-y-auto ${!playing ? 'pb-[calc(92px+env(safe-area-inset-bottom))]' : ''}`}>
+      <main className={`flex-1 overflow-y-auto ${!playing ? 'pb-[calc(104px+env(safe-area-inset-bottom))]' : ''}`}>
         {children}
       </main>
 
@@ -208,11 +208,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <AnimatePresence>
         {!playing && (
           <motion.nav
+            role="navigation"
+            aria-label="Bottom app navigation"
             initial={{ y: 80 }}
             animate={{ y: 0 }}
             exit={{ y: 80 }}
             transition={{ type: 'spring', damping: 28, stiffness: 260 }}
-            className="fixed bottom-0 left-0 right-0 z-50 px-2 pb-[env(safe-area-inset-bottom)] supports-[backdrop-filter]:bg-transparent"
+            className="fixed bottom-0 left-0 right-0 z-50 w-full px-0 pb-[env(safe-area-inset-bottom)] supports-[backdrop-filter]:bg-transparent"
           >
             {/* FAB overlay backdrop */}
             <AnimatePresence>
@@ -256,7 +258,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </AnimatePresence>
 
             {/* Nav bar */}
-            <div className="relative flex items-center justify-around h-[68px] bg-card/95 backdrop-blur-xl border-t border-border px-2 shadow-[0_-4px_24px_rgba(0,0,0,0.12)] max-w-5xl mx-auto">
+            <div className="relative flex items-center justify-between h-[78px] w-full max-w-full bg-card/95 backdrop-blur-xl border-t border-border px-3 md:px-5 shadow-[0_-4px_24px_rgba(0,0,0,0.14)]">
               {/* Left items */}
               {LEFT_NAV.map(item => {
                 const isActive = location === item.href || (item.href !== '/' && location.startsWith(item.href));
@@ -264,7 +266,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`flex flex-col items-center justify-center gap-1 w-16 h-full transition-colors ${isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                    aria-label={item.label}
+                    className={`relative flex flex-col items-center justify-center gap-1 min-w-[72px] flex-1 h-full px-1 transition-colors ${isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
                   >
                     {isActive && (
                       <motion.div
@@ -284,8 +287,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <motion.button
                   whileTap={{ scale: 0.92 }}
                   onClick={() => setFabOpen(v => !v)}
-                  className="relative -top-5 w-14 h-14 rounded-full bg-gradient-to-br from-brand-purple to-brand-blue text-white shadow-lg shadow-brand-purple/40 flex items-center justify-center focus:outline-none"
-                  aria-label="Play options"
+                  className="relative -top-5 w-14 h-14 rounded-full bg-gradient-to-br from-brand-purple to-brand-blue text-white shadow-lg shadow-brand-purple/40 flex items-center justify-center focus:outline-none ring-2 ring-white/90 ring-offset-2 ring-offset-card"
+                  aria-label="Open play options"
                 >
                   <motion.div animate={{ rotate: fabOpen ? 45 : 0 }} transition={{ type: 'spring', damping: 18, stiffness: 260 }}>
                     <Plus className="w-6 h-6" />
@@ -300,7 +303,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`flex flex-col items-center justify-center gap-1 w-16 h-full transition-colors ${isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                    aria-label={item.label}
+                    className={`relative flex flex-col items-center justify-center gap-1 min-w-[72px] flex-1 h-full px-1 transition-colors ${isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
                   >
                     {isActive && (
                       <motion.div

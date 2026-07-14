@@ -349,7 +349,6 @@ export function PreferencesPanel() {
                   </motion.button>
                 ))}
               </div>
-              <p className="text-xs text-muted-foreground">NIV is shown using its abbreviation so verse titles stay uncluttered.</p>
             </CardContent>
           </Card>
         </TabsContent>
