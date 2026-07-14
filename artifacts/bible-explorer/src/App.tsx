@@ -8,6 +8,7 @@ import { Route, Switch, useLocation, Router as WouterRouter } from 'wouter';
 import { Layout } from '@/components/layout';
 import { BiblePanel } from '@/components/bible-panel';
 import { hydratePlayerFromServer } from '@/hooks/use-achievements';
+import { setBaseUrl } from '@workspace/api-client-react';
 
 import { Home } from '@/pages/home';
 import { SoloHub } from '@/pages/solo-hub';
@@ -208,6 +209,7 @@ function ClerkProviderWithRoutes() {
 
 function AppBody() {
   useEffect(() => {
+    setBaseUrl('');
     hydratePlayerFromServer();
   }, []);
 

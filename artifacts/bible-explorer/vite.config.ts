@@ -41,7 +41,7 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       react(),
-      tailwindcss({ optimize: false, disableAutoprefixer: false }),
+      tailwindcss({ optimize: false }),
       runtimeErrorOverlay(),
       ...(env.NODE_ENV !== 'production' && env.REPL_ID !== undefined
         ? [
