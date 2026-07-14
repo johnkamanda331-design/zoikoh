@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { loadPreferences, savePreferences } from '@/lib/preferences';
 
 /* ── Constants ─────────────────────────────────────────────────────────── */
 const BIBLE_BOOKS = [
@@ -67,7 +68,8 @@ const fontLabels: Record<FontSize, string> = { xs: 'XS', sm: 'S', md: 'M', lg: '
 export function BiblePanel() {
   const { isOpen, close } = useBiblePanelStore();
 
-  const [translation, setTranslation] = useState('NIV');
+  const prefs = loadPreferences();
+  const [translation, setTranslation] = useState(prefs.translation || 'NIV');
   const [book, setBook]     = useState('John');
   const [chapter, setChapter] = useState(1);
   const [verses, setVerses] = useState<VerseData[]>([]);
@@ -112,6 +114,10 @@ export function BiblePanel() {
     load();
     return () => { cancelled = true; };
   }, [isOpen, translation, book, chapter]);
+
+  useEffect(() => {
+    savePreferences({ translation });
+  }, [translation]);
 
   const prevChapter = () => {
     if (chapter > 1) { setChapter(c => c - 1); return; }

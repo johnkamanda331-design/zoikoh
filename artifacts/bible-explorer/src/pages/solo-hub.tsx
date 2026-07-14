@@ -204,13 +204,18 @@ const MODES = [
   { id: 'scramble',     title: 'Word Scramble',     desc: 'Unscramble Bible names and places in 45 seconds.',               icon: RotateCcw,   gradient: 'from-brand-green to-emerald-500',  badge: 'Mini-game',badgeVariant: 'green'     as const, tags: ['Speed','45 Seconds'] },
   { id: 'true-false',   title: 'True or False',     desc: 'Quick-fire true/false statements about Bible events.',           icon: Shield,      gradient: 'from-teal-500 to-green-600',       badge: 'Quick',    badgeVariant: 'green'     as const, tags: ['Fast paced','2 choices'] },
   { id: 'speed-round',  title: 'Speed Round',       desc: 'Answer as many questions as you can in 60 seconds.',            icon: Flame,       gradient: 'from-red-500 to-orange-600',       badge: '60 sec',   badgeVariant: 'orange'    as const, tags: ['60 Seconds','High Score'] },
+  { id: 'time-attack',  title: 'Time Attack',       desc: 'Answer as many questions as possible in 60 seconds.',            icon: Clock,       gradient: 'from-red-500 to-orange-500',       badge: 'Attack',  badgeVariant: 'orange'    as const, tags: ['60 Seconds','High Score'] },
+  { id: 'trivia-madness', title: 'Trivia Madness',   desc: 'Rapid-fire 10-question rounds with a one-time power-up.',        icon: Zap,         gradient: 'from-yellow-500 to-orange-500',   badge: 'Madness', badgeVariant: 'orange'    as const, tags: ['10 Questions','Power-up'] },
+  { id: 'survival-mode', title: 'Survival Mode',    desc: 'Keep going as difficulty rises until you miss one.',              icon: Shield,     gradient: 'from-emerald-500 to-green-600',     badge: 'Survive', badgeVariant: 'green'     as const, tags: ['Endurance','Increasing'] },
+  { id: 'story-quest',  title: 'Story Quest',       desc: 'Campaign-style progression through Bible narratives.',          icon: Crown,      gradient: 'from-brand-indigo to-violet-500', badge: 'Quest',   badgeVariant: 'purple'    as const, tags: ['Narrative','Campaign'] },
+  { id: 'team-tournament', title: 'Team Tournament', desc: 'Cooperate with friends in a group trivia bracket.',             icon: Users,      gradient: 'from-brand-blue to-sky-500',      badge: 'Team',    badgeVariant: 'blue'      as const, tags: ['Multiplayer','Co-op'] },
   { id: 'verse-fill',   title: 'Verse Fill-In',     desc: 'Complete the missing word in famous Bible passages.',            icon: BookMarked,  gradient: 'from-pink-500 to-rose-500',        badge: 'Memory',   badgeVariant: 'secondary' as const, tags: ['Fill blanks','Key verses'] },
   { id: 'number-match', title: 'Bible Numbers',     desc: 'Match events, chapters, and counts to the correct number.',     icon: Hash,        gradient: 'from-violet-500 to-purple-600',    badge: 'Numbers',  badgeVariant: 'purple'    as const, tags: ['Trivia','Matching'] },
   { id: 'crossword',    title: 'Bible Crossword',   desc: 'Spell Bible names and places from clues — letter by letter.',  icon: Puzzle,      gradient: 'from-amber-500 to-orange-500',     badge: 'Puzzle',   badgeVariant: 'orange'    as const, tags: ['Themed','Puzzle'] },
   { id: 'quote-match',  title: 'Quote Match',       desc: 'Match famous Bible quotes to their speaker across scripture.',  icon: MessageSquare, gradient: 'from-sky-500 to-blue-600',      badge: 'Matching', badgeVariant: 'blue'      as const, tags: ['Quotes','Attribution'] },
 ];
 
-const SUPPORTED = new Set(['daily','qa','flash','scramble','true-false','speed-round','verse-fill','number-match','crossword','quote-match']);
+const SUPPORTED = new Set(['daily','qa','flash','scramble','true-false','speed-round','time-attack','trivia-madness','survival-mode','bible-sprint','verse-fill','number-match','crossword','quote-match']);
 
 /* ─────────────────────────────────────────────────────────────────────────
    Hub grid
@@ -302,14 +307,18 @@ function SoloGameView({ mode, onBack }: { mode: string; onBack: () => void }) {
     );
   }
 
-  if (mode === 'flash')        return <FlashCardGame onBack={onBack} />;
-  if (mode === 'scramble')     return <WordScrambleGame onBack={onBack} />;
-  if (mode === 'true-false')   return <TrueFalseGame onBack={onBack} />;
-  if (mode === 'speed-round')  return <SpeedRoundGame onBack={onBack} />;
-  if (mode === 'verse-fill')   return <VerseFillGame onBack={onBack} />;
-  if (mode === 'number-match') return <BibleNumbersGame onBack={onBack} />;
-  if (mode === 'crossword')    return <CrosswordGame onBack={onBack} />;
-  if (mode === 'quote-match')  return <QuoteMatchGame onBack={onBack} />;
+  if (mode === 'flash')          return <FlashCardGame onBack={onBack} />;
+  if (mode === 'scramble')       return <WordScrambleGame onBack={onBack} />;
+  if (mode === 'true-false')     return <TrueFalseGame onBack={onBack} />;
+  if (mode === 'speed-round')    return <SpeedRoundGame onBack={onBack} />;
+  if (mode === 'time-attack')    return <TimeAttackGame onBack={onBack} />;
+  if (mode === 'trivia-madness') return <TriviaMadnessGame onBack={onBack} />;
+  if (mode === 'survival-mode')  return <SurvivalModeGame onBack={onBack} />;
+  if (mode === 'story-quest')    return <StoryQuestGame onBack={onBack} />;
+  if (mode === 'verse-fill')     return <VerseFillGame onBack={onBack} />;
+  if (mode === 'number-match')   return <BibleNumbersGame onBack={onBack} />;
+  if (mode === 'crossword')      return <CrosswordGame onBack={onBack} />;
+  if (mode === 'quote-match')    return <QuoteMatchGame onBack={onBack} />;
   return <QuizGame mode={mode} onBack={onBack} />;
 }
 
@@ -366,18 +375,27 @@ function QuizGame({ mode, onBack }: { mode: string; onBack: () => void }) {
   const { data: dailyQuestions, isLoading: dailyLoading } = useGetDailyChallenge({
     query: { enabled: mode === 'daily' && isPlaying, queryKey: getGetDailyChallengeQueryKey() },
   });
-  const { data: qaData, isLoading: qaLoading } = useListQuestions({ limit: 50, difficulty } as any, {
-    query: { enabled: mode === 'qa' && isPlaying, queryKey: getListQuestionsQueryKey({ limit: 50, difficulty } as any) },
+  const { data: qaData, isLoading: qaLoading } = useListQuestions({ limit: 60, difficulty } as any, {
+    query: { enabled: (mode === 'qa' || mode === 'bible-sprint') && isPlaying, queryKey: getListQuestionsQueryKey({ limit: 60, difficulty } as any) },
   });
 
-  const allQuestions = mode === 'daily' ? dailyQuestions : mode === 'qa' ? qaData?.questions : [];
-  const isLoading = mode === 'daily' ? dailyLoading : mode === 'qa' ? qaLoading : false;
+  const allQuestions = mode === 'daily'
+    ? dailyQuestions
+    : mode === 'qa' || mode === 'bible-sprint'
+      ? qaData?.questions
+      : [];
+  const isLoading = mode === 'daily'
+    ? dailyLoading
+    : (mode === 'qa' || mode === 'bible-sprint')
+      ? qaLoading
+      : false;
 
   // Stable one-time question selection — NOT during render to avoid mutation on every re-render
   const [selectedQuestions, setSelectedQuestions] = useState<any[]>([]);
   useEffect(() => {
     if (!isPlaying || selectedQuestions.length > 0 || !allQuestions || allQuestions.length === 0) return;
-    setSelectedQuestions(pickUnseen(allQuestions as any[], mode, mode === 'daily' ? 5 : 10));
+    const count = mode === 'daily' ? 5 : mode === 'bible-sprint' ? 15 : 10;
+    setSelectedQuestions(pickUnseen(allQuestions as any[], mode, count));
   }, [isPlaying, allQuestions, selectedQuestions.length, mode]);
   const questions = selectedQuestions;
 
@@ -404,7 +422,7 @@ function QuizGame({ mode, onBack }: { mode: string; onBack: () => void }) {
   }, [isFinished, handleFinished]);
 
   if (!isPlaying) {
-    if (mode === 'qa') {
+    if (mode === 'qa' || mode === 'bible-sprint') {
       return (
         <div className="p-6 max-w-3xl mx-auto min-h-[70vh] flex flex-col items-center justify-center text-center">
           <div className={`w-20 h-20 rounded-3xl bg-gradient-to-br ${modeData.gradient} p-1 mb-7 shadow-xl`}>

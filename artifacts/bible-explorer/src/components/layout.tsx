@@ -86,7 +86,7 @@ function UserAvatar({ name, imageUrl }: { name: string; imageUrl?: string }) {
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
   const [fabOpen, setFabOpen] = useState(false);
-  const [isDark, setIsDark] = useState(true);
+  const [isDark, setIsDark] = useState(false);
   const biblePanelStore = useBiblePanelStore();
   const { isSignedIn, user } = useUser();
   const { signOut } = useClerk();
@@ -94,8 +94,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const playing = isPlayingRoute(location);
 
   useEffect(() => {
-    const theme = localStorage.getItem('theme');
-    setIsDark(theme !== 'light');
+    const storedTheme = localStorage.getItem('theme') || 'light';
+    const isDarkTheme = storedTheme === 'dark' || (storedTheme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    setIsDark(isDarkTheme);
+
+    if (storedTheme === 'dark' || (storedTheme === 'auto' && isDarkTheme)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
   }, []);
 
   // Close FAB when route changes
@@ -105,15 +112,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const toggleTheme = () => {
     const html = document.documentElement;
-    if (isDark) {
-      html.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-      setIsDark(false);
-    } else {
+    const nextTheme = isDark ? 'light' : 'dark';
+
+    if (nextTheme === 'dark') {
       html.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-      setIsDark(true);
+    } else {
+      html.classList.remove('dark');
     }
+
+    localStorage.setItem('theme', nextTheme);
+    setIsDark(nextTheme === 'dark');
   };
 
   const handlePlayOption = (href: string, requiresAuth: boolean) => {
@@ -192,7 +200,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </header>
 
       {/* ── Page content ─────────────────────────────────────────────── */}
-      <main className={`flex-1 overflow-y-auto ${!playing ? 'pb-24' : ''}`}>
+      <main className={`flex-1 overflow-y-auto ${!playing ? 'pb-[calc(92px+env(safe-area-inset-bottom))]' : ''}`}>
         {children}
       </main>
 
@@ -204,7 +212,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             animate={{ y: 0 }}
             exit={{ y: 80 }}
             transition={{ type: 'spring', damping: 28, stiffness: 260 }}
-            className="fixed bottom-0 left-0 right-0 z-50 supports-[backdrop-filter]:bg-transparent"
+            className="fixed bottom-0 left-0 right-0 z-50 px-2 pb-[env(safe-area-inset-bottom)] supports-[backdrop-filter]:bg-transparent"
           >
             {/* FAB overlay backdrop */}
             <AnimatePresence>
@@ -213,7 +221,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="absolute inset-x-0 bottom-0 h-screen bg-black/50 backdrop-blur-sm"
+                  className="absolute inset-0 bg-black/50 backdrop-blur-sm"
                   onClick={() => setFabOpen(false)}
                 />
               )}
@@ -222,7 +230,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             {/* FAB play options */}
             <AnimatePresence>
               {fabOpen && (
-                <div className="absolute bottom-[72px] left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 z-10">
+                <div className="absolute bottom-[calc(72px+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 z-10">
                   {PLAY_OPTIONS.map((opt, i) => (
                     <motion.div
                       key={opt.href}

@@ -5,28 +5,36 @@
 export interface UserPreferences {
   theme: 'dark' | 'light' | 'auto';
   difficulty: 'easy' | 'medium' | 'hard' | 'mixed';
+  adaptiveDifficulty: boolean;
   soundEnabled: boolean;
+  backgroundMusicEnabled: boolean;
+  voiceNarrationEnabled: boolean;
   soundVolume: number;
   tutorialCompleted: boolean;
   showExplanations: boolean;
   fontSize: 'small' | 'medium' | 'large';
   highContrast: boolean;
   language: string;
+  translation: 'NIV' | 'KJV' | 'ESV' | 'NLT' | 'NKJV';
   reducedMotion?: boolean;
 }
 
 const STORAGE_KEY = 'zoiko_user_preferences';
 
 const DEFAULT_PREFERENCES: UserPreferences = {
-  theme: 'dark',
+  theme: 'light',
   difficulty: 'medium',
+  adaptiveDifficulty: false,
   soundEnabled: true,
+  backgroundMusicEnabled: false,
+  voiceNarrationEnabled: false,
   soundVolume: 0.7,
   tutorialCompleted: false,
   showExplanations: true,
   fontSize: 'medium',
   highContrast: false,
   language: 'en',
+  translation: 'NIV',
   reducedMotion: false,
 };
 

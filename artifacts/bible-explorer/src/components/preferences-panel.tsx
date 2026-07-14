@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   Volume2, VolumeX, Moon, Sun, Settings as SettingsIcon,
-  Type, Eye, Zap, RotateCcw,
+  Type, Eye, Zap, RotateCcw, MessageSquare,
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -24,15 +24,19 @@ export function PreferencesPanel() {
 
   const resetToDefaults = () => {
     const defaults: UserPreferences = {
-      theme: 'dark',
+      theme: 'light',
       difficulty: 'medium',
+      adaptiveDifficulty: false,
       soundEnabled: true,
+      backgroundMusicEnabled: false,
+      voiceNarrationEnabled: false,
       soundVolume: 0.7,
       tutorialCompleted: false,
       showExplanations: true,
       fontSize: 'medium',
       highContrast: false,
       language: 'en',
+      translation: 'NIV',
     };
     savePreferences(defaults);
     setPrefs(defaults);
@@ -140,8 +144,31 @@ export function PreferencesPanel() {
 
           <Card className="rounded-2xl border-border/50">
             <CardHeader>
-              <CardTitle className="text-lg">Sound Effects</CardTitle>
-              <CardDescription>Audio feedback for actions</CardDescription>
+              <CardTitle className="text-lg">Adaptive Difficulty</CardTitle>
+              <CardDescription>Automatically adjust trivia difficulty as you improve</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <motion.button
+                onClick={() => updatePref('adaptiveDifficulty', !prefs.adaptiveDifficulty)}
+                className={`
+                  relative inline-flex h-6 w-11 rounded-full transition-colors
+                  ${prefs.adaptiveDifficulty ? 'bg-brand-purple' : 'bg-secondary'}
+                `}
+                whileTap={{ scale: 0.95 }}
+              >
+                <motion.span
+                  layout
+                  className="inline-block h-5 w-5 transform rounded-full bg-white shadow-md"
+                  animate={{ x: prefs.adaptiveDifficulty ? 20 : 2 }}
+                />
+              </motion.button>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-2xl border-border/50">
+            <CardHeader>
+              <CardTitle className="text-lg">Audio Options</CardTitle>
+              <CardDescription>Control sound effects, music, and narration</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
@@ -151,7 +178,7 @@ export function PreferencesPanel() {
                   ) : (
                     <VolumeX className="w-4 h-4 text-muted-foreground" />
                   )}
-                  <span>Enable sound</span>
+                  <span>Enable sound effects</span>
                 </Label>
                 <motion.button
                   onClick={() => updatePref('soundEnabled', !prefs.soundEnabled)}
@@ -182,6 +209,48 @@ export function PreferencesPanel() {
                   />
                 </div>
               )}
+
+              <div className="flex items-center justify-between">
+                <Label className="flex items-center gap-2 cursor-pointer">
+                  <Zap className="w-4 h-4 text-brand-purple" />
+                  <span>Background music</span>
+                </Label>
+                <motion.button
+                  onClick={() => updatePref('backgroundMusicEnabled', !prefs.backgroundMusicEnabled)}
+                  className={`
+                    relative inline-flex h-6 w-11 rounded-full transition-colors
+                    ${prefs.backgroundMusicEnabled ? 'bg-brand-purple' : 'bg-secondary'}
+                  `}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <motion.span
+                    layout
+                    className="inline-block h-5 w-5 transform rounded-full bg-white shadow-md"
+                    animate={{ x: prefs.backgroundMusicEnabled ? 20 : 2 }}
+                  />
+                </motion.button>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label className="flex items-center gap-2 cursor-pointer">
+                  <MessageSquare className="w-4 h-4 text-brand-purple" />
+                  <span>Voice narration</span>
+                </Label>
+                <motion.button
+                  onClick={() => updatePref('voiceNarrationEnabled', !prefs.voiceNarrationEnabled)}
+                  className={`
+                    relative inline-flex h-6 w-11 rounded-full transition-colors
+                    ${prefs.voiceNarrationEnabled ? 'bg-brand-purple' : 'bg-secondary'}
+                  `}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <motion.span
+                    layout
+                    className="inline-block h-5 w-5 transform rounded-full bg-white shadow-md"
+                    animate={{ x: prefs.voiceNarrationEnabled ? 20 : 2 }}
+                  />
+                </motion.button>
+              </div>
             </CardContent>
           </Card>
 
@@ -259,14 +328,28 @@ export function PreferencesPanel() {
 
           <Card className="rounded-2xl border-border/50">
             <CardHeader>
-              <CardTitle className="text-lg">Language</CardTitle>
-              <CardDescription>Choose your preferred language</CardDescription>
+              <CardTitle className="text-lg">Bible Translation</CardTitle>
+              <CardDescription>Choose the verse source for the Bible panel</CardDescription>
             </CardHeader>
-            <CardContent>
-              <Badge variant="secondary" className="flex items-center gap-2 w-fit">
-                English (EN)
-              </Badge>
-              <p className="text-xs text-muted-foreground mt-3">More languages coming soon</p>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-3 gap-2">
+                {(['NIV', 'KJV', 'ESV', 'NLT', 'NKJV'] as const).map((translation) => (
+                  <motion.button
+                    key={translation}
+                    whileHover={{ y: -2 }}
+                    onClick={() => updatePref('translation', translation)}
+                    className={`
+                      p-3 rounded-xl border-2 transition-all text-sm font-semibold
+                      ${prefs.translation === translation
+                        ? 'border-brand-purple bg-brand-purple/10 text-foreground'
+                        : 'border-border/50 bg-secondary/40 text-muted-foreground hover:border-border'}`
+                    }
+                  >
+                    {translation}
+                  </motion.button>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">NIV is shown using its abbreviation so verse titles stay uncluttered.</p>
             </CardContent>
           </Card>
         </TabsContent>

@@ -201,6 +201,29 @@ export function Home() {
           ))}
         </motion.div>
 
+        {/* ── Play more cards ───────────────────────────────────────────── */}
+        <motion.div variants={fadeUp} className="md:col-span-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {[
+            { title: 'Jump into Solo Modes', description: 'Explore 11 solo challenges from trivia to puzzles.', href: '/solo', action: 'Go Solo' },
+            { title: 'Host a Group Session', description: 'Invite friends to play Bible trivia together in real time.', href: '/start', action: 'Host Now' },
+            { title: 'Try a 1v1 Duel', description: 'Challenge another player in a quick head-to-head match.', href: '/duel', action: 'Duel Now' },
+            { title: 'Join an Active Game', description: 'Jump into a live session already in progress.', href: '/join', action: 'Join Game' },
+          ].map((card) => (
+            <Card key={card.title} className="rounded-3xl border-border/50 bg-card transition hover:-translate-y-1 hover:shadow-lg">
+              <CardContent className="p-6 space-y-4">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground mb-2">More ways to play</p>
+                  <h3 className="text-xl font-heading font-bold">{card.title}</h3>
+                  <p className="text-sm text-muted-foreground mt-2">{card.description}</p>
+                </div>
+                <Button size="sm" onClick={() => window.location.assign(card.href)} className="rounded-full px-4">
+                  {card.action}
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </motion.div>
+
         {/* ── Recent Sessions ───────────────────────────────────────────── */}
         <motion.div variants={fadeUp} className="md:col-span-12">
           <Card className="rounded-3xl overflow-hidden border-border/50">
