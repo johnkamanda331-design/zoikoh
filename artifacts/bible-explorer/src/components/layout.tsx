@@ -200,7 +200,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </header>
 
       {/* ── Page content ─────────────────────────────────────────────── */}
-      <main className={`flex-1 overflow-y-auto ${!playing ? 'pb-[calc(104px+env(safe-area-inset-bottom))]' : ''}`}>
+      <main className={`flex-1 overflow-y-auto hide-scrollbar ${!playing ? 'pb-[calc(104px+env(safe-area-inset-bottom))]' : ''}`}>
         {children}
       </main>
 
