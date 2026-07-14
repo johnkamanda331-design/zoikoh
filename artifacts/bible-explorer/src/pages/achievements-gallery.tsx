@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
-  Trophy, Star, Zap, Clock, Shield, Award, Crown, Target,
+  Trophy, Star, Zap, Clock, Shield, Award, Target,
   Gamepad2, Users, Flame, BookOpen, CheckCircle, Swords, Brain, Hash,
   Puzzle, MessageSquare, Heart, BookMarked, RotateCcw, Timer, CalendarDays,
 } from 'lucide-react';
@@ -18,7 +18,7 @@ import {
 const ICON_MAP: Record<string, React.ElementType> = {
   // Overall
   first_play: CheckCircle, ans_25: Target, ans_50: Target, scholar: Award, ans_250: Award,
-  scholar_500: Award, scholar_1000: Crown, total_50: BookOpen, century: Star, total_500: Star,
+  scholar_500: Award, scholar_1000: Star, total_50: BookOpen, century: Star, total_500: Star,
   streak_3: CalendarDays, streak_7: Clock, streak_14: Clock, streak_30: Flame, streak_60: Flame,
   try_3: Gamepad2, versatile: Target, all_modes: BookOpen, perfect_game: Star, perfect_3: Trophy,
   // Solo
@@ -29,14 +29,14 @@ const ICON_MAP: Record<string, React.ElementType> = {
   verse_first: BookMarked, verse_25: BookMarked,
   numbers_first: Hash, crossword_first: Puzzle, crossword_10: Puzzle, quote_first: MessageSquare,
   // Multiplayer
-  join_first: Users, first_win: Trophy, first_host: Crown,
-  mp_sessions_3: Users, mp_sessions_5: Users, host_master: Crown, mp_sessions_10: Users,
-  team_player: Heart, top_score: Star, mp_sessions_15: Users, grand_host: Crown,
-  win_3: Trophy, win_5: Trophy, mp_sessions_25: Users, host_25: Crown,
-  win_10: Trophy, mp_sessions_50: Users, win_25: Trophy, host_50: Crown, mp_legend: Swords,
+  join_first: Users, first_win: Trophy, first_host: Trophy,
+  mp_sessions_3: Users, mp_sessions_5: Users, host_master: Trophy, mp_sessions_10: Users,
+  team_player: Heart, top_score: Star, mp_sessions_15: Users, grand_host: Trophy,
+  win_3: Trophy, win_5: Trophy, mp_sessions_25: Users, host_25: Trophy,
+  win_10: Trophy, mp_sessions_50: Users, win_25: Trophy, host_50: Trophy, mp_legend: Swords,
   // Speed & Accuracy
   speed_first: Timer, speed_5: Zap, speed_10: Zap, speed_demon: Zap,
-  lightning_speed: Flame, speed_20: Flame, speed_master: Crown,
+  lightning_speed: Flame, speed_20: Flame, speed_master: Trophy,
   true_first: Shield, true_10: Shield, true_ace: Shield, true_50: Shield, true_100: Shield,
   fill_perfect: BookMarked, numbers_perfect: Hash, crossword_25: Puzzle,
   quote_10: MessageSquare, quote_25: MessageSquare,

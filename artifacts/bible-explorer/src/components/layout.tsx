@@ -12,7 +12,7 @@ import {
   Sun,
   Plus,
   Swords,
-  Crown,
+  Trophy,
   LogIn,
   User,
 } from 'lucide-react';
@@ -42,7 +42,7 @@ function isPlayingRoute(location: string) {
 
 /* ── Play FAB options (Solo has its own bottom-nav icon) ──────────────── */
 const PLAY_OPTIONS = [
-  { href: '/start', icon: Crown,  label: 'Host Session', color: 'bg-brand-purple text-white', requiresAuth: true },
+  { href: '/start', icon: Trophy,  label: 'Host Session', color: 'bg-brand-purple text-white', requiresAuth: true },
   { href: '/join',  icon: Users,  label: 'Join Game',    color: 'bg-brand-blue text-white',   requiresAuth: true },
   { href: '/duel',  icon: Swords, label: '1v1 Duel',     color: 'bg-brand-orange text-white', requiresAuth: true },
 ];

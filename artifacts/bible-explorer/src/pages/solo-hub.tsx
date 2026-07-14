@@ -4,7 +4,7 @@ import { useLocation, useSearch } from 'wouter';
 import {
   Target, Zap, RotateCcw, Brain, Clock, ChevronLeft,
   CheckCircle2, XCircle, BookMarked, Hash, Puzzle,
-  MessageSquare, Flame, Star, Shield, RefreshCw, Timer,
+  MessageSquare, Flame, Star, Shield, RefreshCw, Timer, Users,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -200,6 +200,7 @@ const QUOTES: Array<{ id: number; question: string; quote: string; answer: strin
 const MODES = [
   { id: 'daily',        title: 'Daily Challenge',  desc: '5 date-seeded questions that reset every midnight.',              icon: Zap,         gradient: 'from-brand-orange to-red-500',     badge: 'Daily',    badgeVariant: 'orange'    as const, tags: ['5 Questions','Bonus Points'] },
   { id: 'qa',           title: 'Bible Q&A',         desc: 'Endless trivia across Old & New Testament.',                      icon: Target,      gradient: 'from-brand-purple to-indigo-500',  badge: 'Endless',  badgeVariant: 'purple'    as const, tags: ['Custom Diff','All Topics'] },
+  { id: 'bible-sprint', title: 'Bible Sprint',     desc: 'Race through 15 scripture questions in a fast-paced sprint.',     icon: Zap,         gradient: 'from-red-500 to-orange-500',          badge: 'Sprint',  badgeVariant: 'orange'    as const, tags: ['15 Questions','Speed'] },
   { id: 'flash',        title: 'Flash Cards',       desc: 'Flip through key verses, names, and concepts.',                   icon: Brain,       gradient: 'from-brand-blue to-cyan-500',      badge: 'Practice', badgeVariant: 'blue'      as const, tags: ['Self-paced','Memory'] },
   { id: 'scramble',     title: 'Word Scramble',     desc: 'Unscramble Bible names and places in 45 seconds.',               icon: RotateCcw,   gradient: 'from-brand-green to-emerald-500',  badge: 'Mini-game',badgeVariant: 'green'     as const, tags: ['Speed','45 Seconds'] },
   { id: 'true-false',   title: 'True or False',     desc: 'Quick-fire true/false statements about Bible events.',           icon: Shield,      gradient: 'from-teal-500 to-green-600',       badge: 'Quick',    badgeVariant: 'green'     as const, tags: ['Fast paced','2 choices'] },
@@ -207,15 +208,15 @@ const MODES = [
   { id: 'time-attack',  title: 'Time Attack',       desc: 'Answer as many questions as possible in 60 seconds.',            icon: Clock,       gradient: 'from-red-500 to-orange-500',       badge: 'Attack',  badgeVariant: 'orange'    as const, tags: ['60 Seconds','High Score'] },
   { id: 'trivia-madness', title: 'Trivia Madness',   desc: 'Rapid-fire 10-question rounds with a one-time power-up.',        icon: Zap,         gradient: 'from-yellow-500 to-orange-500',   badge: 'Madness', badgeVariant: 'orange'    as const, tags: ['10 Questions','Power-up'] },
   { id: 'survival-mode', title: 'Survival Mode',    desc: 'Keep going as difficulty rises until you miss one.',              icon: Shield,     gradient: 'from-emerald-500 to-green-600',     badge: 'Survive', badgeVariant: 'green'     as const, tags: ['Endurance','Increasing'] },
-  { id: 'story-quest',  title: 'Story Quest',       desc: 'Campaign-style progression through Bible narratives.',          icon: Crown,      gradient: 'from-brand-indigo to-violet-500', badge: 'Quest',   badgeVariant: 'purple'    as const, tags: ['Narrative','Campaign'] },
-  { id: 'team-tournament', title: 'Team Tournament', desc: 'Cooperate with friends in a group trivia bracket.',             icon: Users,      gradient: 'from-brand-blue to-sky-500',      badge: 'Team',    badgeVariant: 'blue'      as const, tags: ['Multiplayer','Co-op'] },
+  { id: 'story-quest',  title: 'Story Quest',       desc: 'Journey through Bible stories in a campaign-style quiz adventure.', icon: Zap,      gradient: 'from-brand-indigo to-violet-500', badge: 'Quest',   badgeVariant: 'purple'    as const, tags: ['Narrative','Campaign'] },
+  { id: 'team-tournament', title: 'Team Tournament', desc: 'Work with friends in a trivia bracket and score as a team.',      icon: Users,      gradient: 'from-brand-blue to-sky-500',      badge: 'Team',    badgeVariant: 'blue'      as const, tags: ['Multiplayer','Co-op'] },
   { id: 'verse-fill',   title: 'Verse Fill-In',     desc: 'Complete the missing word in famous Bible passages.',            icon: BookMarked,  gradient: 'from-pink-500 to-rose-500',        badge: 'Memory',   badgeVariant: 'secondary' as const, tags: ['Fill blanks','Key verses'] },
   { id: 'number-match', title: 'Bible Numbers',     desc: 'Match events, chapters, and counts to the correct number.',     icon: Hash,        gradient: 'from-violet-500 to-purple-600',    badge: 'Numbers',  badgeVariant: 'purple'    as const, tags: ['Trivia','Matching'] },
   { id: 'crossword',    title: 'Bible Crossword',   desc: 'Spell Bible names and places from clues — letter by letter.',  icon: Puzzle,      gradient: 'from-amber-500 to-orange-500',     badge: 'Puzzle',   badgeVariant: 'orange'    as const, tags: ['Themed','Puzzle'] },
   { id: 'quote-match',  title: 'Quote Match',       desc: 'Match famous Bible quotes to their speaker across scripture.',  icon: MessageSquare, gradient: 'from-sky-500 to-blue-600',      badge: 'Matching', badgeVariant: 'blue'      as const, tags: ['Quotes','Attribution'] },
 ];
 
-const SUPPORTED = new Set(['daily','qa','flash','scramble','true-false','speed-round','time-attack','trivia-madness','survival-mode','bible-sprint','verse-fill','number-match','crossword','quote-match']);
+const SUPPORTED = new Set(MODES.map((mode) => mode.id));
 
 /* ─────────────────────────────────────────────────────────────────────────
    Hub grid
@@ -241,14 +242,27 @@ export function SoloHub() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {MODES.map((mode, i) => {
           const supported = SUPPORTED.has(mode.id);
+          const handleOpenMode = () => {
+            if (!supported) return;
+            setLocation(`/solo?mode=${mode.id}`);
+          };
           return (
             <motion.div
               key={mode.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.07 }}
-              onClick={() => setLocation(`/solo?mode=${mode.id}`)}
-              className="solo-card group cursor-pointer"
+              onClick={handleOpenMode}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  handleOpenMode();
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              aria-label={`Open solo mode ${mode.title}`}
+              className={`solo-card group cursor-pointer ${!supported ? 'opacity-60 pointer-events-none' : ''}`}
             >
               <Card className="h-full relative overflow-hidden border-border/50 bg-card hover:border-border transition-all duration-200 rounded-3xl hover:shadow-md">
                 <div className={`absolute top-0 right-0 w-48 h-48 bg-gradient-to-br ${mode.gradient} rounded-full blur-[80px] opacity-0 group-hover:opacity-20 dark:group-hover:opacity-15 transition duration-500 -translate-y-1/2 translate-x-1/3 pointer-events-none`} />
@@ -287,18 +301,36 @@ export function SoloHub() {
 function SoloGameView({ mode, onBack }: { mode: string; onBack: () => void }) {
   const modeData = MODES.find(m => m.id === mode);
 
+  if (!modeData) {
+    return (
+      <div className="p-6 max-w-3xl mx-auto min-h-[70vh] flex flex-col items-center justify-center text-center relative">
+        <Button variant="ghost" onClick={onBack} className="absolute top-4 left-4 gap-2 text-muted-foreground">
+          <ChevronLeft className="w-4 h-4" /> Back
+        </Button>
+        <div className="w-20 h-20 rounded-3xl bg-secondary p-1 mb-7 shadow-xl">
+          <div className="w-full h-full bg-card rounded-[22px] flex items-center justify-center">
+            <XCircle className="w-10 h-10 text-foreground" />
+          </div>
+        </div>
+        <h1 className="text-4xl font-heading font-extrabold mb-3">Unknown mode</h1>
+        <p className="text-sm text-muted-foreground max-w-md mb-6">The selected game mode was not recognized. Return to the hub to choose a supported mode.</p>
+        <Button variant="outline" size="sm" onClick={onBack} className="mt-2 rounded-full">Back to Hub</Button>
+      </div>
+    );
+  }
+
   if (!SUPPORTED.has(mode)) {
     return (
       <div className="p-6 max-w-3xl mx-auto min-h-[70vh] flex flex-col items-center justify-center text-center relative">
         <Button variant="ghost" onClick={onBack} className="absolute top-4 left-4 gap-2 text-muted-foreground">
           <ChevronLeft className="w-4 h-4" /> Back
         </Button>
-        <div className={`w-20 h-20 rounded-3xl bg-gradient-to-br ${modeData?.gradient} p-1 mb-7 shadow-xl`}>
+        <div className={`w-20 h-20 rounded-3xl bg-gradient-to-br ${modeData.gradient} p-1 mb-7 shadow-xl`}>
           <div className="w-full h-full bg-card rounded-[22px] flex items-center justify-center">
-            {modeData?.icon && <modeData.icon className="w-10 h-10 text-foreground" />}
+            {modeData.icon && <modeData.icon className="w-10 h-10 text-foreground" />}
           </div>
         </div>
-        <h1 className="text-4xl font-heading font-extrabold mb-3">{modeData?.title}</h1>
+        <h1 className="text-4xl font-heading font-extrabold mb-3">{modeData.title}</h1>
         <div className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-secondary text-muted-foreground font-semibold text-sm mb-3">
           <Star className="w-4 h-4" /> Coming soon
         </div>
@@ -311,10 +343,7 @@ function SoloGameView({ mode, onBack }: { mode: string; onBack: () => void }) {
   if (mode === 'scramble')       return <WordScrambleGame onBack={onBack} />;
   if (mode === 'true-false')     return <TrueFalseGame onBack={onBack} />;
   if (mode === 'speed-round')    return <SpeedRoundGame onBack={onBack} />;
-  if (mode === 'time-attack')    return <TimeAttackGame onBack={onBack} />;
-  if (mode === 'trivia-madness') return <TriviaMadnessGame onBack={onBack} />;
-  if (mode === 'survival-mode')  return <SurvivalModeGame onBack={onBack} />;
-  if (mode === 'story-quest')    return <StoryQuestGame onBack={onBack} />;
+  if (['time-attack','trivia-madness','survival-mode','story-quest','team-tournament'].includes(mode)) return <QuizGame mode={mode} onBack={onBack} />;
   if (mode === 'verse-fill')     return <VerseFillGame onBack={onBack} />;
   if (mode === 'number-match')   return <BibleNumbersGame onBack={onBack} />;
   if (mode === 'crossword')      return <CrosswordGame onBack={onBack} />;
@@ -375,18 +404,19 @@ function QuizGame({ mode, onBack }: { mode: string; onBack: () => void }) {
   const { data: dailyQuestions, isLoading: dailyLoading } = useGetDailyChallenge({
     query: { enabled: mode === 'daily' && isPlaying, queryKey: getGetDailyChallengeQueryKey() },
   });
+  const quizModes = ['qa','bible-sprint','story-quest','team-tournament','time-attack','trivia-madness','survival-mode'] as const;
   const { data: qaData, isLoading: qaLoading } = useListQuestions({ limit: 60, difficulty } as any, {
-    query: { enabled: (mode === 'qa' || mode === 'bible-sprint') && isPlaying, queryKey: getListQuestionsQueryKey({ limit: 60, difficulty } as any) },
+    query: { enabled: quizModes.includes(mode as typeof quizModes[number]) && isPlaying, queryKey: getListQuestionsQueryKey({ limit: 60, difficulty } as any) },
   });
 
   const allQuestions = mode === 'daily'
     ? dailyQuestions
-    : mode === 'qa' || mode === 'bible-sprint'
+    : quizModes.includes(mode as typeof quizModes[number])
       ? qaData?.questions
       : [];
   const isLoading = mode === 'daily'
     ? dailyLoading
-    : (mode === 'qa' || mode === 'bible-sprint')
+    : quizModes.includes(mode as typeof quizModes[number])
       ? qaLoading
       : false;
 
@@ -394,7 +424,7 @@ function QuizGame({ mode, onBack }: { mode: string; onBack: () => void }) {
   const [selectedQuestions, setSelectedQuestions] = useState<any[]>([]);
   useEffect(() => {
     if (!isPlaying || selectedQuestions.length > 0 || !allQuestions || allQuestions.length === 0) return;
-    const count = mode === 'daily' ? 5 : mode === 'bible-sprint' ? 15 : 10;
+    const count = mode === 'daily' ? 5 : ['bible-sprint','story-quest','team-tournament'].includes(mode) ? 15 : 10;
     setSelectedQuestions(pickUnseen(allQuestions as any[], mode, count));
   }, [isPlaying, allQuestions, selectedQuestions.length, mode]);
   const questions = selectedQuestions;
@@ -422,32 +452,40 @@ function QuizGame({ mode, onBack }: { mode: string; onBack: () => void }) {
   }, [isFinished, handleFinished]);
 
   if (!isPlaying) {
-    if (mode === 'qa' || mode === 'bible-sprint') {
-      return (
-        <div className="p-6 max-w-3xl mx-auto min-h-[70vh] flex flex-col items-center justify-center text-center">
-          <div className={`w-20 h-20 rounded-3xl bg-gradient-to-br ${modeData.gradient} p-1 mb-7 shadow-xl`}>
-            <div className="w-full h-full bg-card rounded-[22px] flex items-center justify-center">
-              <modeData.icon className="w-10 h-10 text-foreground" />
+    if (['qa','bible-sprint','story-quest','team-tournament','time-attack','trivia-madness','survival-mode'].includes(mode)) {
+        const ctaLabel = mode === 'bible-sprint'
+          ? 'Sprint'
+          : mode === 'story-quest'
+            ? 'Begin Quest'
+            : mode === 'team-tournament'
+              ? 'Join Bracket'
+              : 'Start';
+
+        return (
+          <div className="p-6 max-w-3xl mx-auto min-h-[70vh] flex flex-col items-center justify-center text-center">
+            <div className={`w-20 h-20 rounded-3xl bg-gradient-to-br ${modeData.gradient} p-1 mb-7 shadow-xl`}>
+              <div className="w-full h-full bg-card rounded-[22px] flex items-center justify-center">
+                <modeData.icon className="w-10 h-10 text-foreground" />
+              </div>
             </div>
+            <h1 className="text-4xl font-heading font-extrabold mb-3">{modeData.title}</h1>
+            <p className="text-lg text-muted-foreground max-w-lg mb-6">{modeData.desc}</p>
+            <div className="flex gap-2 mb-8 flex-wrap justify-center">
+              {(['easy','medium','hard'] as const).map(d => (
+                <button key={d} onClick={() => setDifficulty(d)}
+                  className={`px-5 py-2 rounded-full text-sm font-semibold transition-all border-2 capitalize ${difficulty === d ? 'bg-primary text-primary-foreground border-primary' : 'border-border text-muted-foreground hover:border-foreground'}`}>
+                  {d}
+                </button>
+              ))}
+            </div>
+            <Button size="lg" className={`h-14 px-10 text-lg rounded-full bg-gradient-to-r ${modeData.gradient} text-white shadow-lg`} onClick={() => setIsPlaying(true)}>
+              {ctaLabel} ({difficulty})
+            </Button>
           </div>
-          <h1 className="text-4xl font-heading font-extrabold mb-3">{modeData.title}</h1>
-          <p className="text-lg text-muted-foreground max-w-lg mb-6">{modeData.desc}</p>
-          <div className="flex gap-2 mb-8 flex-wrap justify-center">
-            {(['easy','medium','hard'] as const).map(d => (
-              <button key={d} onClick={() => setDifficulty(d)}
-                className={`px-5 py-2 rounded-full text-sm font-semibold transition-all border-2 capitalize ${difficulty === d ? 'bg-primary text-primary-foreground border-primary' : 'border-border text-muted-foreground hover:border-foreground'}`}>
-                {d}
-              </button>
-            ))}
-          </div>
-          <Button size="lg" className={`h-14 px-10 text-lg rounded-full bg-gradient-to-r ${modeData.gradient} text-white shadow-lg`} onClick={() => setIsPlaying(true)}>
-            Start ({difficulty})
-          </Button>
-        </div>
-      );
+        );
+      }
+      return <PreGameScreen modeData={modeData} onStart={() => setIsPlaying(true)} />;
     }
-    return <PreGameScreen modeData={modeData} onStart={() => setIsPlaying(true)} />;
-  }
 
   if (isLoading) return <div className="p-10 text-center text-xl font-bold animate-pulse text-muted-foreground">Loading questions…</div>;
 

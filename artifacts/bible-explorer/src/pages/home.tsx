@@ -47,9 +47,21 @@ const fadeUp = {
 };
 
 export function Home() {
-  const { data: dailyContent, isLoading: isLoadingDaily } = useGetDailyContent();
-  const { data: stats } = useGetStatsOverview();
-  const { data: recentSessions } = useListRecentSessions({ limit: 5 } as any);
+  const {
+    data: dailyContent,
+    isLoading: isLoadingDaily,
+    isError: dailyError,
+  } = useGetDailyContent();
+  const {
+    data: stats,
+    isLoading: isLoadingStats,
+    isError: statsError,
+  } = useGetStatsOverview();
+  const {
+    data: recentSessions,
+    isLoading: isLoadingRecent,
+    isError: recentError,
+  } = useListRecentSessions({ limit: 5 } as any);
 
   const [streak, setStreak] = useState<StreakData>({ lastDate: null, current: 0, longest: 0 });
 
@@ -58,7 +70,7 @@ export function Home() {
   }, []);
 
   const verseRef = dailyContent?.verseReference ?? "";
-  const summary = dailyContent?.summary ?? VERSE_SUMMARIES[verseRef] ?? (dailyContent?.verse ? "Take a moment to meditate on this verse and reflect on how it applies to your day." : "");
+  const summary = VERSE_SUMMARIES[verseRef] ?? (dailyContent?.verse ? "Take a moment to meditate on this verse and reflect on how it applies to your day." : "");
 
   return (
     <div className="p-4 md:p-8 lg:p-10 max-w-7xl mx-auto space-y-6">
@@ -91,10 +103,15 @@ export function Home() {
 
             <CardContent className="flex-1 flex flex-col justify-center py-4 md:py-6">
               {isLoadingDaily ? (
-                <div className="space-y-3 animate-pulse">
+                <div role="status" aria-live="polite" className="space-y-3 animate-pulse">
                   <div className="h-6 bg-muted rounded w-3/4" />
                   <div className="h-6 bg-muted rounded w-full" />
                   <div className="h-6 bg-muted rounded w-5/6" />
+                </div>
+              ) : dailyError ? (
+                <div role="alert" className="space-y-3 p-4 rounded-3xl border border-red-200 bg-red-50 text-red-700">
+                  <p className="font-semibold">Unable to load the verse of the day.</p>
+                  <p className="text-sm">Please check your internet connection and try again.</p>
                 </div>
               ) : (
                 <>
@@ -172,9 +189,15 @@ export function Home() {
                   </Button>
                 </Link>
               </div>
-              <p className="text-sm font-medium text-foreground leading-snug">
-                {dailyContent?.challenge ?? "5 rapid-fire questions from today's reading"}
-              </p>
+              {dailyError ? (
+                <div role="alert" className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                  Could not load today's challenge. Please refresh or try again later.
+                </div>
+              ) : (
+                <p className="text-sm font-medium text-foreground leading-snug">
+                  {dailyContent?.challenge ?? "5 rapid-fire questions from today's reading"}
+                </p>
+              )}
             </CardContent>
           </Card>
         </motion.div>
@@ -235,7 +258,16 @@ export function Home() {
               <Button variant="ghost" size="sm" className="text-xs">View All</Button>
             </CardHeader>
             <CardContent className="p-0">
-              {recentSessions && recentSessions.length > 0 ? (
+              {isLoadingRecent ? (
+                <div role="status" aria-live="polite" className="space-y-3 p-6">
+                  <div className="h-4 bg-muted rounded w-1/3 animate-pulse" />
+                  <div className="h-4 bg-muted rounded w-1/2 animate-pulse" />
+                </div>
+              ) : recentError ? (
+                <div role="alert" className="p-8 text-center rounded-3xl border border-red-200 bg-red-50 text-red-700">
+                  Unable to load recent sessions. Please refresh the page or try again later.
+                </div>
+              ) : recentSessions && recentSessions.length > 0 ? (
                 <div className="divide-y divide-border">
                   {recentSessions.map((session: any) => (
                     <div key={session.id} className="flex items-center justify-between p-4 hover:bg-secondary/20 transition-colors">

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   Search, Trash2, Wand2, Database, UploadCloud,
-  LogIn, LogOut, User, Target, Gamepad2, Users, Crown, Swords, Trophy, Flame, Settings as SettingsIcon,
+  LogIn, LogOut, User, Target, Gamepad2, Users, Swords, Trophy, Flame, Settings as SettingsIcon,
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -199,7 +199,7 @@ function AccountTab() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <StatCard icon={Users}  label="Sessions Played"  value={progress?.sessionsPlayed ?? 0}  color="text-brand-green"  bg="bg-brand-green/10" />
             <StatCard icon={Trophy} label="Sessions Won"     value={progress?.sessionsWon ?? 0}     color="text-brand-purple" bg="bg-brand-purple/10" />
-            <StatCard icon={Crown}  label="Sessions Hosted"  value={progress?.sessionsHosted ?? 0}  color="text-brand-blue"   bg="bg-brand-blue/10" />
+            <StatCard icon={Trophy}  label="Sessions Hosted"  value={progress?.sessionsHosted ?? 0}  color="text-brand-blue"   bg="bg-brand-blue/10" />
             <StatCard icon={Swords} label="Duels"            value={progress?.sessionsPlayed ?? 0}  color="text-brand-orange" bg="bg-brand-orange/10" />
           </div>
         </div>
