@@ -45,8 +45,9 @@ const TRANSLATIONS = [
 
 function cleanVerse(text: string) {
   return text
-    .replace(/<S>\d+<\/S>/g, '')
-    .replace(/<[^>]+>/g, '')
+    .replace(/<S>\d+<\/S>/g, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&(nbsp|#160);/gi, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -129,12 +130,19 @@ export function BiblePanel() {
 
   useEffect(() => {
     if (!isOpen) return;
+    const prefs = loadPreferences();
+    if (prefs.translation !== translation) {
+      setTranslation(prefs.translation);
+      return;
+    }
     fetchChapter();
-  }, [isOpen, fetchChapter]);
+  }, [isOpen, fetchChapter, translation]);
 
   useEffect(() => {
-    savePreferences({ translation });
-  }, [translation]);
+    if (translation !== prefs.translation) {
+      savePreferences({ translation });
+    }
+  }, [translation, prefs.translation]);
 
   const prevChapter = () => {
     if (chapter > 1) { setChapter(c => c - 1); return; }
