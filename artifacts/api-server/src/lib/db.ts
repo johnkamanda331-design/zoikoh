@@ -152,17 +152,20 @@ async function ensureDatabaseInitialized() {
   }
 
   if (!initializationPromise) {
-    initializationPromise = Promise.race([
-      initializeDatabase().catch((error) => {
-        const msg = `Failed to initialize database schema: ${error instanceof Error ? error.message : String(error)}`;
-        console.error(msg);
-        // Don't throw in serverless - let the query attempt and fail gracefully if needed
-        return;
-      }),
-      new Promise((resolve) =>
+    initializationPromise = Promise.race<void>([
+      (async () => {
+        try {
+          await initializeDatabase();
+        } catch (error) {
+          const msg = `Failed to initialize database schema: ${error instanceof Error ? error.message : String(error)}`;
+          console.error(msg);
+          // Don't throw in serverless - let the query attempt and fail gracefully if needed
+        }
+      })(),
+      new Promise<void>((resolve) =>
         setTimeout(() => {
           console.warn("Database initialization timeout - proceeding without guarantee of schema");
-          resolve(undefined);
+          resolve();
         }, 5000) // 5 second timeout for serverless
       ),
     ]);
