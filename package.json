@@ -4,6 +4,7 @@
   "license": "MIT",
   "scripts": {
     "preinstall": "node -e \"const fs=require('fs'); ['package-lock.json','yarn.lock'].forEach(f=>{try{fs.unlinkSync(f)}catch(e){}})\" && echo \"pnpm is required - use 'pnpm install'\"",
+    "dev": "pnpm -r --parallel --filter @workspace/api-server --filter @workspace/bible-explorer run dev",
     "build": "pnpm run typecheck && pnpm -r --if-present run build",
     "typecheck:libs": "pnpm exec tsc --build tsconfig.json",
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"

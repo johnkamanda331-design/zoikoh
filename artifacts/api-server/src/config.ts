@@ -34,11 +34,26 @@ if (existsSync(envFile)) {
 }
 
 const rawPort = process.env["PORT"];
-const port = Number(rawPort ?? "3000");
+const port = Number(rawPort ?? "8081");
 const hasValidPort = Number.isFinite(port) && port > 0;
 
-const databaseUrl =
-  process.env["NEON_DATABASE_URL"] ?? process.env["DATABASE_URL"] ?? "";
+function getFirstEnvValue(...keys: string[]) {
+  for (const key of keys) {
+    const value = process.env[key];
+    if (typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
+  }
+  return "";
+}
+
+const databaseUrl = getFirstEnvValue(
+  "NEON_DATABASE_URL",
+  "DATABASE_URL",
+  "POSTGRES_URL",
+  "POSTGRES_PRISMA_URL",
+  "POSTGRES_URL_NON_POOLING",
+);
 
 export const config = Object.freeze({
   /** HTTP port the Express server listens on (from PORT env var). */
@@ -55,9 +70,9 @@ export const config = Object.freeze({
 
   clerk: Object.freeze({
     /** Clerk secret key for server-side auth and the Clerk proxy middleware. */
-    secretKey: process.env["CLERK_SECRET_KEY"] ?? "",
+    secretKey: getFirstEnvValue("CLERK_SECRET_KEY"),
     /** Clerk publishable key used to initialise the Clerk Express middleware. */
-    publishableKey: process.env["CLERK_PUBLISHABLE_KEY"] ?? "",
+    publishableKey: getFirstEnvValue("CLERK_PUBLISHABLE_KEY", "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"),
   }),
 
   ai: Object.freeze({

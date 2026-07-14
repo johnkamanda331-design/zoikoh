@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import { ClerkProvider, SignIn, SignUp, useClerk } from '@clerk/react';
-import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -41,18 +40,18 @@ const queryClient = new QueryClient({
   },
 });
 
-// Resolve the key from the incoming host when available, but fall back to a
-// safe dev/test publishable key so the app still renders in deployments that
-// do not provide Clerk credentials.
-const clerkPubKey = publishableKeyFromHost(
-  window.location.hostname,
-  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || 'pk_test_1234567890',
-);
-
-// Only use a proxy URL when one is explicitly configured. Local development
-// should use Clerk directly so the sign-in flow doesn't depend on the backend
-// proxy endpoint.
-const clerkProxyUrl = (import.meta.env.VITE_CLERK_PROXY_URL || '').trim() || undefined;
+const clerkPubKey = (
+  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY ||
+  import.meta.env.CLERK_PUBLISHABLE_KEY ||
+  import.meta.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ||
+  'pk_test_1234567890'
+).trim();
+const clerkProxyUrl = (
+  import.meta.env.VITE_CLERK_PROXY_URL ||
+  import.meta.env.CLERK_PROXY_URL ||
+  import.meta.env.NEXT_PUBLIC_CLERK_PROXY_URL ||
+  ''
+).trim() || undefined;
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
 
@@ -111,16 +110,20 @@ const clerkAppearance = {
 
 function SignInPage() {
   return (
-    <div className="flex min-h-[100dvh] items-center justify-center bg-background px-4">
-      <SignIn routing="path" path={`${basePath}/sign-in`} signUpUrl={`${basePath}/sign-up`} />
+    <div className="flex min-h-[100dvh] items-center justify-center bg-background px-3 py-6 sm:px-4">
+      <div className="w-full max-w-[440px]">
+        <SignIn routing="path" path={`${basePath}/sign-in`} signUpUrl={`${basePath}/sign-up`} forceRedirectUrl={`${basePath}/`} />
+      </div>
     </div>
   );
 }
 
 function SignUpPage() {
   return (
-    <div className="flex min-h-[100dvh] items-center justify-center bg-background px-4">
-      <SignUp routing="path" path={`${basePath}/sign-up`} signInUrl={`${basePath}/sign-in`} />
+    <div className="flex min-h-[100dvh] items-center justify-center bg-background px-3 py-6 sm:px-4">
+      <div className="w-full max-w-[440px]">
+        <SignUp routing="path" path={`${basePath}/sign-up`} signInUrl={`${basePath}/sign-in`} forceRedirectUrl={`${basePath}/`} />
+      </div>
     </div>
   );
 }

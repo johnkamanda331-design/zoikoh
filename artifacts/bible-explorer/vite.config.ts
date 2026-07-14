@@ -21,8 +21,17 @@ export default defineConfig(({ mode }) => {
   }
 
   const basePath = env.BASE_PATH ?? '/';
-  const clerkPublishableKey = env.VITE_CLERK_PUBLISHABLE_KEY || env.CLERK_PUBLISHABLE_KEY || '';
-  const clerkProxyUrl = (env.VITE_CLERK_PROXY_URL || env.CLERK_PROXY_URL || '').trim();
+  const clerkPublishableKey =
+    env.VITE_CLERK_PUBLISHABLE_KEY ||
+    env.CLERK_PUBLISHABLE_KEY ||
+    env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ||
+    '';
+  const clerkProxyUrl = (
+    env.VITE_CLERK_PROXY_URL ||
+    env.CLERK_PROXY_URL ||
+    env.NEXT_PUBLIC_CLERK_PROXY_URL ||
+    ''
+  ).trim();
 
   return {
     base: basePath,
@@ -71,7 +80,7 @@ export default defineConfig(({ mode }) => {
       allowedHosts: true,
       proxy: {
         '/api': {
-          target: 'http://localhost:8080',
+          target: 'http://127.0.0.1:8081',
           changeOrigin: true,
         },
       },

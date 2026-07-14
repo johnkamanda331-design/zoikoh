@@ -128,10 +128,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const displayName = user?.firstName || user?.username || user?.emailAddresses?.[0]?.emailAddress?.split('@')[0] || 'You';
 
   return (
-    <div className="flex flex-col min-h-[100dvh] w-full bg-background overflow-hidden selection:bg-brand-purple selection:text-white">
+    <div className="flex flex-col min-h-[100dvh] w-full bg-background overflow-x-hidden selection:bg-brand-purple selection:text-white">
 
       {/* ── Top bar ──────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-40 flex items-center justify-between h-14 px-4 border-b border-border bg-card/80 backdrop-blur-md shrink-0">
+      <header className="sticky top-0 z-40 flex items-center justify-between h-14 px-3 sm:px-4 border-b border-border bg-card/80 backdrop-blur-md shrink-0">
         {/* Logo → navigates home on click */}
         <Link href="/" className="cursor-pointer">
           <Logo />
@@ -204,7 +204,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             animate={{ y: 0 }}
             exit={{ y: 80 }}
             transition={{ type: 'spring', damping: 28, stiffness: 260 }}
-            className="fixed bottom-0 left-0 right-0 z-50"
+            className="fixed bottom-0 left-0 right-0 z-50 supports-[backdrop-filter]:bg-transparent"
           >
             {/* FAB overlay backdrop */}
             <AnimatePresence>
@@ -248,7 +248,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </AnimatePresence>
 
             {/* Nav bar */}
-            <div className="relative flex items-center justify-around h-[68px] bg-card/95 backdrop-blur-xl border-t border-border px-2 shadow-[0_-4px_24px_rgba(0,0,0,0.12)]">
+            <div className="relative flex items-center justify-around h-[68px] bg-card/95 backdrop-blur-xl border-t border-border px-2 shadow-[0_-4px_24px_rgba(0,0,0,0.12)] max-w-5xl mx-auto">
               {/* Left items */}
               {LEFT_NAV.map(item => {
                 const isActive = location === item.href || (item.href !== '/' && location.startsWith(item.href));

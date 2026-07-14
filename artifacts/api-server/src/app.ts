@@ -78,6 +78,7 @@ app.use(
 );
 
 app.use("/api", router);
+app.use("/", router);
 
 // Central error handler — must be last
 app.use(errorHandler);
