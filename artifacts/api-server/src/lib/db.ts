@@ -146,12 +146,16 @@ async function initializeDatabase() {
 
 async function ensureDatabaseInitialized() {
   if (!pool) {
-    return;
+    const msg = `Database connection pool not initialized. Check that NEON_DATABASE_URL or DATABASE_URL environment variable is set.`;
+    console.error(msg);
+    throw new Error(msg);
   }
 
   if (!initializationPromise) {
     initializationPromise = initializeDatabase().catch((error) => {
-      console.error("Failed to initialize questions database schema", error);
+      const msg = `Failed to initialize database schema: ${error instanceof Error ? error.message : String(error)}`;
+      console.error(msg);
+      throw error;
     });
   }
 
@@ -161,8 +165,14 @@ async function ensureDatabaseInitialized() {
 const wrappedClient = pool
   ? {
       query: async (...args: Parameters<typeof pool.query>) => {
-        await ensureDatabaseInitialized();
-        return pool.query(...args);
+        try {
+          await ensureDatabaseInitialized();
+          return pool.query(...args);
+        } catch (error) {
+          const msg = error instanceof Error ? error.message : String(error);
+          console.error(`Database query failed: ${msg}`);
+          throw error;
+        }
       },
       connect: async () => {
         await ensureDatabaseInitialized();
