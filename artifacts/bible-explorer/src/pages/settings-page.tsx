@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   Search, Trash2, Wand2, Database, UploadCloud,
-  LogIn, LogOut, User, Target, Gamepad2, Users, Crown, Swords, Trophy, Flame,
+  LogIn, LogOut, User, Target, Gamepad2, Users, Crown, Swords, Trophy, Flame, Settings as SettingsIcon,
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,7 @@ import { useUser, useClerk } from '@clerk/react';
 import { useLocation } from 'wouter';
 import { toast } from 'sonner';
 import { loadProgress, getPlayerName, type PlayerProgress } from '@/hooks/use-achievements';
+import { PreferencesPanel } from '@/components/preferences-panel';
 
 /* ── Stat card ─────────────────────────────────────────────────────────── */
 function StatCard({ icon: Icon, label, value, color, bg }: {
@@ -278,9 +279,12 @@ export function SettingsPage() {
       </div>
 
       <Tabs defaultValue="account" className="w-full">
-        <TabsList className="grid w-full max-w-lg grid-cols-3 mb-8 bg-secondary/50 p-1 rounded-xl h-12">
+        <TabsList className="grid w-full max-w-2xl grid-cols-4 mb-8 bg-secondary/50 p-1 rounded-xl h-12">
           <TabsTrigger value="account"   className="rounded-lg font-bold data-[state=active]:bg-card data-[state=active]:shadow-sm">
             <User className="w-4 h-4 mr-2" /> Account
+          </TabsTrigger>
+          <TabsTrigger value="preferences" className="rounded-lg font-bold data-[state=active]:bg-card data-[state=active]:shadow-sm">
+            <SettingsIcon className="w-4 h-4 mr-2" /> Preferences
           </TabsTrigger>
           <TabsTrigger value="database"  className="rounded-lg font-bold data-[state=active]:bg-card data-[state=active]:shadow-sm">
             <Database className="w-4 h-4 mr-2" /> Database
@@ -293,6 +297,11 @@ export function SettingsPage() {
         {/* ── Account tab ─────────────────────────────────────────────── */}
         <TabsContent value="account">
           <AccountTab />
+        </TabsContent>
+
+        {/* ── Preferences tab ──────────────────────────────────────────── */}
+        <TabsContent value="preferences">
+          <PreferencesPanel />
         </TabsContent>
 
         {/* ── Database tab ─────────────────────────────────────────────── */}

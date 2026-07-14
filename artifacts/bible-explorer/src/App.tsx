@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import { ClerkProvider, SignIn, SignUp, useClerk } from '@clerk/react';
 import { shadcn } from '@clerk/themes';
@@ -7,8 +7,10 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { Route, Switch, useLocation, Router as WouterRouter } from 'wouter';
 import { Layout } from '@/components/layout';
 import { BiblePanel } from '@/components/bible-panel';
+import { OnboardingTutorial } from '@/components/onboarding-tutorial';
 import { hydratePlayerFromServer } from '@/hooks/use-achievements';
 import { setBaseUrl } from '@workspace/api-client-react';
+import { loadPreferences, savePreferences } from '@/lib/preferences';
 
 import { Home } from '@/pages/home';
 import { SoloHub } from '@/pages/solo-hub';
@@ -208,13 +210,27 @@ function ClerkProviderWithRoutes() {
 }
 
 function AppBody() {
+  const [showTutorial, setShowTutorial] = useState(false);
+
   useEffect(() => {
     setBaseUrl('');
     hydratePlayerFromServer();
+
+    // Initialize preferences and show tutorial for first-time users
+    const prefs = loadPreferences();
+    if (!prefs.tutorialCompleted) {
+      setShowTutorial(true);
+    }
   }, []);
+
+  const handleTutorialComplete = () => {
+    savePreferences({ tutorialCompleted: true });
+    setShowTutorial(false);
+  };
 
   return (
     <TooltipProvider>
+      <OnboardingTutorial isOpen={showTutorial} onComplete={handleTutorialComplete} />
       <Router />
       <BiblePanel />
       <Toaster position="top-center" />

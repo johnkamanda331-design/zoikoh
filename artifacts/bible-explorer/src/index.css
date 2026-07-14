@@ -169,3 +169,46 @@
   color: hsl(var(--foreground));
   line-height: 1.9;
 }
+
+/* ── Text scaling ──────────────────────────────────────────────────────── */
+:root.text-scale-small {
+  --font-scale: 0.875;
+}
+
+:root.text-scale-medium {
+  --font-scale: 1;
+}
+
+:root.text-scale-large {
+  --font-scale: 1.125;
+}
+
+body {
+  font-size: calc(1rem * var(--font-scale, 1));
+}
+
+/* ── High contrast mode ────────────────────────────────────────────────── */
+:root.high-contrast {
+  --border: 0 0% 0%;
+  --input: 0 0% 0%;
+}
+
+.high-contrast body {
+  color-contrast: more;
+}
+
+.high-contrast .text-muted-foreground {
+  opacity: 1;
+  color: hsl(var(--foreground));
+}
+
+.high-contrast .border-border {
+  border-width: 2px;
+}
+
+.high-contrast button:focus-visible,
+.high-contrast [role="button"]:focus-visible,
+.high-contrast a:focus-visible {
+  outline: 3px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
