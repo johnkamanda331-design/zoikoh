@@ -212,3 +212,18 @@ body {
   outline: 3px solid hsl(var(--ring));
   outline-offset: 2px;
 }
+
+/* Reduced motion helper — applied when user prefers reduced motion or sets preference */
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  transition: none !important;
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

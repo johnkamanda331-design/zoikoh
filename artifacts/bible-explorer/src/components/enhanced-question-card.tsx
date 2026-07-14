@@ -2,6 +2,8 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { BookOpen, Target, Zap } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { recordAnswer } from '@/lib/progress';
+import { trackEvent } from '@/lib/analytics';
 
 interface EnhancedQuestionCardProps {
   question: {
@@ -129,13 +131,24 @@ export function EnhancedQuestionCard({
           const isSelected = selectedAnswer === option;
           const isCorrect = correctAnswer === option;
           const isWrong = isSelected && selectedAnswer !== correctAnswer;
+          function handleSelect() {
+            if (isAnswered) return;
+            const wasCorrect = option === correctAnswer;
+            try {
+              recordAnswer(question.id, wasCorrect, { category: String(question.categoryId ?? 'unknown'), difficulty: question.difficulty });
+            } catch {}
+            try {
+              trackEvent('question_answered', { questionId: question.id, selected: option, correct: wasCorrect, difficulty: question.difficulty, categoryId: question.categoryId });
+            } catch {}
+            onSelectAnswer(option);
+          }
 
           return (
             <motion.button
               key={idx}
               whileHover={isAnswered ? {} : { x: 4 }}
               whileTap={isAnswered ? {} : { scale: 0.98 }}
-              onClick={() => !isAnswered && onSelectAnswer(option)}
+              onClick={() => handleSelect()}
               disabled={isAnswered}
               className={`
                 w-full p-4 rounded-xl border-2 transition-all text-left font-medium

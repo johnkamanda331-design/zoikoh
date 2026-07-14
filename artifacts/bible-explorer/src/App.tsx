@@ -7,6 +7,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { Route, Switch, useLocation, Router as WouterRouter } from 'wouter';
 import { Layout } from '@/components/layout';
 import { BiblePanel } from '@/components/bible-panel';
+import ProgressTracker from '@/components/progress-tracker';
 import { OnboardingTutorial } from '@/components/onboarding-tutorial';
 import { hydratePlayerFromServer } from '@/hooks/use-achievements';
 import { setBaseUrl } from '@workspace/api-client-react';
@@ -23,6 +24,7 @@ import { AchievementsGallery } from '@/pages/achievements-gallery';
 import { SettingsPage } from '@/pages/settings-page';
 import { DuelHub } from '@/pages/duel';
 import { DuelSession } from '@/pages/duel-session';
+import AnalyticsPage from '@/pages/analytics';
 
 function NotFound() {
   return (
@@ -166,6 +168,7 @@ function Router() {
         <Route path="/session/:id/summary" component={SessionSummary} />
         <Route path="/achievements" component={AchievementsGallery} />
         <Route path="/settings" component={SettingsPage} />
+        <Route path="/analytics" component={AnalyticsPage} />
         <Route path="/sign-in/*?" component={SignInPage} />
         <Route path="/sign-up/*?" component={SignUpPage} />
         <Route component={NotFound} />
@@ -233,6 +236,9 @@ function AppBody() {
       <OnboardingTutorial isOpen={showTutorial} onComplete={handleTutorialComplete} />
       <Router />
       <BiblePanel />
+      <div className="px-4 pb-6 md:pb-8">
+        <ProgressTracker />
+      </div>
       <Toaster position="top-center" />
     </TooltipProvider>
   );

@@ -139,6 +139,31 @@ async function initializeDatabase() {
         ]
       );
     }
+
+    // Analytics: raw events store and per-user aggregated progress
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS analytics_events (
+        id BIGSERIAL PRIMARY KEY,
+        user_id UUID NULL,
+        name TEXT NOT NULL,
+        payload JSONB,
+        session_id TEXT NULL,
+        created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS user_progress (
+        user_id UUID PRIMARY KEY,
+        total_answered INTEGER NOT NULL DEFAULT 0,
+        correct INTEGER NOT NULL DEFAULT 0,
+        current_streak INTEGER NOT NULL DEFAULT 0,
+        longest_streak INTEGER NOT NULL DEFAULT 0,
+        per_category JSONB NOT NULL DEFAULT '{}'::jsonb,
+        per_difficulty JSONB NOT NULL DEFAULT '{}'::jsonb,
+        updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+      );
+    `);
   } finally {
     client.release();
   }

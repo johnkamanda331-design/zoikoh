@@ -236,6 +236,29 @@ export function PreferencesPanel() {
 
           <Card className="rounded-2xl border-border/50">
             <CardHeader>
+              <CardTitle className="text-lg">Reduced Motion</CardTitle>
+              <CardDescription>Disable non-essential animations for accessibility</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <motion.button
+                onClick={() => updatePref('reducedMotion', !prefs.reducedMotion)}
+                className={`
+                  relative inline-flex h-6 w-11 rounded-full transition-colors
+                  ${prefs.reducedMotion ? 'bg-brand-purple' : 'bg-secondary'}
+                `}
+                whileTap={{ scale: 0.95 }}
+              >
+                <motion.span
+                  layout
+                  className="inline-block h-5 w-5 transform rounded-full bg-white shadow-md"
+                  animate={{ x: prefs.reducedMotion ? 20 : 2 }}
+                />
+              </motion.button>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-2xl border-border/50">
+            <CardHeader>
               <CardTitle className="text-lg">Language</CardTitle>
               <CardDescription>Choose your preferred language</CardDescription>
             </CardHeader>

@@ -12,6 +12,7 @@ export interface UserPreferences {
   fontSize: 'small' | 'medium' | 'large';
   highContrast: boolean;
   language: string;
+  reducedMotion?: boolean;
 }
 
 const STORAGE_KEY = 'zoiko_user_preferences';
@@ -26,6 +27,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   fontSize: 'medium',
   highContrast: false,
   language: 'en',
+  reducedMotion: false,
 };
 
 export function loadPreferences(): UserPreferences {
@@ -45,10 +47,20 @@ export function savePreferences(prefs: Partial<UserPreferences>) {
     applyTheme(updated.theme);
     applyFontSize(updated.fontSize);
     applyHighContrast(updated.highContrast);
+    applyReducedMotion(Boolean(updated.reducedMotion));
     return updated;
   } catch (error) {
     console.error('Failed to save preferences:', error);
     return loadPreferences();
+  }
+}
+
+function applyReducedMotion(enabled: boolean) {
+  const root = document.documentElement;
+  if (enabled) {
+    root.classList.add('reduce-motion');
+  } else {
+    root.classList.remove('reduce-motion');
   }
 }
 
