@@ -1,6 +1,7 @@
 {
   "name": "workspace",
   "version": "0.0.0",
+  "packageManager": "pnpm@9.15.0",
   "license": "MIT",
   "scripts": {
     "preinstall": "node -e \"const fs=require('fs'); ['package-lock.json','yarn.lock'].forEach(f=>{try{fs.unlinkSync(f)}catch(e){}})\" && echo \"pnpm is required - use 'pnpm install'\"",
@@ -20,6 +21,6 @@
     "lightningcss": "^1.32.0",
     "lightningcss-win32-x64-msvc": "^1.32.0",
     "prettier": "^3.9.4",
-    "typescript": "^6.0.0"
+    "typescript": "~5.9.3"
   }
 }
