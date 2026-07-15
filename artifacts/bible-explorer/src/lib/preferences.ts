@@ -25,6 +25,72 @@ export interface UserPreferences {
 
 const STORAGE_KEY = 'zoiko_user_preferences';
 
+let ambientMusicContext: AudioContext | null = null;
+let ambientMusicGain: GainNode | null = null;
+let ambientMusicOscillator: OscillatorNode | null = null;
+let ambientMusicTimer: number | null = null;
+
+function stopBackgroundMusic() {
+  if (ambientMusicTimer !== null) {
+    window.clearInterval(ambientMusicTimer);
+    ambientMusicTimer = null;
+  }
+
+  if (ambientMusicOscillator) {
+    ambientMusicOscillator.stop();
+    ambientMusicOscillator.disconnect();
+    ambientMusicOscillator = null;
+  }
+
+  if (ambientMusicGain) {
+    ambientMusicGain.disconnect();
+    ambientMusicGain = null;
+  }
+
+  if (ambientMusicContext) {
+    ambientMusicContext.close().catch(() => undefined);
+    ambientMusicContext = null;
+  }
+}
+
+function startBackgroundMusic() {
+  if (typeof window === 'undefined') return;
+
+  const prefs = loadPreferences();
+  if (!prefs.soundEnabled || !prefs.backgroundMusicEnabled) {
+    stopBackgroundMusic();
+    return;
+  }
+
+  if (ambientMusicContext) return;
+
+  const AudioContextCtor = window.AudioContext || (window as any).webkitAudioContext;
+  if (!AudioContextCtor) return;
+
+  const context = new AudioContextCtor();
+  const gainNode = context.createGain();
+  gainNode.gain.value = 0.025;
+  gainNode.connect(context.destination);
+
+  const oscillator = context.createOscillator();
+  oscillator.type = 'sine';
+  oscillator.frequency.value = 196;
+  oscillator.connect(gainNode);
+  oscillator.start();
+
+  const frequencies = [196, 261.63, 329.63, 392];
+  ambientMusicContext = context;
+  ambientMusicGain = gainNode;
+  ambientMusicOscillator = oscillator;
+  ambientMusicTimer = window.setInterval(() => {
+    if (!ambientMusicOscillator) return;
+    ambientMusicOscillator.frequency.setValueAtTime(
+      frequencies[Math.floor(Math.random() * frequencies.length)],
+      ambientMusicContext?.currentTime ?? 0,
+    );
+  }, 2200);
+}
+
 const DEFAULT_PREFERENCES: UserPreferences = {
   theme: 'light',
   difficulty: 'medium',
@@ -64,6 +130,17 @@ export function savePreferences(prefs: Partial<UserPreferences>) {
     applyFontSize(updated.fontSize);
     applyHighContrast(updated.highContrast);
     applyReducedMotion(Boolean(updated.reducedMotion));
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('zoiko-preferences-changed', { detail: updated }));
+    }
+
+    if (updated.backgroundMusicEnabled && updated.soundEnabled) {
+      startBackgroundMusic();
+    } else {
+      stopBackgroundMusic();
+    }
+
     return updated;
   } catch (error) {
     console.error('Failed to save preferences:', error);

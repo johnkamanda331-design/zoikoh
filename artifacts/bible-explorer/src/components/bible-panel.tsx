@@ -9,15 +9,12 @@ import {
   Search,
   Bookmark,
   Star,
-  Volume2,
-  VolumeX,
   BookOpen,
   Sparkles,
   Share2,
   PenSquare,
   Clock3,
   ListChecks,
-  CheckCircle2,
   MoonStar,
   SunMedium,
   RefreshCw,
@@ -88,10 +85,12 @@ const DAILY_QUOTES = [
   '“Take heart; I have overcome the world.” — John 16:33',
 ];
 
-const MOOD_RECOMMENDATIONS: Record<'peace' | 'focus' | 'encouragement', string> = {
-  peace: 'Try Psalm 23 or a short passage of gratitude for a calm heart.',
-  focus: 'A focused reading plan often works well with John 14 or a chapter of Proverbs.',
-  encouragement: 'John 3 or Psalm 91 can provide strength and reassurance for the day.',
+type Mood = 'peace' | 'focus' | 'encouragement';
+
+const MOOD_RECOMMENDATIONS: Record<Mood, { title: string; book: string; chapter: number; text: string }> = {
+  peace: { title: 'Peace', book: 'Psalms', chapter: 23, text: 'Try Psalm 23 for a calm heart and a steady sense of rest.' },
+  focus: { title: 'Focus', book: 'Proverbs', chapter: 3, text: 'Proverbs 3 helps sharpen attention and steady the mind for the day ahead.' },
+  encouragement: { title: 'Encouragement', book: 'John', chapter: 14, text: 'John 14 offers comfort and confidence in the presence of Jesus.' },
 };
 
 function cleanVerse(text: string) {
@@ -104,6 +103,27 @@ function cleanVerse(text: string) {
 }
 
 interface VerseData { pk: number; verse: number; text: string }
+
+function parseVerseContent(text: string) {
+  const parts: Array<{ type: 'heading' | 'text'; content: string }> = [];
+  const headingRegex = /<(h[1-6])[^>]*>(.*?)<\/\1>/gi;
+  let lastIndex = 0;
+
+  for (const match of text.matchAll(headingRegex)) {
+    const before = cleanVerse(text.slice(lastIndex, match.index ?? lastIndex));
+    if (before) parts.push({ type: 'text', content: before });
+
+    const headingText = cleanVerse(match[2] ?? '');
+    if (headingText) parts.push({ type: 'heading', content: headingText });
+
+    lastIndex = (match.index ?? lastIndex) + match[0].length;
+  }
+
+  const tail = cleanVerse(text.slice(lastIndex));
+  if (tail) parts.push({ type: 'text', content: tail });
+
+  return parts.filter((part) => part.content.length > 0);
+}
 
 type FontSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 const fontSizes: FontSize[] = ['xs', 'sm', 'md', 'lg', 'xl'];
@@ -138,9 +158,8 @@ export function BiblePanel() {
   const [favorites, setFavorites] = useState<string[]>([]);
   const [recentChapters, setRecentChapters] = useState<string[]>([]);
   const [studyList, setStudyList] = useState<string[]>([]);
-  const [isSpeaking, setIsSpeaking] = useState(false);
   const [readingPlan, setReadingPlan] = useState({ completedToday: false, streak: 0, target: 7 });
-  const [mood, setMood] = useState<'peace' | 'focus' | 'encouragement'>('focus');
+  const [mood, setMood] = useState<Mood>('focus');
   const [chapterCache, setChapterCache] = useState<Record<string, VerseData[]>>({});
   const [layoutMode, setLayoutMode] = useState<'comfortable' | 'compact'>((initialPrefs.readingDensity as 'comfortable' | 'compact' | undefined) ?? 'comfortable');
   const [lineSpacing, setLineSpacing] = useState<'comfortable' | 'relaxed'>((initialPrefs.lineSpacing as 'comfortable' | 'relaxed' | undefined) ?? 'comfortable');
@@ -154,6 +173,7 @@ export function BiblePanel() {
   const isFavorite = favorites.includes(chapterKey);
   const summary = CHAPTER_SUMMARIES[book]?.[chapter] ?? `A calm reading of ${book} chapter ${chapter} can help you reflect and pray.`;
   const dailyQuote = DAILY_QUOTES[new Date().getDay() % DAILY_QUOTES.length];
+  const activeMood = MOOD_RECOMMENDATIONS[mood];
 
   const filteredVerses = searchQuery
     ? verses.filter((verse) => {
@@ -288,14 +308,18 @@ export function BiblePanel() {
     }
   }, [isOpen, translation, book, chapter, chapterKey, chapterCache]);
 
-  useEffect(() => {
-    if (!isOpen) return;
+  const syncPreferences = useCallback(() => {
     const latestPrefs = loadPreferences();
     setPrefs(latestPrefs);
     setTranslation((latestPrefs.translation as Translation | undefined) ?? 'NIV');
     setLayoutMode((latestPrefs.readingDensity as 'comfortable' | 'compact' | undefined) ?? 'comfortable');
     setLineSpacing((latestPrefs.lineSpacing as 'comfortable' | 'relaxed' | undefined) ?? 'comfortable');
-  }, [isOpen]);
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    syncPreferences();
+  }, [isOpen, syncPreferences]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -306,6 +330,23 @@ export function BiblePanel() {
     }
     fetchChapter();
   }, [isOpen, fetchChapter, translation]);
+
+  useEffect(() => {
+    const handlePreferencesChanged = (event: Event) => {
+      const nextPrefs = (event as CustomEvent).detail as ReturnType<typeof loadPreferences> | undefined;
+      if (nextPrefs?.translation) {
+        setPrefs(nextPrefs);
+        setTranslation(nextPrefs.translation as Translation);
+        setLayoutMode((nextPrefs.readingDensity as 'comfortable' | 'compact' | undefined) ?? 'comfortable');
+        setLineSpacing((nextPrefs.lineSpacing as 'comfortable' | 'relaxed' | undefined) ?? 'comfortable');
+      } else {
+        syncPreferences();
+      }
+    };
+
+    window.addEventListener('zoiko-preferences-changed', handlePreferencesChanged as EventListener);
+    return () => window.removeEventListener('zoiko-preferences-changed', handlePreferencesChanged as EventListener);
+  }, [syncPreferences]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -435,31 +476,6 @@ export function BiblePanel() {
     }
   };
 
-  const speakPassage = () => {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-
-    const textToSpeak = filteredVerses.length
-      ? filteredVerses.map((verse) => `${verse.verse}. ${cleanVerse(verse.text)}`).join(' ')
-      : verses.map((verse) => `${verse.verse}. ${cleanVerse(verse.text)}`).join(' ');
-
-    if (!textToSpeak) return;
-
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(textToSpeak);
-    utterance.lang = 'en-US';
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
-    window.speechSynthesis.speak(utterance);
-  };
-
-  const stopSpeaking = () => {
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    }
-    setIsSpeaking(false);
-  };
-
   const handleSwipeEnd = (endX: number) => {
     if (touchStartX === null) return;
     const delta = endX - touchStartX;
@@ -471,20 +487,18 @@ export function BiblePanel() {
     setTouchStartX(null);
   };
 
-  const markPlanComplete = () => {
-    setReadingPlan((prev) => {
-      const alreadyDone = prev.completedToday;
-      if (alreadyDone) return prev;
-      const nextStreak = prev.streak + 1;
-      return { completedToday: true, streak: nextStreak, target: prev.target };
-    });
-  };
-
   const updateReadingPreference = (key: 'readingDensity' | 'lineSpacing', value: 'comfortable' | 'compact' | 'relaxed') => {
     const nextPrefs = savePreferences({ [key]: value } as any);
     setPrefs(nextPrefs);
     if (key === 'readingDensity') setLayoutMode(value as 'comfortable' | 'compact');
     else setLineSpacing(value as 'comfortable' | 'relaxed');
+  };
+
+  const handleMoodSelect = (nextMood: Mood) => {
+    const recommendation = MOOD_RECOMMENDATIONS[nextMood];
+    setMood(nextMood);
+    setBook(recommendation.book);
+    setChapter(recommendation.chapter);
   };
 
   const recommendedReading = recentChapters[0]
@@ -508,7 +522,7 @@ export function BiblePanel() {
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 28, stiffness: 220 }}
-            className="relative w-full md:w-[580px] h-[92dvh] md:h-[100dvh] pointer-events-auto flex flex-col shadow-2xl rounded-t-3xl md:rounded-none"
+            className="relative w-full md:w-[75vw] md:max-w-[900px] h-[92dvh] md:h-[100dvh] pointer-events-auto flex flex-col shadow-2xl rounded-t-3xl md:rounded-none"
             style={{ background: 'hsl(var(--card))', borderLeft: '1px solid hsl(var(--border))' }}
           >
             <div
@@ -689,13 +703,6 @@ export function BiblePanel() {
                         <div className="h-2 rounded-full" style={{ width: `${Math.min(100, (readingPlan.streak / readingPlan.target) * 100)}%`, background: 'hsl(var(--brand-purple))' }} />
                       </div>
                       <div className="mt-3 flex flex-wrap gap-2">
-                        <Button variant="secondary" size="sm" onClick={markPlanComplete} className="rounded-full">
-                          <CheckCircle2 className="mr-2 h-4 w-4" /> Mark chapter read
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={speakPassage} className="rounded-full">
-                          {isSpeaking ? <VolumeX className="mr-2 h-4 w-4" /> : <Volume2 className="mr-2 h-4 w-4" />}
-                          {isSpeaking ? 'Stop audio' : 'Play audio'}
-                        </Button>
                         <Button variant="outline" size="sm" onClick={sharePassage} className="rounded-full">
                           <Share2 className="mr-2 h-4 w-4" /> Share
                         </Button>
@@ -740,7 +747,7 @@ export function BiblePanel() {
                           <h3 className="text-sm font-semibold">Daily inspiration</h3>
                         </div>
                         <p className="text-sm leading-6" style={{ color: 'hsl(var(--foreground))' }}>{dailyQuote}</p>
-                        <p className="mt-2 text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>{MOOD_RECOMMENDATIONS[mood]}</p>
+                        <p className="mt-2 text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>{activeMood.text}</p>
                       </div>
                     </div>
 
@@ -749,7 +756,7 @@ export function BiblePanel() {
                         {(['peace', 'focus', 'encouragement'] as const).map((option) => (
                           <button
                             key={option}
-                            onClick={() => setMood(option)}
+                            onClick={() => handleMoodSelect(option)}
                             className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${mood === option ? 'text-white' : ''}`}
                             style={{ background: mood === option ? 'hsl(var(--brand-purple))' : 'hsl(var(--secondary))', color: mood === option ? 'white' : 'hsl(var(--foreground))' }}
                           >
@@ -806,9 +813,19 @@ export function BiblePanel() {
                                 <span className="font-semibold text-sm select-none pt-1" style={{ color: 'hsl(var(--brand-purple))' }}>
                                   {v.verse}
                                 </span>
-                                <span className="bible-verse-text text-base text-foreground">
-                                  {cleanVerse(v.text)}
-                                </span>
+                                <div className="flex flex-col gap-2">
+                                  {parseVerseContent(v.text).map((part, index) =>
+                                    part.type === 'heading' ? (
+                                      <div key={`${v.pk}-heading-${index}`} className="text-sm font-semibold uppercase tracking-[0.2em]" style={{ color: 'hsl(var(--brand-purple))' }}>
+                                        {part.content}
+                                      </div>
+                                    ) : (
+                                      <span key={`${v.pk}-text-${index}`} className="bible-verse-text text-base text-foreground">
+                                        {part.content}
+                                      </span>
+                                    )
+                                  )}
+                                </div>
                               </div>
                               <div className="flex flex-col gap-1">
                                 <button onClick={() => { setActiveVerse(v.verse); setNoteDraft(verseNote?.text ?? ''); }} className="rounded-full p-1.5" style={{ background: 'hsl(var(--secondary))' }} title="Add note">

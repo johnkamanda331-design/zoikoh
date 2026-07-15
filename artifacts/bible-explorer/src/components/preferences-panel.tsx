@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   Volume2, VolumeX, Moon, Sun, Settings as SettingsIcon,
-  Type, Eye, Zap, RotateCcw, MessageSquare,
+  Type, Eye, Zap, RotateCcw,
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -231,26 +231,6 @@ export function PreferencesPanel() {
                 </motion.button>
               </div>
 
-              <div className="flex items-center justify-between">
-                <Label className="flex items-center gap-2 cursor-pointer">
-                  <MessageSquare className="w-4 h-4 text-brand-purple" />
-                  <span>Voice narration</span>
-                </Label>
-                <motion.button
-                  onClick={() => updatePref('voiceNarrationEnabled', !prefs.voiceNarrationEnabled)}
-                  className={`
-                    relative inline-flex h-6 w-11 rounded-full transition-colors
-                    ${prefs.voiceNarrationEnabled ? 'bg-brand-purple' : 'bg-secondary'}
-                  `}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <motion.span
-                    layout
-                    className="inline-block h-5 w-5 transform rounded-full bg-white shadow-md"
-                    animate={{ x: prefs.voiceNarrationEnabled ? 20 : 2 }}
-                  />
-                </motion.button>
-              </div>
             </CardContent>
           </Card>
 
