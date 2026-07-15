@@ -490,6 +490,7 @@ function QuizGame({ mode, onBack }: { mode: string; onBack: () => void }) {
         );
       }
       return <PreGameScreen modeData={modeData} onStart={() => setIsPlaying(true)} cta={mode === 'self-practice' ? 'Start Practice' : undefined} />;
+    }
 
   if (isLoading) return <div className="p-10 text-center text-xl font-bold animate-pulse text-muted-foreground">Loading questions…</div>;
 
