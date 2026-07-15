@@ -172,7 +172,7 @@ router.post("/ice-breakers/generate", generateLimiter, async (req: any, res: any
       return res.json({ scenarios: mockScenarios });
     }
 
-    const prompt = buildIceBreakerPrompt(title as string, instructions as string[], summary as string | undefined);
+    const prompt = buildIceBreakerPrompt(title as string, summary as string | undefined, instructions as string[]);
 
     try {
       const parsed = openaiKey
@@ -180,13 +180,13 @@ router.post("/ice-breakers/generate", generateLimiter, async (req: any, res: any
         : await generateWithGemini(geminiKey as string, prompt);
 
       if (!parsed || !parsed.scenarios || !Array.isArray(parsed.scenarios)) {
-        const mockScenarios = generateMockScenarios(title as string, instructions as string[], summary as string | undefined);
+        const mockScenarios = generateMockScenarios(title as string, summary as string | undefined, instructions as string[]);
         return res.json({ scenarios: mockScenarios });
       }
 
       return res.json({ scenarios: parsed.scenarios.slice(0, 5).map((item: unknown) => String(item)) });
     } catch (aiError) {
-      const mockScenarios = generateMockScenarios(title as string, instructions as string[], summary as string | undefined);
+      const mockScenarios = generateMockScenarios(title as string, summary as string | undefined, instructions as string[]);
       return res.json({ scenarios: mockScenarios });
     }
   } catch (err) {
@@ -195,7 +195,7 @@ router.post("/ice-breakers/generate", generateLimiter, async (req: any, res: any
   }
 });
 
-function buildIceBreakerPrompt(title: string, instructions: string[], summary?: string) {
+function buildIceBreakerPrompt(title: string, summary?: string, instructions: string[]) {
   const summaryLine = summary ? `Summary: ${summary}` : "";
   const instructionText = instructions.map((step, index) => `${index + 1}. ${step}`).join(" ");
 
@@ -224,7 +224,7 @@ Requirements:
 `;
 }
 
-function generateMockScenarios(title: string, instructions: string[], summary?: string) {
+function generateMockScenarios(title: string, summary: string | undefined, instructions: string[]) {
   return [
     `Use ${title} as a story prompt and ask each person to share a one-sentence takeaway.`,
     `Turn ${title} into a quick pairing activity where each person shares one related Bible verse.`,
