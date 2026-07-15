@@ -195,7 +195,7 @@ router.post("/ice-breakers/generate", generateLimiter, async (req: any, res: any
   }
 });
 
-function buildIceBreakerPrompt(title: string, summary?: string, instructions: string[]) {
+function buildIceBreakerPrompt(title: string, summary: string | undefined, instructions: string[]) {
   const summaryLine = summary ? `Summary: ${summary}` : "";
   const instructionText = instructions.map((step, index) => `${index + 1}. ${step}`).join(" ");
 

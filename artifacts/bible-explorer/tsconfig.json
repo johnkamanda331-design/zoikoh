@@ -9,7 +9,10 @@
     "resolveJsonModule": true,
     "allowImportingTsExtensions": true,
     "moduleResolution": "bundler",
-    "types": ["node", "vite/client"],
+    "module": "esnext",
+    "target": "es2022",
+    "types": ["node", "vite/client", "react", "react-dom"],
+    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     }

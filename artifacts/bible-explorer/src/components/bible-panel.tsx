@@ -170,11 +170,11 @@ export function BiblePanel() {
 
   const chapterKey = useMemo(() => `${translation}:${book}:${chapter}`, [translation, book, chapter]);
   const selectedVerseKeys = useMemo(
-    () => selectedVerses.map((verse) => `${chapterKey}:${verse}`),
+    () => selectedVerses.map((verse: number) => `${chapterKey}:${verse}`),
     [chapterKey, selectedVerses],
   );
   const selectedNotes = useMemo(
-    () => selectedVerseKeys.map((key) => notes[key]).filter(Boolean),
+    () => selectedVerseKeys.map((key: string) => notes[key]).filter(Boolean),
     [notes, selectedVerseKeys],
   );
   const notePreview = useMemo(
@@ -335,7 +335,7 @@ export function BiblePanel() {
 
       if (fetchRequestId.current === myId) {
         setVerses(data);
-        setChapterCache((prev) => ({ ...prev, [chapterKey]: data }));
+        setChapterCache((prev: Record<string, VerseData[]>) => ({ ...prev, [chapterKey]: data }));
       }
     } catch (err: any) {
       // Ignore abort error if we intentionally cancelled
@@ -397,8 +397,8 @@ export function BiblePanel() {
     } catch {
       // ignore storage errors
     }
-    setRecentChapters((prev) => {
-      const next = [chapterKey, ...prev.filter((item) => item !== chapterKey)].slice(0, 6);
+    setRecentChapters((prev: string[]) => {
+      const next = [chapterKey, ...prev.filter((item: string) => item !== chapterKey)].slice(0, 6);
       return next;
     });
   }, [book, chapter, translation, isOpen, chapterKey]);
@@ -419,7 +419,7 @@ export function BiblePanel() {
 
   const prevChapter = () => {
     if (chapter > 1) {
-      setChapter((c) => c - 1);
+      setChapter((c: number) => c - 1);
       return;
     }
     const i = BIBLE_BOOKS.indexOf(book);
@@ -432,7 +432,7 @@ export function BiblePanel() {
 
   const nextChapter = () => {
     if (chapter < CHAPTER_COUNTS[book]) {
-      setChapter((c) => c + 1);
+      setChapter((c: number) => c + 1);
       return;
     }
     const i = BIBLE_BOOKS.indexOf(book);
@@ -451,36 +451,36 @@ export function BiblePanel() {
   };
 
   const decreaseFontSize = () => {
-    setFontSize((f) => {
+    setFontSize((f: FontSize) => {
       const idx = fontSizes.indexOf(f);
       return idx > 0 ? fontSizes[idx - 1] : f;
     });
   };
 
   const increaseFontSize = () => {
-    setFontSize((f) => {
+    setFontSize((f: FontSize) => {
       const idx = fontSizes.indexOf(f);
       return idx < fontSizes.length - 1 ? fontSizes[idx + 1] : f;
     });
   };
 
   const toggleBookmark = () => {
-    setBookmarks((prev) => (prev.includes(chapterKey) ? prev.filter((item) => item !== chapterKey) : [...prev, chapterKey]));
+    setBookmarks((prev: string[]) => (prev.includes(chapterKey) ? prev.filter((item: string) => item !== chapterKey) : [...prev, chapterKey]));
   };
 
   const toggleFavorite = () => {
-    setFavorites((prev) => (prev.includes(chapterKey) ? prev.filter((item) => item !== chapterKey) : [...prev, chapterKey]));
+    setFavorites((prev: string[]) => (prev.includes(chapterKey) ? prev.filter((item: string) => item !== chapterKey) : [...prev, chapterKey]));
   };
 
   const addToStudyList = () => {
-    setStudyList((prev) => (prev.includes(chapterKey) ? prev : [...prev, chapterKey]));
+    setStudyList((prev: string[]) => (prev.includes(chapterKey) ? prev : [...prev, chapterKey]));
   };
 
   const saveNote = () => {
     if (!selectedVerses.length) return;
-    setNotes((prev) => {
+    setNotes((prev: Record<string, ReadingNote>) => {
       const next = { ...prev };
-      selectedVerses.forEach((verse) => {
+      selectedVerses.forEach((verse: number) => {
         const key = `${chapterKey}:${verse}`;
         next[key] = {
           text: noteDraft,
@@ -495,7 +495,7 @@ export function BiblePanel() {
 
   const toggleHighlight = (verse: number) => {
     const verseKey = `${chapterKey}:${verse}`;
-    setNotes((prev) => {
+    setNotes((prev: Record<string, ReadingNote>) => {
       const current = prev[verseKey];
       return {
         ...prev,
@@ -535,11 +535,11 @@ export function BiblePanel() {
   };
 
   const toggleVerseSelection = (verse: number) => {
-    setSelectedVerses((prev) => {
+    setSelectedVerses((prev: number[]) => {
       if (prev.includes(verse)) {
-        return prev.filter((item) => item !== verse);
+        return prev.filter((item: number) => item !== verse);
       }
-      return [...prev, verse].sort((a, b) => a - b);
+      return [...prev, verse].sort((a: number, b: number) => a - b);
     });
   };
 
