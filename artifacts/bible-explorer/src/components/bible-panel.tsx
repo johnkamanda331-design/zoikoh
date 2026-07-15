@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useBiblePanelStore } from '@/hooks/use-bible-panel';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -152,7 +152,7 @@ export function BiblePanel() {
   const [showChapterSelector, setShowChapterSelector] = useState(false);
   const [showVerseSelector, setShowVerseSelector] = useState(false);
   const [selectedChapterForSelection, setSelectedChapterForSelection] = useState<number | null>(null);
-  const [activeVerse, setActiveVerse] = useState<number | null>(null);
+  const [selectedVerses, setSelectedVerses] = useState<number[]>([]);
   const [noteDraft, setNoteDraft] = useState('');
   const [notes, setNotes] = useState<Record<string, ReadingNote>>({});
   const [bookmarks, setBookmarks] = useState<string[]>([]);
@@ -166,17 +166,31 @@ export function BiblePanel() {
   const [lineSpacing, setLineSpacing] = useState<'comfortable' | 'relaxed'>((initialPrefs.lineSpacing as 'comfortable' | 'relaxed' | undefined) ?? 'comfortable');
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const verseRefs = useRef<Record<number, HTMLDivElement | null>>({});
 
-  const chapterKey = `${translation}:${book}:${chapter}`;
-  const noteKey = activeVerse ? `${chapterKey}:${activeVerse}` : '';
-  const currentNote = noteKey ? notes[noteKey] : undefined;
-  const isBookmarked = bookmarks.includes(chapterKey);
-  const isFavorite = favorites.includes(chapterKey);
-  const summary = CHAPTER_SUMMARIES[book]?.[chapter] ?? `A calm reading of ${book} chapter ${chapter} can help you reflect and pray.`;
-  const dailyQuote = DAILY_QUOTES[new Date().getDay() % DAILY_QUOTES.length];
-  const activeMood = MOOD_RECOMMENDATIONS[mood];
+  const chapterKey = useMemo(() => `${translation}:${book}:${chapter}`, [translation, book, chapter]);
+  const selectedVerseKeys = useMemo(
+    () => selectedVerses.map((verse) => `${chapterKey}:${verse}`),
+    [chapterKey, selectedVerses],
+  );
+  const selectedNotes = useMemo(
+    () => selectedVerseKeys.map((key) => notes[key]).filter(Boolean),
+    [notes, selectedVerseKeys],
+  );
+  const notePreview = useMemo(
+    () => (selectedVerses.length === 1 ? notes[selectedVerseKeys[0]]?.text ?? '' : ''),
+    [notes, selectedVerseKeys, selectedVerses.length],
+  );
+  const isBookmarked = useMemo(() => bookmarks.includes(chapterKey), [bookmarks, chapterKey]);
+  const isFavorite = useMemo(() => favorites.includes(chapterKey), [favorites, chapterKey]);
+  const summary = useMemo(
+    () => CHAPTER_SUMMARIES[book]?.[chapter] ?? `A calm reading of ${book} chapter ${chapter} can help you reflect and pray.`,
+    [book, chapter],
+  );
+  const dailyQuote = useMemo(() => DAILY_QUOTES[new Date().getDay() % DAILY_QUOTES.length], []);
+  const activeMood = useMemo(() => MOOD_RECOMMENDATIONS[mood], [mood]);
 
-  const filteredVerses = verses;
+  const filteredVerses = useMemo(() => verses, [verses]);
 
   useEffect(() => {
     try {
@@ -258,6 +272,16 @@ export function BiblePanel() {
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   }, [book, chapter]);
+
+  useEffect(() => {
+    if (!isOpen || selectedVerses.length === 0) return;
+    const lastSelected = selectedVerses[selectedVerses.length - 1];
+    const element = verseRefs.current[lastSelected];
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      element.focus();
+    }
+  }, [selectedVerses, isOpen]);
 
   const fetchAbort = useRef<AbortController | null>(null);
   const fetchRequestId = useRef(0);
@@ -453,17 +477,20 @@ export function BiblePanel() {
   };
 
   const saveNote = () => {
-    if (!noteKey || !activeVerse) return;
-    setNotes((prev) => ({
-      ...prev,
-      [noteKey]: {
-        text: noteDraft,
-        highlighted: Boolean(prev[noteKey]?.highlighted || noteDraft.trim()),
-        createdAt: new Date().toISOString(),
-      },
-    }));
+    if (!selectedVerses.length) return;
+    setNotes((prev) => {
+      const next = { ...prev };
+      selectedVerses.forEach((verse) => {
+        const key = `${chapterKey}:${verse}`;
+        next[key] = {
+          text: noteDraft,
+          highlighted: Boolean(prev[key]?.highlighted || noteDraft.trim()),
+          createdAt: new Date().toISOString(),
+        };
+      });
+      return next;
+    });
     setNoteDraft('');
-    setActiveVerse(null);
   };
 
   const toggleHighlight = (verse: number) => {
@@ -507,9 +534,31 @@ export function BiblePanel() {
     setChapter(recommendation.chapter);
   };
 
-  const recommendedReading = recentChapters[0]
-    ? recentChapters[0].split(':').slice(1).join(' · ')
-    : `${book} ${chapter}`;
+  const toggleVerseSelection = (verse: number) => {
+    setSelectedVerses((prev) => {
+      if (prev.includes(verse)) {
+        return prev.filter((item) => item !== verse);
+      }
+      return [...prev, verse].sort((a, b) => a - b);
+    });
+  };
+
+  const clearSelection = () => {
+    setSelectedVerses([]);
+    setNoteDraft('');
+  };
+
+  const randomVerse = () => {
+    if (!verses.length) return;
+    const next = verses[Math.floor(Math.random() * verses.length)].verse;
+    setSelectedVerses([next]);
+    setShowVerseSelector(false);
+  };
+
+  const recommendedReading = useMemo(
+    () => (recentChapters[0] ? recentChapters[0].split(':').slice(1).join(' · ') : `${book} ${chapter}`),
+    [recentChapters, book, chapter],
+  );
 
   return (
     <AnimatePresence>
@@ -685,7 +734,14 @@ export function BiblePanel() {
                     <div className="text-sm font-semibold mb-2">{book} {chapter} — Pick a verse</div>
                     <div className="grid grid-cols-8 gap-2 max-h-[220px] overflow-y-auto">
                       {verses.length ? verses.map((v) => (
-                        <button key={v.pk} onClick={() => { setActiveVerse(v.verse); setShowVerseSelector(false); }} className="text-xs px-2 py-1 rounded bg-secondary/40 hover:opacity-80">{v.verse}</button>
+                        <button
+                          key={v.pk}
+                          onClick={() => { toggleVerseSelection(v.verse); setShowVerseSelector(false); }}
+                          className={`text-xs px-2 py-1 rounded ${selectedVerses.includes(v.verse) ? 'bg-brand-purple/15 text-brand-purple' : 'bg-secondary/40 hover:opacity-80'}`}
+                          aria-pressed={selectedVerses.includes(v.verse)}
+                        >
+                          {v.verse}
+                        </button>
                       )) : (
                         <div className="text-xs text-muted-foreground">Loading verses…</div>
                       )}
@@ -751,41 +807,86 @@ export function BiblePanel() {
                       </div>
                     </div>
 
-                    {noteKey ? (
+                    <div className="grid gap-4 md:grid-cols-[1fr_auto]">
                       <div className="rounded-2xl border p-4" style={{ borderColor: 'hsl(var(--border))', background: 'hsl(var(--card))' }}>
-                        <div className="flex items-center gap-2 mb-2">
-                          <PenSquare className="h-4 w-4" style={{ color: 'hsl(var(--brand-purple))' }} />
-                          <h3 className="text-sm font-semibold">Verse notes</h3>
+                        <div className="flex items-center justify-between gap-3 mb-2">
+                          <div className="flex items-center gap-2">
+                            <PenSquare className="h-4 w-4" style={{ color: 'hsl(var(--brand-purple))' }} />
+                            <div>
+                              <h3 className="text-sm font-semibold">Verse notes</h3>
+                              <p className="text-xs text-muted-foreground">Select one or more verses to add notes.</p>
+                            </div>
+                          </div>
+                          <button type="button" onClick={clearSelection} className="text-xs text-brand-purple hover:underline">Clear selection</button>
+                        </div>
+                        <div className="mb-3 text-sm text-foreground">
+                          {selectedVerses.length > 0 ? (
+                            <>
+                              <p className="text-xs text-muted-foreground mb-2">Selected: {selectedVerses.join(', ')}</p>
+                              <div className="flex flex-wrap gap-2">
+                                {selectedVerses.map((verse) => (
+                                  <span key={verse} className="rounded-full bg-secondary/40 px-2 py-1 text-xs">Verse {verse}</span>
+                                ))}
+                              </div>
+                            </>
+                          ) : (
+                            <p className="text-xs text-muted-foreground">Tap verse numbers to select them for notes.</p>
+                          )}
                         </div>
                         <textarea
                           value={noteDraft}
                           onChange={(event) => setNoteDraft(event.target.value)}
-                          rows={3}
-                          placeholder="Save a quick note for this verse"
+                          rows={4}
+                          placeholder="Save a note for selected verses"
                           className="w-full rounded-xl border px-3 py-2 text-sm outline-none"
                           style={{ borderColor: 'hsl(var(--border))', background: 'hsl(var(--secondary))' }}
                         />
-                        <div className="mt-3 flex items-center gap-2">
-                          <Button size="sm" onClick={saveNote} className="rounded-full">Save note</Button>
-                          <Button variant="outline" size="sm" onClick={() => setActiveVerse(null)} className="rounded-full">Cancel</Button>
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                          <Button size="sm" onClick={saveNote} disabled={!selectedVerses.length || !noteDraft.trim()} className="rounded-full">Save note</Button>
+                          <Button variant="outline" size="sm" onClick={clearSelection} className="rounded-full">Cancel</Button>
+                          <Button variant="ghost" size="sm" onClick={randomVerse} className="rounded-full">Random verse</Button>
                         </div>
-                        {currentNote?.text ? (
-                          <p className="mt-3 text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>Saved note: {currentNote.text}</p>
+                        {selectedVerses.length === 1 && notePreview ? (
+                          <p className="mt-3 text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>Saved note: {notePreview}</p>
                         ) : null}
                       </div>
-                    ) : null}
+                      <div className="rounded-2xl border p-4 bg-secondary/70" style={{ borderColor: 'hsl(var(--border))', background: 'hsl(var(--secondary))' }}>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Clock3 className="h-4 w-4" style={{ color: 'hsl(var(--brand-blue))' }} />
+                          <h3 className="text-sm font-semibold">Quick controls</h3>
+                        </div>
+                        <div className="space-y-2 text-sm" style={{ color: 'hsl(var(--foreground))' }}>
+                          <p><strong>Tap verse number</strong> to select multiple verses.</p>
+                          <p><strong>Highlight</strong> keeps the verse visible and easy to return to.</p>
+                          <p><strong>Save note</strong> stores the same note for all selected verses.</p>
+                        </div>
+                      </div>
+                    </div>
 
                     <div className="space-y-3">
                       {filteredVerses.map((v) => {
                         const verseNote = notes[`${chapterKey}:${v.verse}`];
                         const isHighlighted = Boolean(verseNote?.highlighted);
                         return (
-                          <div key={v.pk} className={`rounded-2xl border p-3 transition-all ${isHighlighted ? 'border-brand-purple/70' : ''}`} style={{ borderColor: isHighlighted ? 'hsl(var(--brand-purple))' : 'hsl(var(--border))', background: isHighlighted ? 'hsl(var(--brand-purple) / 0.08)' : 'transparent' }}>
+                          <div
+                            key={v.pk}
+                            ref={(el) => { verseRefs.current[v.verse] = el; }}
+                            tabIndex={-1}
+                            className={`rounded-2xl border p-3 transition-all focus-within:ring-2 focus-within:ring-brand-purple/40 ${isHighlighted ? 'border-brand-purple/70' : ''}`}
+                            style={{ borderColor: isHighlighted ? 'hsl(var(--brand-purple))' : 'hsl(var(--border))', background: isHighlighted ? 'hsl(var(--brand-purple) / 0.08)' : 'transparent' }}
+                          >
                             <div className="flex items-start justify-between gap-2">
                               <div className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1 text-sm leading-relaxed flex-1">
-                                <span className="font-semibold text-sm select-none pt-1" style={{ color: 'hsl(var(--brand-purple))' }}>
+                                <button
+                                  type="button"
+                                  onClick={() => toggleVerseSelection(v.verse)}
+                                  className={`font-semibold text-sm select-none pt-1 rounded-full px-2 py-1 transition-colors ${selectedVerses.includes(v.verse) ? 'bg-brand-purple/15 text-brand-purple' : 'hover:bg-secondary/60'}`}
+                                  style={{ color: 'hsl(var(--brand-purple))' }}
+                                  aria-pressed={selectedVerses.includes(v.verse)}
+                                  aria-label={`Select verse ${v.verse}`}
+                                >
                                   {v.verse}
-                                </span>
+                                </button>
                                 <div className="flex flex-col gap-2">
                                   {parseVerseContent(v.text).map((part, index) =>
                                     part.type === 'heading' ? (
@@ -801,10 +902,27 @@ export function BiblePanel() {
                                 </div>
                               </div>
                               <div className="flex flex-col gap-1">
-                                <button onClick={() => { setActiveVerse(v.verse); setNoteDraft(verseNote?.text ?? ''); }} className="rounded-full p-1.5" style={{ background: 'hsl(var(--secondary))' }} title="Add note">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    toggleVerseSelection(v.verse);
+                                    setNoteDraft(verseNote?.text ?? noteDraft);
+                                  }}
+                                  className="rounded-full p-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-purple"
+                                  style={{ background: 'hsl(var(--secondary))' }}
+                                  title="Select verse for note"
+                                  aria-label={`Select verse ${v.verse} for note`}
+                                >
                                   <PenSquare className="h-3.5 w-3.5" />
                                 </button>
-                                <button onClick={() => toggleHighlight(v.verse)} className="rounded-full p-1.5" style={{ background: isHighlighted ? 'hsl(var(--brand-purple))' : 'hsl(var(--secondary))', color: isHighlighted ? 'white' : 'hsl(var(--foreground))' }} title="Highlight verse">
+                                <button
+                                  type="button"
+                                  onClick={() => toggleHighlight(v.verse)}
+                                  className="rounded-full p-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-purple"
+                                  style={{ background: isHighlighted ? 'hsl(var(--brand-purple))' : 'hsl(var(--secondary))', color: isHighlighted ? 'white' : 'hsl(var(--foreground))' }}
+                                  title="Highlight verse"
+                                  aria-label={`${isHighlighted ? 'Remove highlight from' : 'Highlight'} verse ${v.verse}`}
+                                >
                                   <Sparkles className="h-3.5 w-3.5" />
                                 </button>
                               </div>

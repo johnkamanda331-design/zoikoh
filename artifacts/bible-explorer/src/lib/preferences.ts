@@ -38,7 +38,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   fontSize: 'medium',
   highContrast: false,
   language: 'en',
-  translation: 'NIV',
+  translation: 'ESV',
   readingDensity: 'comfortable',
   lineSpacing: 'comfortable',
   showChapterSummary: true,

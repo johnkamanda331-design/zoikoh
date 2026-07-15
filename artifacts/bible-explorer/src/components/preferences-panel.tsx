@@ -35,7 +35,7 @@ export function PreferencesPanel() {
       fontSize: 'medium',
       highContrast: false,
       language: 'en',
-      translation: 'NIV',
+      translation: 'ESV',
     };
     savePreferences(defaults);
     setPrefs(defaults);

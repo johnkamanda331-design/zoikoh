@@ -381,9 +381,9 @@ export function IceBreakersPanel() {
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 md:p-8" style={{ background: 'hsl(var(--background))' }}>
-              <div className="grid gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
-                <div className="rounded-3xl border p-4 shadow-sm" style={{ borderColor: 'hsl(var(--border))', background: 'hsl(var(--card))' }}>
+            <div className="flex-1 overflow-hidden p-6 md:p-8" style={{ background: 'hsl(var(--background))' }}>
+              <div className="grid gap-4 lg:grid-cols-[320px_minmax(0,1fr)] h-full">
+                <div className="rounded-3xl border p-4 shadow-sm h-full overflow-y-auto" style={{ borderColor: 'hsl(var(--border))', background: 'hsl(var(--card))' }}>
                   <div className="text-sm font-semibold mb-3">Choose an ice-breaker</div>
                   <div className="space-y-2">
                     {ICE_BREAKERS.map((item) => (
@@ -400,39 +400,41 @@ export function IceBreakersPanel() {
                   </div>
                 </div>
 
-                <div className="rounded-3xl border p-4 shadow-sm" style={{ borderColor: 'hsl(var(--border))', background: 'hsl(var(--card))' }}>
-                  {selectedItem ? (
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-2xl bg-brand-purple/10 flex items-center justify-center text-brand-purple">
-                          <Users className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <div className="text-lg font-semibold">{selectedItem.title}</div>
-                          <p className="text-xs text-muted-foreground">{selectedItem.summary}</p>
-                        </div>
-                      </div>
-                      <div className="space-y-3">
-                        {selectedItem.instructions.map((step, index) => (
-                          <div key={index} className="rounded-2xl border p-3" style={{ borderColor: 'hsl(var(--border))', background: 'hsl(var(--secondary))' }}>
-                            <div className="text-sm font-semibold mb-1">Step {index + 1}</div>
-                            <p className="text-sm leading-6 text-foreground">{step}</p>
+                <div className="rounded-3xl border p-4 shadow-sm h-full overflow-y-auto" style={{ borderColor: 'hsl(var(--border))', background: 'hsl(var(--card))' }}>
+                  <div className="space-y-4">
+                    {selectedItem ? (
+                      <>
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-2xl bg-brand-purple/10 flex items-center justify-center text-brand-purple">
+                            <Users className="w-5 h-5" />
                           </div>
-                        ))}
-                      </div>
-                      {selectedItem.notes ? (
-                        <div className="rounded-2xl border p-3" style={{ borderColor: 'hsl(var(--border))', background: 'hsl(var(--secondary))' }}>
-                          <div className="text-sm font-semibold mb-1">Notes</div>
-                          <p className="text-sm text-muted-foreground leading-6">{selectedItem.notes}</p>
+                          <div>
+                            <div className="text-lg font-semibold">{selectedItem.title}</div>
+                            <p className="text-xs text-muted-foreground">{selectedItem.summary}</p>
+                          </div>
                         </div>
-                      ) : null}
-                    </div>
-                  ) : (
-                    <div className="text-center py-20">
-                      <Lightbulb className="mx-auto mb-4 w-8 h-8 text-brand-purple" />
-                      <p className="text-sm text-muted-foreground">Select an ice-breaker from the list to see instructions and tips.</p>
-                    </div>
-                  )}
+                        <div className="space-y-3">
+                          {selectedItem.instructions.map((step, index) => (
+                            <div key={index} className="rounded-2xl border p-3" style={{ borderColor: 'hsl(var(--border))', background: 'hsl(var(--secondary))' }}>
+                              <div className="text-sm font-semibold mb-1">Step {index + 1}</div>
+                              <p className="text-sm leading-6 text-foreground">{step}</p>
+                            </div>
+                          ))}
+                        </div>
+                        {selectedItem.notes ? (
+                          <div className="rounded-2xl border p-3" style={{ borderColor: 'hsl(var(--border))', background: 'hsl(var(--secondary))' }}>
+                            <div className="text-sm font-semibold mb-1">Notes</div>
+                            <p className="text-sm text-muted-foreground leading-6">{selectedItem.notes}</p>
+                          </div>
+                        ) : null}
+                      </>
+                    ) : (
+                      <div className="text-center py-20">
+                        <Lightbulb className="mx-auto mb-4 w-8 h-8 text-brand-purple" />
+                        <p className="text-sm text-muted-foreground">Select an ice-breaker from the list to see instructions and tips.</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

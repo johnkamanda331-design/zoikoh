@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'wouter';
-import { Target, Users, Zap, BookOpen, Flame, Clock, Gamepad2, Trophy, Lightbulb, CalendarDays } from 'lucide-react';
+import { Target, Users, Zap, BookOpen, Flame, Clock, Gamepad2, Trophy, Lightbulb, CalendarDays, Sparkles } from 'lucide-react';
 import { useAuth } from '@clerk/react';
 import { useGetDailyContent, useGetStatsOverview, useListRecentSessions } from '@workspace/api-client-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useIceBreakersPanelStore } from '@/hooks/use-icebreakers-panel';
 
 /* ── Verse summaries ───────────────────────────────────────────────────── */
 const VERSE_SUMMARIES: Record<string, string> = {
@@ -64,6 +65,7 @@ export function Home() {
   } = useListRecentSessions({ limit: 5 } as any);
 
   const [streak, setStreak] = useState<StreakData>({ lastDate: null, current: 0, longest: 0 });
+  const iceBreakersPanelStore = useIceBreakersPanelStore();
 
   useEffect(() => {
     setStreak(loadStreak());
@@ -231,15 +233,26 @@ export function Home() {
             { title: 'Host a Group Session', description: 'Invite friends to play Bible trivia together in real time.', href: '/start', action: 'Host Now' },
             { title: 'Try a 1v1 Duel', description: 'Challenge another player in a quick head-to-head match.', href: '/duel', action: 'Duel Now' },
             { title: 'Join an Active Game', description: 'Jump into a live session already in progress.', href: '/join', action: 'Join Game' },
+            { title: 'Open Ice-Breakers', description: 'Discover faith-based activities and conversation starters for your next gathering.', action: 'Explore Ice-Breakers', icon: Sparkles, onClick: () => iceBreakersPanelStore.open(), badge: 'New' },
           ].map((card) => (
             <Card key={card.title} className="rounded-3xl border-border/50 bg-card transition hover:-translate-y-1 hover:shadow-lg">
               <CardContent className="p-6 space-y-4">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground mb-2">More ways to play</p>
-                  <h3 className="text-xl font-heading font-bold">{card.title}</h3>
+                  <div className="flex items-center gap-2 mb-2">
+                    <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">More ways to play</p>
+                    {card.badge ? (
+                      <span className="rounded-full bg-brand-purple/10 text-brand-purple px-2 py-1 text-[10px] uppercase tracking-[0.3em] font-semibold">
+                        {card.badge}
+                      </span>
+                    ) : null}
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {card.icon ? <card.icon className="w-5 h-5 text-brand-purple" /> : null}
+                    <h3 className="text-xl font-heading font-bold">{card.title}</h3>
+                  </div>
                   <p className="text-sm text-muted-foreground mt-2">{card.description}</p>
                 </div>
-                <Button size="sm" onClick={() => window.location.assign(card.href)} className="rounded-full px-4">
+                <Button size="sm" onClick={() => card.onClick ? card.onClick() : window.location.assign(card.href!)} className="rounded-full px-4">
                   {card.action}
                 </Button>
               </CardContent>
