@@ -1,17 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
-  Volume2, VolumeX, Moon, Sun, Settings as SettingsIcon,
+  Moon, Sun, Settings as SettingsIcon,
   Type, Eye, Zap, RotateCcw,
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Slider } from '@/components/ui/slider';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { DifficultySelector } from '@/components/difficulty-selector';
 import { loadPreferences, savePreferences, type UserPreferences } from '@/lib/preferences';
+import { TRANSLATIONS } from '@/lib/bible';
 import { toast } from 'sonner';
 
 export function PreferencesPanel() {
@@ -27,18 +25,18 @@ export function PreferencesPanel() {
       theme: 'light',
       difficulty: 'medium',
       adaptiveDifficulty: false,
-      soundEnabled: true,
-      voiceNarrationEnabled: false,
-      soundVolume: 0.7,
       tutorialCompleted: false,
       showExplanations: true,
       fontSize: 'medium',
       highContrast: false,
       language: 'en',
       translation: 'ESV',
+      readingDensity: 'comfortable',
+      lineSpacing: 'comfortable',
+      reducedMotion: false,
     };
-    savePreferences(defaults);
-    setPrefs(defaults);
+    const updated = savePreferences(defaults);
+    setPrefs(updated);
     toast.success('Preferences reset to defaults');
   };
 
@@ -166,56 +164,6 @@ export function PreferencesPanel() {
 
           <Card className="rounded-2xl border-border/50">
             <CardHeader>
-              <CardTitle className="text-lg">Audio Options</CardTitle>
-              <CardDescription>Control sound effects, music, and narration</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label className="flex items-center gap-2 cursor-pointer">
-                  {prefs.soundEnabled ? (
-                    <Volume2 className="w-4 h-4 text-brand-purple" />
-                  ) : (
-                    <VolumeX className="w-4 h-4 text-muted-foreground" />
-                  )}
-                  <span>Enable sound effects</span>
-                </Label>
-                <motion.button
-                  onClick={() => updatePref('soundEnabled', !prefs.soundEnabled)}
-                  className={`
-                    relative inline-flex h-6 w-11 rounded-full transition-colors
-                    ${prefs.soundEnabled ? 'bg-brand-purple' : 'bg-secondary'}
-                  `}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <motion.span
-                    layout
-                    className="inline-block h-5 w-5 transform rounded-full bg-white shadow-md"
-                    animate={{ x: prefs.soundEnabled ? 20 : 2 }}
-                  />
-                </motion.button>
-              </div>
-
-              {prefs.soundEnabled && (
-                <div className="space-y-2">
-                  <Label className="text-sm">Volume: {Math.round(prefs.soundVolume * 100)}%</Label>
-                  <Slider
-                    value={[prefs.soundVolume]}
-                    onValueChange={([v]) => updatePref('soundVolume', v)}
-                    min={0}
-                    max={1}
-                    step={0.1}
-                    className="w-full"
-                  />
-                </div>
-              )}
-
-              {/* Background music feature removed */}
-
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-2xl border-border/50">
-            <CardHeader>
               <CardTitle className="text-lg">Answer Explanations</CardTitle>
               <CardDescription>Show explanations after each question</CardDescription>
             </CardHeader>
@@ -293,19 +241,20 @@ export function PreferencesPanel() {
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="grid grid-cols-3 gap-2">
-                {(['NIV', 'KJV', 'ESV', 'NLT', 'NKJV'] as const).map((translation) => (
+                {TRANSLATIONS.map((translation) => (
                   <motion.button
-                    key={translation}
+                    key={translation.code}
                     whileHover={{ y: -2 }}
-                    onClick={() => updatePref('translation', translation)}
+                    onClick={() => updatePref('translation', translation.code)}
+                    aria-pressed={prefs.translation === translation.code}
                     className={`
                       p-3 rounded-xl border-2 transition-all text-sm font-semibold
-                      ${prefs.translation === translation
+                      ${prefs.translation === translation.code
                         ? 'border-brand-purple bg-brand-purple/10 text-foreground'
                         : 'border-border/50 bg-secondary/40 text-muted-foreground hover:border-border'}`
                     }
                   >
-                    {translation}
+                    {translation.code}
                   </motion.button>
                 ))}
               </div>

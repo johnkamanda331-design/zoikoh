@@ -20,6 +20,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { loadPreferences, savePreferences } from '@/lib/preferences';
+import { fetchBibleChapter, parseVerseContent, TRANSLATIONS, type Translation } from '@/lib/bible';
+import { loadJSON, saveJSON } from '@/lib/storage';
 
 /* ── Constants ─────────────────────────────────────────────────────────── */
 const BIBLE_BOOKS = [
@@ -49,18 +51,7 @@ const CHAPTER_COUNTS: Record<string, number> = {
   '1 Peter':5,'2 Peter':3,'1 John':5,'2 John':1,'3 John':1,'Jude':1,'Revelation':22,
 };
 
-type Translation = 'NIV' | 'KJV' | 'NLT' | 'ESV' | 'NKJV';
-
 type ReadingNote = { text: string; highlighted: boolean; createdAt: string };
-
-/* Translations available on bolls.life */
-const TRANSLATIONS: Array<{ code: Translation; label: string }> = [
-  { code: 'NIV', label: 'NIV – New International' },
-  { code: 'KJV', label: 'KJV – King James (1769)' },
-  { code: 'NLT', label: 'NLT – New Living Translation' },
-  { code: 'ESV', label: 'ESV – English Standard' },
-  { code: 'NKJV', label: 'NKJV – New King James' },
-];
 
 const CHAPTER_SUMMARIES: Record<string, Record<number, string>> = {
   John: {
@@ -91,38 +82,6 @@ const MOOD_RECOMMENDATIONS: Record<Mood, { title: string; book: string; chapter:
   encouragement: { title: 'Encouragement', book: 'John', chapter: 14, text: 'John 14 offers comfort and confidence in the presence of Jesus.' },
 };
 
-function cleanVerse(text: string) {
-  return text
-    .replace(/<S>\d+<\/S>/g, ' ')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&(nbsp|#160);/gi, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-interface VerseData { pk: number; verse: number; text: string }
-
-function parseVerseContent(text: string) {
-  const parts: Array<{ type: 'heading' | 'text'; content: string }> = [];
-  const headingRegex = /<(h[1-6])[^>]*>(.*?)<\/\1>/gi;
-  let lastIndex = 0;
-
-  for (const match of text.matchAll(headingRegex)) {
-    const before = cleanVerse(text.slice(lastIndex, match.index ?? lastIndex));
-    if (before) parts.push({ type: 'text', content: before });
-
-    const headingText = cleanVerse(match[2] ?? '');
-    if (headingText) parts.push({ type: 'heading', content: headingText });
-
-    lastIndex = (match.index ?? lastIndex) + match[0].length;
-  }
-
-  const tail = cleanVerse(text.slice(lastIndex));
-  if (tail) parts.push({ type: 'text', content: tail });
-
-  return parts.filter((part) => part.content.length > 0);
-}
-
 type FontSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 const fontSizes: FontSize[] = ['xs', 'sm', 'md', 'lg', 'xl'];
 const fontClasses: Record<FontSize, string> = {
@@ -151,7 +110,6 @@ export function BiblePanel() {
   const [selectedBookForSelection, setSelectedBookForSelection] = useState<string | null>(null);
   const [showChapterSelector, setShowChapterSelector] = useState(false);
   const [showVerseSelector, setShowVerseSelector] = useState(false);
-  const [selectedChapterForSelection, setSelectedChapterForSelection] = useState<number | null>(null);
   const [selectedVerses, setSelectedVerses] = useState<number[]>([]);
   const [noteDraft, setNoteDraft] = useState('');
   const [notes, setNotes] = useState<Record<string, ReadingNote>>({});
@@ -194,12 +152,12 @@ export function BiblePanel() {
 
   useEffect(() => {
     try {
-      const savedNotes = JSON.parse(localStorage.getItem('zoiko-bible-notes') ?? '{}');
-      const savedBookmarks = JSON.parse(localStorage.getItem('zoiko-bible-bookmarks') ?? '[]');
-      const savedFavorites = JSON.parse(localStorage.getItem('zoiko-bible-favorites') ?? '[]');
-      const savedRecent = JSON.parse(localStorage.getItem('zoiko-bible-recent') ?? '[]');
-      const savedStudy = JSON.parse(localStorage.getItem('zoiko-bible-study-list') ?? '[]');
-      const savedPlan = JSON.parse(localStorage.getItem('zoiko-bible-plan') ?? '{"completedToday":false,"streak":0,"target":7}');
+      const savedNotes = loadJSON<Record<string, ReadingNote>>('zoiko-bible-notes', {});
+      const savedBookmarks = loadJSON<string[]>('zoiko-bible-bookmarks', []);
+      const savedFavorites = loadJSON<string[]>('zoiko-bible-favorites', []);
+      const savedRecent = loadJSON<string[]>('zoiko-bible-recent', []);
+      const savedStudy = loadJSON<string[]>('zoiko-bible-study-list', []);
+      const savedPlan = loadJSON<{ completedToday: boolean; streak: number; target: number }>('zoiko-bible-plan', { completedToday: false, streak: 0, target: 7 });
       setNotes(savedNotes);
       setBookmarks(savedBookmarks);
       setFavorites(savedFavorites);
@@ -212,51 +170,27 @@ export function BiblePanel() {
   }, []);
 
   useEffect(() => {
-    try {
-      localStorage.setItem('zoiko-bible-notes', JSON.stringify(notes));
-    } catch {
-      // ignore storage errors
-    }
+    saveJSON('zoiko-bible-notes', notes);
   }, [notes]);
 
   useEffect(() => {
-    try {
-      localStorage.setItem('zoiko-bible-bookmarks', JSON.stringify(bookmarks));
-    } catch {
-      // ignore storage errors
-    }
+    saveJSON('zoiko-bible-bookmarks', bookmarks);
   }, [bookmarks]);
 
   useEffect(() => {
-    try {
-      localStorage.setItem('zoiko-bible-favorites', JSON.stringify(favorites));
-    } catch {
-      // ignore storage errors
-    }
+    saveJSON('zoiko-bible-favorites', favorites);
   }, [favorites]);
 
   useEffect(() => {
-    try {
-      localStorage.setItem('zoiko-bible-recent', JSON.stringify(recentChapters));
-    } catch {
-      // ignore storage errors
-    }
+    saveJSON('zoiko-bible-recent', recentChapters);
   }, [recentChapters]);
 
   useEffect(() => {
-    try {
-      localStorage.setItem('zoiko-bible-study-list', JSON.stringify(studyList));
-    } catch {
-      // ignore storage errors
-    }
+    saveJSON('zoiko-bible-study-list', studyList);
   }, [studyList]);
 
   useEffect(() => {
-    try {
-      localStorage.setItem('zoiko-bible-plan', JSON.stringify(readingPlan));
-    } catch {
-      // ignore storage errors
-    }
+    saveJSON('zoiko-bible-plan', readingPlan);
   }, [readingPlan]);
 
   /* Keyboard close */
@@ -320,25 +254,12 @@ export function BiblePanel() {
     }
 
     try {
-      const res = await fetch(`https://bolls.life/get-chapter/${translation}/${idx}/${chapter}/`, { signal: controller.signal });
-      if (!res.ok) {
-        if (res.status === 429) {
-          throw new Error('Rate limited by the Bible source. Please try again shortly.');
-        }
-        throw new Error(`${res.status} – failed to load chapter`);
-      }
-
-      const data = await res.json();
-      if (!Array.isArray(data)) {
-        throw new Error('Unexpected response from Bible source.');
-      }
-
+      const data = await fetchBibleChapter(translation, idx, chapter, controller.signal);
       if (fetchRequestId.current === myId) {
         setVerses(data);
         setChapterCache((prev: Record<string, VerseData[]>) => ({ ...prev, [chapterKey]: data }));
       }
     } catch (err: any) {
-      // Ignore abort error if we intentionally cancelled
       if (err && err.name === 'AbortError') return;
       if (fetchRequestId.current === myId) {
         setError(err.message ?? 'Something went wrong while loading the chapter.');
@@ -392,11 +313,7 @@ export function BiblePanel() {
 
   useEffect(() => {
     if (!isOpen) return;
-    try {
-      localStorage.setItem('zoiko-bible-last-reading', JSON.stringify({ translation, book, chapter, timestamp: new Date().toISOString() }));
-    } catch {
-      // ignore storage errors
-    }
+    saveJSON('zoiko-bible-last-reading', { translation, book, chapter, timestamp: new Date().toISOString() });
     setRecentChapters((prev: string[]) => {
       const next = [chapterKey, ...prev.filter((item: string) => item !== chapterKey)].slice(0, 6);
       return next;
@@ -405,17 +322,13 @@ export function BiblePanel() {
 
   useEffect(() => {
     if (!isOpen) return;
-    try {
-      const restored = JSON.parse(localStorage.getItem('zoiko-bible-last-reading') ?? 'null');
-      if (restored?.book && restored?.chapter) {
-        setBook(restored.book);
-        setChapter(restored.chapter);
-        setTranslation(restored.translation ?? translation);
-      }
-    } catch {
-      // ignore storage errors
+    const restored = loadJSON<{ book?: string; chapter?: number; translation?: Translation } | null>('zoiko-bible-last-reading', null);
+    if (restored?.book && restored?.chapter) {
+      setBook(restored.book);
+      setChapter(restored.chapter);
+      setTranslation(restored.translation ?? translation);
     }
-  }, [isOpen]);
+  }, [isOpen, translation]);
 
   const prevChapter = () => {
     if (chapter > 1) {
@@ -706,7 +619,6 @@ export function BiblePanel() {
                           <button
                             key={ch}
                             onClick={() => {
-                              setSelectedChapterForSelection(ch);
                               // apply selection
                               setBook(selectedBookForSelection);
                               setChapter(ch);
