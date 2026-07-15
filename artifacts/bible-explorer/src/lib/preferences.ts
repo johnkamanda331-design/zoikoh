@@ -16,6 +16,10 @@ export interface UserPreferences {
   highContrast: boolean;
   language: string;
   translation: 'NIV' | 'KJV' | 'ESV' | 'NLT' | 'NKJV';
+  readingDensity?: 'comfortable' | 'compact';
+  lineSpacing?: 'comfortable' | 'relaxed';
+  showChapterSummary?: boolean;
+  showVerseNotes?: boolean;
   reducedMotion?: boolean;
 }
 
@@ -35,6 +39,10 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   highContrast: false,
   language: 'en',
   translation: 'NIV',
+  readingDensity: 'comfortable',
+  lineSpacing: 'comfortable',
+  showChapterSummary: true,
+  showVerseNotes: true,
   reducedMotion: false,
 };
 
