@@ -183,11 +183,11 @@ export function Home() {
             <CardContent className="p-4">
               <div className="flex items-start justify-between gap-3 mb-3">
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mt-0.5">
-                  Today's Challenge
+                  Self-Practice Challenge
                 </p>
-                <Link href="/solo?mode=daily" className="shrink-0">
+                <Link href="/solo?mode=self-practice" className="shrink-0">
                   <Button size="sm" variant="purple" className="rounded-full gap-1.5">
-                    <Zap className="w-3.5 h-3.5" /> Play
+                    <Zap className="w-3.5 h-3.5" /> Practice
                   </Button>
                 </Link>
               </div>
@@ -197,7 +197,7 @@ export function Home() {
                 </div>
               ) : (
                 <p className="text-sm font-medium text-foreground leading-snug">
-                  {dailyContent?.challenge ?? "5 rapid-fire questions from today's reading"}
+                  {dailyContent?.challenge ?? "Practice today's faith prompt at your own pace."}
                 </p>
               )}
             </CardContent>
@@ -229,11 +229,11 @@ export function Home() {
         {/* ── Play more cards ───────────────────────────────────────────── */}
         <motion.div variants={fadeUp} className="md:col-span-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[
-            { title: 'Jump into Solo Modes', description: 'Explore 11 solo challenges from trivia to puzzles.', href: '/solo', action: 'Go Solo' },
-            { title: 'Host a Group Session', description: 'Invite friends to play Bible trivia together in real time.', href: '/start', action: 'Host Now' },
-            { title: 'Try a 1v1 Duel', description: 'Challenge another player in a quick head-to-head match.', href: '/duel', action: 'Duel Now' },
-            { title: 'Join an Active Game', description: 'Jump into a live session already in progress.', href: '/join', action: 'Join Game' },
-            { title: 'Open Ice-Breakers', description: 'Discover faith-based activities and conversation starters for your next gathering.', action: 'Explore Ice-Breakers', icon: Sparkles, onClick: () => iceBreakersPanelStore.open(), badge: 'New' },
+            { title: 'Jump into Solo Modes', description: 'Explore 11 solo challenges from trivia to puzzles.', href: '/solo', action: 'Go Solo', icon: Gamepad2 },
+            { title: 'Host a Group Session', description: 'Invite friends to play Bible trivia together in real time.', href: '/start', action: 'Host Now', icon: Users },
+            { title: 'Try a 1v1 Duel', description: 'Challenge another player in a quick head-to-head match.', href: '/duel', action: 'Duel Now', icon: Zap },
+            { title: 'Join an Active Game', description: 'Jump into a live session already in progress.', href: '/join', action: 'Join Game', icon: Target },
+            { title: 'Open Ice-Breakers', description: 'Discover faith-based activities and conversation starters for your next gathering.', action: 'Explore Ice-Breakers', icon: Sparkles, onClick: () => iceBreakersPanelStore.open() },
           ].map((card) => (
             <Card key={card.title} className="rounded-3xl border-border/50 bg-card transition hover:-translate-y-1 hover:shadow-lg">
               <CardContent className="p-6 space-y-4">

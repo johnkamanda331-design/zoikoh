@@ -349,6 +349,44 @@ const ICE_BREAKERS: IceBreakerItem[] = [
 export function IceBreakersPanel() {
   const { isOpen, close } = useIceBreakersPanelStore();
   const [selectedItem, setSelectedItem] = useState<IceBreakerItem | null>(null);
+  const [generatedScenarios, setGeneratedScenarios] = useState<string[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationError, setGenerationError] = useState('');
+
+  const handleSelectItem = (item: IceBreakerItem) => {
+    setSelectedItem(item);
+    setGeneratedScenarios([]);
+    setGenerationError('');
+  };
+
+  const generateScenarios = async () => {
+    if (!selectedItem) return;
+    setIsGenerating(true);
+    setGenerationError('');
+
+    try {
+      const response = await fetch('/api/ice-breakers/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: selectedItem.title,
+          summary: selectedItem.summary,
+          instructions: selectedItem.instructions,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok || !Array.isArray(data?.scenarios)) {
+        throw new Error(data?.error || 'Unable to generate scenarios.');
+      }
+
+      setGeneratedScenarios(data.scenarios.slice(0, 5).map((item: unknown) => String(item)));
+    } catch (error: any) {
+      setGenerationError(error?.message || 'Failed to generate scenarios.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -389,7 +427,7 @@ export function IceBreakersPanel() {
                     {ICE_BREAKERS.map((item) => (
                       <button
                         key={item.id}
-                        onClick={() => setSelectedItem(item)}
+                        onClick={() => handleSelectItem(item)}
                         className={`w-full text-left rounded-2xl p-3 transition-colors ${selectedItem?.id === item.id ? 'bg-brand-purple/10 border-brand-purple text-brand-purple' : 'bg-secondary/50 hover:bg-secondary'}`}
                         style={{ border: '1px solid transparent' }}
                       >
@@ -427,6 +465,34 @@ export function IceBreakersPanel() {
                             <p className="text-sm text-muted-foreground leading-6">{selectedItem.notes}</p>
                           </div>
                         ) : null}
+
+                        <div className="rounded-2xl border p-4 bg-secondary/70 space-y-3" style={{ borderColor: 'hsl(var(--border))' }}>
+                          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                              <div className="text-sm font-semibold">AI-generated scenarios</div>
+                              <p className="text-xs text-muted-foreground">Generate five different ways to run this ice-breaker.</p>
+                            </div>
+                            <Button size="sm" onClick={generateScenarios} disabled={!selectedItem || isGenerating} className="rounded-full">
+                              {isGenerating ? 'Generating…' : 'Generate scenarios'}
+                            </Button>
+                          </div>
+
+                          {generationError ? (
+                            <p className="text-xs text-destructive">{generationError}</p>
+                          ) : null}
+
+                          {generatedScenarios.length > 0 ? (
+                            <ol className="space-y-2 text-sm text-foreground list-decimal list-inside">
+                              {generatedScenarios.map((scenario, index) => (
+                                <li key={index} className="rounded-2xl border p-3" style={{ borderColor: 'hsl(var(--border))', background: 'hsl(var(--card))' }}>
+                                  {scenario}
+                                </li>
+                              ))}
+                            </ol>
+                          ) : (
+                            <p className="text-xs text-muted-foreground">Tap generate to see five custom AI scenarios for this ice-breaker.</p>
+                          )}
+                        </div>
                       </>
                     ) : (
                       <div className="text-center py-20">

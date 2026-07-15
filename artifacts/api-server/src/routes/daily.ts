@@ -476,7 +476,7 @@ router.get("/daily/challenge", async (req: any, res: any) => {
       return ha - hb;
     });
 
-    const daily = shuffled.slice(0, 5).map((q) => ({
+    const daily = shuffled.slice(0, 15).map((q) => ({
       id: q.id,
       text: q.text,
       options: q.options,

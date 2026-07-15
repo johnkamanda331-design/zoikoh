@@ -198,7 +198,8 @@ const QUOTES: Array<{ id: number; question: string; quote: string; answer: strin
    Mode definitions
 ───────────────────────────────────────────────────────────────────────── */
 const MODES = [
-  { id: 'daily',        title: 'Daily Challenge',  desc: '5 date-seeded questions that reset every midnight.',              icon: Zap,         gradient: 'from-brand-orange to-red-500',     badge: 'Daily',    badgeVariant: 'orange'    as const, tags: ['5 Questions','Bonus Points'] },
+  { id: 'daily',        title: 'Daily Challenge',  desc: '15 date-seeded questions that reset every midnight.',             icon: Zap,         gradient: 'from-brand-orange to-red-500',     badge: 'Daily',    badgeVariant: 'orange'    as const, tags: ['15 Questions','Bonus Points'] },
+  { id: 'self-practice', title: 'Self-Practice',   desc: 'Practice today’s challenge content at your own pace.',            icon: BookMarked,  gradient: 'from-brand-blue to-cyan-500',      badge: 'Practice', badgeVariant: 'blue'      as const, tags: ['Self-study','Daily content'] },
   { id: 'qa',           title: 'Bible Q&A',         desc: 'Endless trivia across Old & New Testament.',                      icon: Target,      gradient: 'from-brand-purple to-indigo-500',  badge: 'Endless',  badgeVariant: 'purple'    as const, tags: ['Custom Diff','All Topics'] },
   { id: 'bible-sprint', title: 'Bible Sprint',     desc: 'Race through 15 scripture questions in a fast-paced sprint.',     icon: Zap,         gradient: 'from-red-500 to-orange-500',          badge: 'Sprint',  badgeVariant: 'orange'    as const, tags: ['15 Questions','Speed'] },
   { id: 'flash',        title: 'Flash Cards',       desc: 'Flip through key verses, names, and concepts.',                   icon: Brain,       gradient: 'from-brand-blue to-cyan-500',      badge: 'Practice', badgeVariant: 'blue'      as const, tags: ['Self-paced','Memory'] },
@@ -405,18 +406,20 @@ function QuizGame({ mode, onBack }: { mode: string; onBack: () => void }) {
     query: { enabled: mode === 'daily' && isPlaying, queryKey: getGetDailyChallengeQueryKey() },
   });
   const quizModes = ['qa','bible-sprint','story-quest','team-tournament','time-attack','trivia-madness','survival-mode'] as const;
+  const isSelfPractice = mode === 'self-practice';
+  const shouldFetchQA = quizModes.includes(mode as typeof quizModes[number]) || isSelfPractice;
   const { data: qaData, isLoading: qaLoading } = useListQuestions({ limit: 60, difficulty } as any, {
-    query: { enabled: quizModes.includes(mode as typeof quizModes[number]) && isPlaying, queryKey: getListQuestionsQueryKey({ limit: 60, difficulty } as any) },
+    query: { enabled: shouldFetchQA && isPlaying, queryKey: getListQuestionsQueryKey({ limit: 60, difficulty } as any) },
   });
 
   const allQuestions = mode === 'daily'
     ? dailyQuestions
-    : quizModes.includes(mode as typeof quizModes[number])
+    : shouldFetchQA
       ? qaData?.questions
       : [];
   const isLoading = mode === 'daily'
     ? dailyLoading
-    : quizModes.includes(mode as typeof quizModes[number])
+    : shouldFetchQA
       ? qaLoading
       : false;
 
@@ -424,7 +427,7 @@ function QuizGame({ mode, onBack }: { mode: string; onBack: () => void }) {
   const [selectedQuestions, setSelectedQuestions] = useState<any[]>([]);
   useEffect(() => {
     if (!isPlaying || selectedQuestions.length > 0 || !allQuestions || allQuestions.length === 0) return;
-    const count = mode === 'daily' ? 5 : ['bible-sprint','story-quest','team-tournament'].includes(mode) ? 15 : 10;
+    const count = mode === 'daily' || mode === 'self-practice' ? 15 : ['bible-sprint','story-quest','team-tournament'].includes(mode) ? 15 : 10;
     setSelectedQuestions(pickUnseen(allQuestions as any[], mode, count));
   }, [isPlaying, allQuestions, selectedQuestions.length, mode]);
   const questions = selectedQuestions;
@@ -452,14 +455,16 @@ function QuizGame({ mode, onBack }: { mode: string; onBack: () => void }) {
   }, [isFinished, handleFinished]);
 
   if (!isPlaying) {
-    if (['qa','bible-sprint','story-quest','team-tournament','time-attack','trivia-madness','survival-mode'].includes(mode)) {
+    if (['qa','bible-sprint','story-quest','team-tournament','time-attack','trivia-madness','survival-mode','self-practice'].includes(mode)) {
         const ctaLabel = mode === 'bible-sprint'
           ? 'Sprint'
           : mode === 'story-quest'
             ? 'Begin Quest'
             : mode === 'team-tournament'
               ? 'Join Bracket'
-              : 'Start';
+              : mode === 'self-practice'
+                ? 'Start Practice'
+                : 'Start';
 
         return (
           <div className="p-6 max-w-3xl mx-auto min-h-[70vh] flex flex-col items-center justify-center text-center">
@@ -484,8 +489,7 @@ function QuizGame({ mode, onBack }: { mode: string; onBack: () => void }) {
           </div>
         );
       }
-      return <PreGameScreen modeData={modeData} onStart={() => setIsPlaying(true)} />;
-    }
+      return <PreGameScreen modeData={modeData} onStart={() => setIsPlaying(true)} cta={mode === 'self-practice' ? 'Start Practice' : undefined} />;
 
   if (isLoading) return <div className="p-10 text-center text-xl font-bold animate-pulse text-muted-foreground">Loading questions…</div>;
 

@@ -157,7 +157,84 @@ router.post("/questions/generate", generateLimiter, async (req: any, res: any) =
   }
 });
 
-async function generateWithOpenAI(apiKey: string, prompt: string): Promise<{ questions: unknown[] } | null> {
+router.post("/ice-breakers/generate", generateLimiter, async (req: any, res: any) => {
+  try {
+    const { title, summary, instructions } = req.body;
+    if (!title || !Array.isArray(instructions) || instructions.length === 0) {
+      return res.status(400).json({ error: "Missing ice-breaker details." });
+    }
+
+    const openaiKey = config.ai.openaiApiKey;
+    const geminiKey = config.ai.geminiApiKey;
+
+    if (!openaiKey && !geminiKey) {
+      const mockScenarios = generateMockScenarios(title as string, summary as string | undefined, instructions as string[]);
+      return res.json({ scenarios: mockScenarios });
+    }
+
+    const prompt = buildIceBreakerPrompt(title as string, summary as string | undefined, instructions as string[]);
+
+    try {
+      const parsed = openaiKey
+        ? await generateWithOpenAI(openaiKey, prompt)
+        : await generateWithGemini(geminiKey as string, prompt);
+
+      if (!parsed || !parsed.scenarios || !Array.isArray(parsed.scenarios)) {
+        const mockScenarios = generateMockScenarios(title as string, summary as string | undefined, instructions as string[]);
+        return res.json({ scenarios: mockScenarios });
+      }
+
+      return res.json({ scenarios: parsed.scenarios.slice(0, 5).map((item: unknown) => String(item)) });
+    } catch (aiError) {
+      const mockScenarios = generateMockScenarios(title as string, summary as string | undefined, instructions as string[]);
+      return res.json({ scenarios: mockScenarios });
+    }
+  } catch (err) {
+    req.log.error({ err }, "Failed to generate ice breaker scenarios");
+    return res.status(500).json({ error: "Failed to generate ice-breaker scenarios" });
+  }
+});
+
+function buildIceBreakerPrompt(title: string, summary?: string, instructions: string[]) {
+  const summaryLine = summary ? `Summary: ${summary}` : "";
+  const instructionText = instructions.map((step, index) => `${index + 1}. ${step}`).join(" ");
+
+  return `Generate 5 different group ice-breaker scenarios for the following activity. Use engaging, practical ideas that help people connect in a faith-based setting.
+
+Title: ${title}
+${summaryLine}
+Instructions: ${instructionText}
+
+Return a JSON object with this exact structure:
+{
+  "scenarios": [
+    "Scenario text one.",
+    "Scenario text two.",
+    "Scenario text three.",
+    "Scenario text four.",
+    "Scenario text five."
+  ]
+}
+
+Requirements:
+- Provide exactly 5 scenarios
+- Keep each scenario short and easy to follow
+- Focus on the selected ice-breaker activity
+- Do not include markup or extra JSON keys
+`;
+}
+
+function generateMockScenarios(title: string, summary: string | undefined, instructions: string[]) {
+  return [
+    `Use ${title} as a story prompt and ask each person to share a one-sentence takeaway.`,
+    `Turn ${title} into a quick pairing activity where each person shares one related Bible verse.`,
+    `Ask the group to brainstorm how ${title} could help someone in their daily faith journey.`,
+    `Invite people to describe how ${title} connects to a Bible story or character they know.`,
+    `Have participants suggest a short prayer topic inspired by ${title} and pray together.`,
+  ];
+}
+
+async function generateWithOpenAI(apiKey: string, prompt: string): Promise<Record<string, unknown> | null> {
   const response: any = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -184,7 +261,7 @@ async function generateWithOpenAI(apiKey: string, prompt: string): Promise<{ que
   return JSON.parse(data.choices[0].message.content);
 }
 
-async function generateWithGemini(apiKey: string, prompt: string): Promise<{ questions: unknown[] } | null> {
+async function generateWithGemini(apiKey: string, prompt: string): Promise<Record<string, unknown> | null> {
   const response: any = await fetch(
     "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
     {
