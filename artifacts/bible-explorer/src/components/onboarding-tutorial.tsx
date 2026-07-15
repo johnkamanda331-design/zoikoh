@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, X, Gamepad2, Users, Trophy, Zap, BookOpen, Settings } from 'lucide-react';
+import { ChevronRight, X, Gamepad2, Users, Trophy, Zap, BookOpen, Settings, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -80,6 +80,18 @@ const TUTORIAL_STEPS: OnboardingStep[] = [
       '🎯 Focus on weak areas',
     ],
   },
+  {
+    title: 'Ice-Breakers',
+    description: 'Access faith-based ice-breaker activities next to the Bible reader for social gatherings.',
+    icon: Sparkles,
+    highlightPath: '#icebreakers-button',
+    tips: [
+      '🤝 30 faith-based social activities',
+      '💬 Select an activity to see step-by-step guidance',
+      '✨ Use it in groups, church events, or fellowship',
+      '📌 Built for conversation and connection',
+    ],
+  },
 ];
 
 interface OnboardingTutorialProps {
@@ -89,9 +101,34 @@ interface OnboardingTutorialProps {
 
 export function OnboardingTutorial({ isOpen, onComplete }: OnboardingTutorialProps) {
   const [currentStep, setCurrentStep] = useState(0);
+  const [highlightRect, setHighlightRect] = useState<DOMRect | null>(null);
   const step = TUTORIAL_STEPS[currentStep];
   const Icon = step.icon;
   const isLastStep = currentStep === TUTORIAL_STEPS.length - 1;
+
+  useEffect(() => {
+    if (!step.highlightPath) {
+      setHighlightRect(null);
+      return;
+    }
+
+    const updateRect = () => {
+      const target = document.querySelector<HTMLElement>(step.highlightPath);
+      if (target) {
+        setHighlightRect(target.getBoundingClientRect());
+      } else {
+        setHighlightRect(null);
+      }
+    };
+
+    updateRect();
+    window.addEventListener('resize', updateRect);
+    window.addEventListener('scroll', updateRect, true);
+    return () => {
+      window.removeEventListener('resize', updateRect);
+      window.removeEventListener('scroll', updateRect, true);
+    };
+  }, [step.highlightPath, currentStep, isOpen]);
 
   const handleNext = () => {
     if (isLastStep) {
@@ -116,6 +153,25 @@ export function OnboardingTutorial({ isOpen, onComplete }: OnboardingTutorialPro
           exit={{ opacity: 0 }}
           className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4"
         >
+          {highlightRect ? (
+            <div className="pointer-events-none">
+              <div
+                className="absolute rounded-2xl border-2 border-brand-purple/80 shadow-[0_0_0_6px_rgba(124,58,237,0.12)] animate-pulse"
+                style={{
+                  top: highlightRect.top - 10,
+                  left: highlightRect.left - 10,
+                  width: highlightRect.width + 20,
+                  height: highlightRect.height + 20,
+                }}
+              />
+              <div
+                className="absolute bg-brand-purple text-white text-[11px] font-semibold uppercase tracking-[0.2em] rounded-full px-2 py-1"
+                style={{ top: highlightRect.top - 32, left: highlightRect.left }}
+              >
+                Ice-Breakers
+              </div>
+            </div>
+          ) : null}
           <motion.div
             initial={{ scale: 0.9, y: 20 }}
             animate={{ scale: 1, y: 0 }}

@@ -7,6 +7,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { Route, Switch, useLocation, Router as WouterRouter } from 'wouter';
 import { Layout } from '@/components/layout';
 import { BiblePanel } from '@/components/bible-panel';
+import { IceBreakersPanel } from '@/components/ice-breakers-panel';
 import { OnboardingTutorial } from '@/components/onboarding-tutorial';
 import { hydratePlayerFromServer } from '@/hooks/use-achievements';
 import { setBaseUrl } from '@workspace/api-client-react';
@@ -237,6 +238,7 @@ function AppBody() {
       <OnboardingTutorial isOpen={showTutorial} onComplete={handleTutorialComplete} />
       <Router />
       <BiblePanel />
+      <IceBreakersPanel />
       <Toaster position="top-center" />
     </TooltipProvider>
   );

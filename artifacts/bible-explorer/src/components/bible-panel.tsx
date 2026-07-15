@@ -6,12 +6,10 @@ import {
   ChevronLeft,
   ChevronRight,
   List,
-  Search,
   Bookmark,
   Star,
   BookOpen,
   Sparkles,
-  Share2,
   PenSquare,
   Clock3,
   ListChecks,
@@ -150,7 +148,10 @@ export function BiblePanel() {
   const [error, setError] = useState('');
   const [fontSize, setFontSize] = useState<FontSize>('md');
   const [showBookList, setShowBookList] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedBookForSelection, setSelectedBookForSelection] = useState<string | null>(null);
+  const [showChapterSelector, setShowChapterSelector] = useState(false);
+  const [showVerseSelector, setShowVerseSelector] = useState(false);
+  const [selectedChapterForSelection, setSelectedChapterForSelection] = useState<number | null>(null);
   const [activeVerse, setActiveVerse] = useState<number | null>(null);
   const [noteDraft, setNoteDraft] = useState('');
   const [notes, setNotes] = useState<Record<string, ReadingNote>>({});
@@ -175,12 +176,7 @@ export function BiblePanel() {
   const dailyQuote = DAILY_QUOTES[new Date().getDay() % DAILY_QUOTES.length];
   const activeMood = MOOD_RECOMMENDATIONS[mood];
 
-  const filteredVerses = searchQuery
-    ? verses.filter((verse) => {
-        const text = cleanVerse(verse.text).toLowerCase();
-        return text.includes(searchQuery.toLowerCase()) || String(verse.verse).includes(searchQuery);
-      })
-    : verses;
+  const filteredVerses = verses;
 
   useEffect(() => {
     try {
@@ -263,6 +259,9 @@ export function BiblePanel() {
     scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   }, [book, chapter]);
 
+  const fetchAbort = useRef<AbortController | null>(null);
+  const fetchRequestId = useRef(0);
+
   const fetchChapter = useCallback(async () => {
     if (!isOpen) return;
 
@@ -274,19 +273,30 @@ export function BiblePanel() {
       return;
     }
 
+    // Abort any previous fetch and start a new one
+    fetchRequestId.current += 1;
+    const myId = fetchRequestId.current;
+    if (fetchAbort.current) {
+      try { fetchAbort.current.abort(); } catch {}
+    }
+    const controller = new AbortController();
+    fetchAbort.current = controller;
+
     setIsLoading(true);
     setError('');
     setVerses([]);
 
     const idx = BIBLE_BOOKS.indexOf(book) + 1;
     if (idx === 0) {
-      setError('Unknown book selected.');
-      setIsLoading(false);
+      if (fetchRequestId.current === myId) {
+        setError('Unknown book selected.');
+        setIsLoading(false);
+      }
       return;
     }
 
     try {
-      const res = await fetch(`https://bolls.life/get-chapter/${translation}/${idx}/${chapter}/`);
+      const res = await fetch(`https://bolls.life/get-chapter/${translation}/${idx}/${chapter}/`, { signal: controller.signal });
       if (!res.ok) {
         if (res.status === 429) {
           throw new Error('Rate limited by the Bible source. Please try again shortly.');
@@ -299,12 +309,20 @@ export function BiblePanel() {
         throw new Error('Unexpected response from Bible source.');
       }
 
-      setVerses(data);
-      setChapterCache((prev) => ({ ...prev, [chapterKey]: data }));
+      if (fetchRequestId.current === myId) {
+        setVerses(data);
+        setChapterCache((prev) => ({ ...prev, [chapterKey]: data }));
+      }
     } catch (err: any) {
-      setError(err.message ?? 'Something went wrong while loading the chapter.');
+      // Ignore abort error if we intentionally cancelled
+      if (err && err.name === 'AbortError') return;
+      if (fetchRequestId.current === myId) {
+        setError(err.message ?? 'Something went wrong while loading the chapter.');
+      }
     } finally {
-      setIsLoading(false);
+      if (fetchRequestId.current === myId) {
+        setIsLoading(false);
+      }
     }
   }, [isOpen, translation, book, chapter, chapterKey, chapterCache]);
 
@@ -463,18 +481,6 @@ export function BiblePanel() {
     });
   };
 
-  const sharePassage = async () => {
-    const text = `${book} ${chapter}\n${verses.slice(0, 6).map((verse) => `${verse.verse}. ${cleanVerse(verse.text)}`).join('\n')}`;
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: `${book} ${chapter}`, text });
-      } else if (navigator.clipboard) {
-        await navigator.clipboard.writeText(text);
-      }
-    } catch {
-      // ignore share interruptions
-    }
-  };
 
   const handleSwipeEnd = (endX: number) => {
     if (touchStartX === null) return;
@@ -623,9 +629,9 @@ export function BiblePanel() {
                       <button
                         key={b}
                         onClick={() => {
-                          setBook(b);
-                          setChapter(1);
-                          setShowBookList(false);
+                          // begin the selection flow: choose book → chapter → verse
+                          setSelectedBookForSelection(b);
+                          setShowChapterSelector(true);
                         }}
                         className={`text-xs text-left px-2 py-1.5 rounded-md transition-colors ${b === book ? 'font-bold' : 'hover:opacity-70'}`}
                         style={{
@@ -636,6 +642,57 @@ export function BiblePanel() {
                         {b}
                       </button>
                     ))}
+                  </div>
+                </motion.div>
+              )}
+
+              {showChapterSelector && selectedBookForSelection && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="shrink-0 overflow-y-auto border-b" style={{ borderColor: 'hsl(var(--border))', background: 'hsl(var(--card))' }}>
+                  <div className="p-3">
+                    <div className="text-sm font-semibold mb-2">{selectedBookForSelection} — Pick a chapter</div>
+                    <div className="grid grid-cols-6 gap-2 max-h-[220px] overflow-y-auto">
+                      {Array.from({ length: CHAPTER_COUNTS[selectedBookForSelection] }).map((_, i) => {
+                        const ch = i + 1;
+                        return (
+                          <button
+                            key={ch}
+                            onClick={() => {
+                              setSelectedChapterForSelection(ch);
+                              // apply selection
+                              setBook(selectedBookForSelection);
+                              setChapter(ch);
+                              setShowChapterSelector(false);
+                              setShowVerseSelector(true);
+                              setShowBookList(false);
+                            }}
+                            className="text-xs px-2 py-1 rounded bg-secondary/40 hover:opacity-80"
+                          >
+                            {ch}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="mt-3 text-xs text-muted-foreground">
+                      <button onClick={() => { setShowChapterSelector(false); setSelectedBookForSelection(null); }} className="underline">Cancel</button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {showVerseSelector && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="shrink-0 overflow-y-auto border-b" style={{ borderColor: 'hsl(var(--border))', background: 'hsl(var(--card))' }}>
+                  <div className="p-3">
+                    <div className="text-sm font-semibold mb-2">{book} {chapter} — Pick a verse</div>
+                    <div className="grid grid-cols-8 gap-2 max-h-[220px] overflow-y-auto">
+                      {verses.length ? verses.map((v) => (
+                        <button key={v.pk} onClick={() => { setActiveVerse(v.verse); setShowVerseSelector(false); }} className="text-xs px-2 py-1 rounded bg-secondary/40 hover:opacity-80">{v.verse}</button>
+                      )) : (
+                        <div className="text-xs text-muted-foreground">Loading verses…</div>
+                      )}
+                    </div>
+                    <div className="mt-3 text-xs text-muted-foreground">
+                      <button onClick={() => setShowVerseSelector(false)} className="underline">Done</button>
+                    </div>
                   </div>
                 </motion.div>
               )}
@@ -665,72 +722,14 @@ export function BiblePanel() {
                 ) : (
                   <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className={`space-y-4 ${fontClasses[fontSize]}`}>
                     <div className="rounded-2xl border p-4 shadow-sm" style={{ borderColor: 'hsl(var(--border))', background: 'hsl(var(--card))' }}>
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <h1 className="text-2xl md:text-3xl font-heading font-extrabold" style={{ color: 'hsl(var(--foreground))' }}>
-                            {book} — Chapter {chapter}
-                          </h1>
-                          <p className="mt-1 text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                            {translation} • {recentChapters.length} recent stops • {studyList.length} study items
-                          </p>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm" onClick={toggleBookmark} className="rounded-full">
-                            <Bookmark className={`mr-2 h-4 w-4 ${isBookmarked ? 'fill-current' : ''}`} />
-                            {isBookmarked ? 'Saved' : 'Save'}
-                          </Button>
-                          <Button variant="outline" size="sm" onClick={toggleFavorite} className="rounded-full">
-                            <Star className={`mr-2 h-4 w-4 ${isFavorite ? 'fill-current' : ''}`} />
-                            {isFavorite ? 'Loved' : 'Like'}
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="rounded-2xl border p-4" style={{ borderColor: 'hsl(var(--border))', background: 'hsl(var(--card))' }}>
-                      <div className="flex flex-wrap gap-2">
-                        <span className="rounded-full px-3 py-1 text-xs font-semibold" style={{ background: 'hsl(var(--secondary))', color: 'hsl(var(--foreground))' }}>
-                          Reading streak: {readingPlan.streak} days
-                        </span>
-                        <span className="rounded-full px-3 py-1 text-xs font-semibold" style={{ background: 'hsl(var(--secondary))', color: 'hsl(var(--foreground))' }}>
-                          Continue: {recommendedReading}
-                        </span>
-                        <span className="rounded-full px-3 py-1 text-xs font-semibold" style={{ background: 'hsl(var(--secondary))', color: 'hsl(var(--foreground))' }}>
-                          Layout: {layoutMode}
-                        </span>
-                      </div>
-                      <div className="mt-3 h-2 rounded-full" style={{ background: 'hsl(var(--secondary))' }}>
-                        <div className="h-2 rounded-full" style={{ width: `${Math.min(100, (readingPlan.streak / readingPlan.target) * 100)}%`, background: 'hsl(var(--brand-purple))' }} />
-                      </div>
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        <Button variant="outline" size="sm" onClick={sharePassage} className="rounded-full">
-                          <Share2 className="mr-2 h-4 w-4" /> Share
-                        </Button>
-                      </div>
-                    </div>
-
-                    <div className="rounded-2xl border p-4" style={{ borderColor: 'hsl(var(--border))', background: 'hsl(var(--card))' }}>
-                      <div className="flex items-center gap-2 mb-3">
-                        <Search className="h-4 w-4" style={{ color: 'hsl(var(--brand-purple))' }} />
-                        <h2 className="text-sm font-semibold">Find a passage</h2>
-                      </div>
-                      <div className="flex gap-2">
-                        <div className="flex-1 flex items-center rounded-xl border px-3 py-2" style={{ borderColor: 'hsl(var(--border))', background: 'hsl(var(--secondary))' }}>
-                          <Search className="mr-2 h-4 w-4" style={{ color: 'hsl(var(--muted-foreground))' }} />
-                          <input
-                            value={searchQuery}
-                            onChange={(event) => setSearchQuery(event.target.value)}
-                            placeholder="Search verses or books"
-                            className="w-full bg-transparent text-sm outline-none"
-                          />
-                        </div>
-                        <Button variant="outline" size="sm" onClick={() => setSearchQuery('')}>Clear</Button>
-                      </div>
-                      {searchQuery ? (
-                        <p className="mt-2 text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                          Showing {filteredVerses.length} matching verse{filteredVerses.length === 1 ? '' : 's'} for “{searchQuery}”.
+                      <div>
+                        <h1 className="text-2xl md:text-3xl font-heading font-extrabold" style={{ color: 'hsl(var(--foreground))' }}>
+                          {book} — Chapter {chapter}
+                        </h1>
+                        <p className="mt-1 text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                          {translation}
                         </p>
-                      ) : null}
+                      </div>
                     </div>
 
                     <div className="grid gap-3 md:grid-cols-2">
@@ -741,6 +740,7 @@ export function BiblePanel() {
                         </div>
                         <p className="text-sm leading-6" style={{ color: 'hsl(var(--foreground))' }}>{summary}</p>
                       </div>
+
                       <div className="rounded-2xl border p-4" style={{ borderColor: 'hsl(var(--border))', background: 'hsl(var(--card))' }}>
                         <div className="flex items-center gap-2 mb-2">
                           <BookOpen className="h-4 w-4" style={{ color: 'hsl(var(--brand-purple))' }} />
@@ -748,33 +748,6 @@ export function BiblePanel() {
                         </div>
                         <p className="text-sm leading-6" style={{ color: 'hsl(var(--foreground))' }}>{dailyQuote}</p>
                         <p className="mt-2 text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>{activeMood.text}</p>
-                      </div>
-                    </div>
-
-                    <div className="rounded-2xl border p-4" style={{ borderColor: 'hsl(var(--border))', background: 'hsl(var(--card))' }}>
-                      <div className="flex flex-wrap gap-2 mb-3">
-                        {(['peace', 'focus', 'encouragement'] as const).map((option) => (
-                          <button
-                            key={option}
-                            onClick={() => handleMoodSelect(option)}
-                            className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${mood === option ? 'text-white' : ''}`}
-                            style={{ background: mood === option ? 'hsl(var(--brand-purple))' : 'hsl(var(--secondary))', color: mood === option ? 'white' : 'hsl(var(--foreground))' }}
-                          >
-                            {option}
-                          </button>
-                        ))}
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        <Button variant="outline" size="sm" onClick={() => updateReadingPreference('readingDensity', layoutMode === 'comfortable' ? 'compact' : 'comfortable')} className="rounded-full">
-                          {layoutMode === 'comfortable' ? <MoonStar className="mr-2 h-4 w-4" /> : <SunMedium className="mr-2 h-4 w-4" />}
-                          {layoutMode === 'comfortable' ? 'Compact view' : 'Comfort view'}
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={() => updateReadingPreference('lineSpacing', lineSpacing === 'comfortable' ? 'relaxed' : 'comfortable')} className="rounded-full">
-                          <RefreshCw className="mr-2 h-4 w-4" /> {lineSpacing === 'comfortable' ? 'Relaxed spacing' : 'Compact spacing'}
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={addToStudyList} className="rounded-full">
-                          <ListChecks className="mr-2 h-4 w-4" /> Add to study list
-                        </Button>
                       </div>
                     </div>
 

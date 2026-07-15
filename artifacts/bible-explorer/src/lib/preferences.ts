@@ -7,7 +7,6 @@ export interface UserPreferences {
   difficulty: 'easy' | 'medium' | 'hard' | 'mixed';
   adaptiveDifficulty: boolean;
   soundEnabled: boolean;
-  backgroundMusicEnabled: boolean;
   voiceNarrationEnabled: boolean;
   soundVolume: number;
   tutorialCompleted: boolean;
@@ -25,78 +24,13 @@ export interface UserPreferences {
 
 const STORAGE_KEY = 'zoiko_user_preferences';
 
-let ambientMusicContext: AudioContext | null = null;
-let ambientMusicGain: GainNode | null = null;
-let ambientMusicOscillator: OscillatorNode | null = null;
-let ambientMusicTimer: number | null = null;
-
-function stopBackgroundMusic() {
-  if (ambientMusicTimer !== null) {
-    window.clearInterval(ambientMusicTimer);
-    ambientMusicTimer = null;
-  }
-
-  if (ambientMusicOscillator) {
-    ambientMusicOscillator.stop();
-    ambientMusicOscillator.disconnect();
-    ambientMusicOscillator = null;
-  }
-
-  if (ambientMusicGain) {
-    ambientMusicGain.disconnect();
-    ambientMusicGain = null;
-  }
-
-  if (ambientMusicContext) {
-    ambientMusicContext.close().catch(() => undefined);
-    ambientMusicContext = null;
-  }
-}
-
-function startBackgroundMusic() {
-  if (typeof window === 'undefined') return;
-
-  const prefs = loadPreferences();
-  if (!prefs.soundEnabled || !prefs.backgroundMusicEnabled) {
-    stopBackgroundMusic();
-    return;
-  }
-
-  if (ambientMusicContext) return;
-
-  const AudioContextCtor = window.AudioContext || (window as any).webkitAudioContext;
-  if (!AudioContextCtor) return;
-
-  const context = new AudioContextCtor();
-  const gainNode = context.createGain();
-  gainNode.gain.value = 0.025;
-  gainNode.connect(context.destination);
-
-  const oscillator = context.createOscillator();
-  oscillator.type = 'sine';
-  oscillator.frequency.value = 196;
-  oscillator.connect(gainNode);
-  oscillator.start();
-
-  const frequencies = [196, 261.63, 329.63, 392];
-  ambientMusicContext = context;
-  ambientMusicGain = gainNode;
-  ambientMusicOscillator = oscillator;
-  ambientMusicTimer = window.setInterval(() => {
-    if (!ambientMusicOscillator) return;
-    ambientMusicOscillator.frequency.setValueAtTime(
-      frequencies[Math.floor(Math.random() * frequencies.length)],
-      ambientMusicContext?.currentTime ?? 0,
-    );
-  }, 2200);
-}
+// Background music feature removed — kept only sound effects playback
 
 const DEFAULT_PREFERENCES: UserPreferences = {
   theme: 'light',
   difficulty: 'medium',
   adaptiveDifficulty: false,
   soundEnabled: true,
-  backgroundMusicEnabled: false,
   voiceNarrationEnabled: false,
   soundVolume: 0.7,
   tutorialCompleted: false,
@@ -135,11 +69,7 @@ export function savePreferences(prefs: Partial<UserPreferences>) {
       window.dispatchEvent(new CustomEvent('zoiko-preferences-changed', { detail: updated }));
     }
 
-    if (updated.backgroundMusicEnabled && updated.soundEnabled) {
-      startBackgroundMusic();
-    } else {
-      stopBackgroundMusic();
-    }
+    // No background music feature; sound effects handled separately
 
     return updated;
   } catch (error) {
@@ -171,6 +101,14 @@ function applyTheme(theme: 'dark' | 'light' | 'auto') {
   } else {
     root.classList.remove('dark');
     root.classList.add('light');
+  }
+
+  try {
+    // Persist the chosen theme so other parts of the app (e.g. layout.tsx)
+    // that read the simple `theme` key stay in sync.
+    localStorage.setItem('theme', actualTheme);
+  } catch {
+    // ignore storage errors
   }
 }
 

@@ -28,7 +28,6 @@ export function PreferencesPanel() {
       difficulty: 'medium',
       adaptiveDifficulty: false,
       soundEnabled: true,
-      backgroundMusicEnabled: false,
       voiceNarrationEnabled: false,
       soundVolume: 0.7,
       tutorialCompleted: false,
@@ -210,26 +209,7 @@ export function PreferencesPanel() {
                 </div>
               )}
 
-              <div className="flex items-center justify-between">
-                <Label className="flex items-center gap-2 cursor-pointer">
-                  <Zap className="w-4 h-4 text-brand-purple" />
-                  <span>Background music</span>
-                </Label>
-                <motion.button
-                  onClick={() => updatePref('backgroundMusicEnabled', !prefs.backgroundMusicEnabled)}
-                  className={`
-                    relative inline-flex h-6 w-11 rounded-full transition-colors
-                    ${prefs.backgroundMusicEnabled ? 'bg-brand-purple' : 'bg-secondary'}
-                  `}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <motion.span
-                    layout
-                    className="inline-block h-5 w-5 transform rounded-full bg-white shadow-md"
-                    animate={{ x: prefs.backgroundMusicEnabled ? 20 : 2 }}
-                  />
-                </motion.button>
-              </div>
+              {/* Background music feature removed */}
 
             </CardContent>
           </Card>

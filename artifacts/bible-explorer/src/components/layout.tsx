@@ -12,11 +12,12 @@ import {
   Sun,
   Plus,
   Swords,
-  Trophy,
   LogIn,
   User,
+  Sparkles,
 } from 'lucide-react';
 import { useBiblePanelStore } from '@/hooks/use-bible-panel';
+import { useIceBreakersPanelStore } from '@/hooks/use-icebreakers-panel';
 import { Button } from '@/components/ui/button';
 import { useUser, useClerk } from '@clerk/react';
 
@@ -88,6 +89,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [fabOpen, setFabOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
   const biblePanelStore = useBiblePanelStore();
+  const iceBreakersPanelStore = useIceBreakersPanelStore();
   const { isSignedIn, user } = useUser();
   const { signOut } = useClerk();
 
@@ -103,6 +105,25 @@ export function Layout({ children }: { children: React.ReactNode }) {
     } else {
       document.documentElement.classList.remove('dark');
     }
+  }, []);
+
+  // Keep top-bar theme state in sync when preferences change elsewhere
+  useEffect(() => {
+    const handler = (event: Event) => {
+      try {
+        const detail = (event as CustomEvent).detail;
+        const theme = detail?.theme ?? localStorage.getItem('theme') ?? 'light';
+        const isDarkTheme = theme === 'dark' || (theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        setIsDark(isDarkTheme);
+        const html = document.documentElement;
+        if (isDarkTheme) html.classList.add('dark'); else html.classList.remove('dark');
+      } catch {
+        // ignore
+      }
+    };
+
+    window.addEventListener('zoiko-preferences-changed', handler as EventListener);
+    return () => window.removeEventListener('zoiko-preferences-changed', handler as EventListener);
   }, []);
 
   // Close FAB when route changes
@@ -155,6 +176,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
             title="Open Bible"
           >
             <BookOpen className="w-5 h-5" />
+          </Button>
+
+          {/* Ice-breakers */}
+          <Button
+            id="icebreakers-button"
+            variant="ghost"
+            size="icon"
+            className="w-9 h-9"
+            onClick={() => iceBreakersPanelStore.open()}
+            title="Open Ice-Breakers"
+          >
+            <Sparkles className="w-4 h-4 text-brand-purple" />
           </Button>
 
           {/* Theme toggle */}
