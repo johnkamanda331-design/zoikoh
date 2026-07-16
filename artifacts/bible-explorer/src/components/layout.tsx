@@ -27,7 +27,7 @@ export function Logo({ size = 'md', className }: { size?: 'sm' | 'md' | 'lg'; cl
   const combined = className ? `${className} object-contain` : `${cls} object-contain`;
   return (
     <img
-      src="/logo_edited.png"
+      src="/logo.png"
       alt="ZOIKOH logo"
       className={combined}
       loading="eager"
@@ -158,14 +158,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative flex flex-col min-h-[100dvh] w-full bg-background overflow-x-hidden selection:bg-brand-purple selection:text-white">
       <div
-        className="pointer-events-none absolute inset-0"
+        className="pointer-events-none fixed inset-0 bg-center bg-cover -z-10 opacity-5 sm:opacity-10"
         style={{
           backgroundImage: "url('/logo_edited.png')",
           backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'center top',
-          backgroundSize: '55%',
-          opacity: 0.06,
-          zIndex: 0,
+          backgroundPosition: 'center',
+          backgroundSize: 'cover',
+          backgroundAttachment: 'fixed',
+          backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
+          backgroundBlendMode: 'soft-light',
+          filter: 'grayscale(100%) contrast(0.95) brightness(1.1)',
         }}
       />
 
