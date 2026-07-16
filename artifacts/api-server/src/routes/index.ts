@@ -8,6 +8,7 @@ import achievementsRouter from "./achievements.js";
 import statsRouter from "./stats.js";
 import playersRouter from "./players.js";
 import analyticsRouter from "./analytics.js";
+import aiRouter from "./ai.js";
 
 const router = Router();
 
@@ -20,5 +21,6 @@ router.use(achievementsRouter);
 router.use(statsRouter);
 router.use(playersRouter);
 router.use(analyticsRouter);
+router.use(aiRouter);
 
 export default router;

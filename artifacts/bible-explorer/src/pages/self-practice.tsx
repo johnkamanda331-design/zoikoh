@@ -11,8 +11,8 @@ export function SelfPractice() {
   const [completed, setCompleted] = useState(false);
 
   const prompt = dailyContent
-    ? `AI suggests using ${dailyContent.verseReference} to do one small action: write a short encouragement, pray for someone, or share this truth with a friend.`
-    : 'Reflect on today’s verse in a short personal or social activity that connects scripture to real life.';
+    ? `Use ${dailyContent.verseReference} as your guided prompt: write a brief encouragement, pray with this verse in mind, or apply it in a simple, practical way.`
+    : 'Use today’s verse as your reflective prompt: write a short encouragement, pray with it, or do one small practical action inspired by it.';
 
   const summary = dailyContent?.verse
     ? 'Take a moment to meditate on this verse and reflect on how it applies to your day.'

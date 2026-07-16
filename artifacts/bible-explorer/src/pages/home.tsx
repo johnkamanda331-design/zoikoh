@@ -49,11 +49,11 @@ const fadeUp = {
 
 function buildSelfPracticePrompt(dailyContent?: { verseReference?: string; summary?: string }) {
   if (!dailyContent) {
-    return 'Reflect on today’s verse with a short personal action: write a message, pray, or encourage someone using this truth.';
+    return 'Use today’s verse as a guide for a short meaningful action: write an encouragement, pray with it in mind, or encourage someone with this truth.';
   }
 
   const verse = dailyContent.verseReference ?? 'today’s verse';
-  return `AI suggests using ${verse} to do one of these: write a short encouragement, pray for someone, or take a small action that reflects the verse in real life.`;
+  return `Use ${verse} as your reflection prompt: write a short encouragement, pray with this truth, or take one small real-life action inspired by the verse.`;
 }
 
 export function Home() {

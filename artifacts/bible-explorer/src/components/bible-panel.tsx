@@ -117,6 +117,7 @@ export function BiblePanel() {
   const [activeVerseMenu, setActiveVerseMenu] = useState<{ verse: number; top: number; left: number } | null>(null);
   const [showVerseActions, setShowVerseActions] = useState(false);
   const longPressTimer = useRef<number | null>(null);
+  const shouldScrollToSelection = useRef(false);
   const [bookmarks, setBookmarks] = useState<string[]>([]);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [recentChapters, setRecentChapters] = useState<string[]>([]);
@@ -124,6 +125,8 @@ export function BiblePanel() {
   const [readingPlan, setReadingPlan] = useState({ completedToday: false, streak: 0, target: 7 });
   const [mood, setMood] = useState<Mood>('focus');
   const [chapterCache, setChapterCache] = useState<Record<string, VerseData[]>>({});
+  const [chapterSummaries, setChapterSummaries] = useState<Record<string, string>>({});
+  const [summaryLoading, setSummaryLoading] = useState(false);
   const [layoutMode, setLayoutMode] = useState<'comfortable' | 'compact'>((initialPrefs.readingDensity as 'comfortable' | 'compact' | undefined) ?? 'comfortable');
   const [lineSpacing, setLineSpacing] = useState<'comfortable' | 'relaxed'>((initialPrefs.lineSpacing as 'comfortable' | 'relaxed' | undefined) ?? 'comfortable');
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
@@ -155,10 +158,11 @@ export function BiblePanel() {
   );
   const isBookmarked = useMemo(() => bookmarks.includes(chapterKey), [bookmarks, chapterKey]);
   const isFavorite = useMemo(() => favorites.includes(chapterKey), [favorites, chapterKey]);
-  const summary = useMemo(
-    () => CHAPTER_SUMMARIES[book]?.[chapter] ?? `A calm reading of ${book} chapter ${chapter} can help you reflect and pray.`,
-    [book, chapter],
-  );
+  const summary = useMemo(() => {
+    const chapterSummary = CHAPTER_SUMMARIES[book]?.[chapter];
+    if (chapterSummary) return chapterSummary;
+    return `Summary for ${book} ${chapter} is not available yet. Read through the chapter and use notes or highlights to capture what stands out most.`;
+  }, [book, chapter]);
   const dailyQuote = useMemo(() => DAILY_QUOTES[new Date().getDay() % DAILY_QUOTES.length], []);
   const activeMood = useMemo(() => MOOD_RECOMMENDATIONS[mood], [mood]);
 
@@ -222,7 +226,8 @@ export function BiblePanel() {
   }, [book, chapter]);
 
   useEffect(() => {
-    if (!isOpen || selectedVerses.length === 0) return;
+    if (!isOpen || selectedVerses.length === 0 || !shouldScrollToSelection.current) return;
+    shouldScrollToSelection.current = false;
     const lastSelected = selectedVerses[selectedVerses.length - 1];
     const element = verseRefs.current[lastSelected];
     if (element) {
@@ -233,6 +238,28 @@ export function BiblePanel() {
 
   const fetchAbort = useRef<AbortController | null>(null);
   const fetchRequestId = useRef(0);
+
+  const fetchChapterSummary = useCallback(async (translation: Translation, bookIdx: number, chap: number, key: string, force = false) => {
+    if (!force && chapterSummaries[key]) return;
+    setSummaryLoading(true);
+    try {
+      const resp = await fetch('/api/ai/summarize-chapter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ translation, bookIndex: bookIdx, chapter: chap }),
+      });
+      if (!resp.ok) throw new Error('Summary request failed');
+      const data = await resp.json();
+      if (data && (data.summary || data.application)) {
+        const combined = data.application ? `${data.summary}\n\nApplication: ${data.application}` : data.summary;
+        setChapterSummaries((prev) => ({ ...prev, [key]: combined }));
+      }
+    } catch (err) {
+      // ignore and keep fallback
+    } finally {
+      setSummaryLoading(false);
+    }
+  }, [chapterSummaries]);
 
   const fetchChapter = useCallback(async () => {
     if (!isOpen) return;
@@ -272,6 +299,7 @@ export function BiblePanel() {
       if (fetchRequestId.current === myId) {
         setVerses(data);
         setChapterCache((prev: Record<string, VerseData[]>) => ({ ...prev, [chapterKey]: data }));
+        void fetchChapterSummary(translation, idx, chapter, chapterKey).catch(() => {});
       }
     } catch (err: any) {
       if (err && err.name === 'AbortError') return;
@@ -283,7 +311,7 @@ export function BiblePanel() {
         setIsLoading(false);
       }
     }
-  }, [isOpen, translation, book, chapter, chapterKey, chapterCache]);
+  }, [isOpen, translation, book, chapter, chapterKey, chapterCache, fetchChapterSummary]);
 
   const syncPreferences = useCallback(() => {
     const latestPrefs = loadPreferences();
@@ -511,6 +539,7 @@ export function BiblePanel() {
   };
 
   const toggleVerseSelection = (verse: number) => {
+    shouldScrollToSelection.current = true;
     setSelectedVerses((prev: number[]) => {
       if (prev.includes(verse)) {
         return prev.filter((item: number) => item !== verse);
@@ -811,7 +840,25 @@ export function BiblePanel() {
                           <Sparkles className="h-4 w-4" style={{ color: 'hsl(var(--brand-purple))' }} />
                           <h3 className="text-sm font-semibold">Chapter summary</h3>
                         </div>
-                        <p className="text-sm leading-6" style={{ color: 'hsl(var(--foreground))' }}>{summary}</p>
+                        <div className="flex items-start justify-between">
+                          <p className="text-sm leading-6" style={{ color: 'hsl(var(--foreground))' }}>{chapterSummaries[chapterKey] ?? summary}</p>
+                          <div className="ml-3">
+                            {summaryLoading ? (
+                              <span className="text-xs text-muted-foreground">Generating…</span>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const idx = BIBLE_BOOKS.indexOf(book) + 1;
+                                  if (idx > 0) void fetchChapterSummary(translation, idx, chapter, chapterKey, true);
+                                }}
+                                className="text-xs font-semibold text-brand-blue hover:underline"
+                              >
+                                Regenerate summary
+                              </button>
+                            )}
+                          </div>
+                        </div>
                       </div>
 
                       <div className="rounded-2xl border p-4" style={{ borderColor: 'hsl(var(--border))', background: 'hsl(var(--card))' }}>
