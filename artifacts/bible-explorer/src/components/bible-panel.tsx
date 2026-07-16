@@ -78,6 +78,47 @@ const fontClasses: Record<FontSize, string> = {
 };
 const fontLabels: Record<FontSize, string> = { xs: 'XS', sm: 'S', md: 'M', lg: 'L', xl: 'XL' };
 
+const SUMMARY_THEME_PATTERNS: Array<[RegExp, string]> = [
+  [/\b(shepherd|sheep|still waters|green pastures|fear no evil)\b/i, 'trust in God’s caring guidance'],
+  [/\b(love|beloved|love one another|forgive|forgiveness|mercy)\b/i, 'God’s love, mercy, and forgiveness'],
+  [/\b(faith|believe|trust|hope|confidence)\b/i, 'faith and confident trust in God'],
+  [/\b(law|commandment|commandments|decree|statute)\b/i, 'God’s instruction and faithful obedience'],
+  [/\b(judge|judgment|justice|wrath|punish)\b/i, 'God’s justice and righteous judgment'],
+  [/\b(king|kingdom|crown|throne|reign)\b/i, 'leadership and kingdom ministry'],
+  [/\b(repent|repentance|return to God|turn from sin)\b/i, 'repentance and returning to God'],
+  [/\b(wisdom|understanding|discernment|prudence)\b/i, 'wisdom and spiritual understanding'],
+  [/\b(praise|worship|glory|sing)\b/i, 'praise, worship, and rejoicing in God'],
+  [/\b(peace|comfort|rest|refuge|safe)\b/i, 'comfort, peace, and divine protection'],
+];
+
+function normalizeChapterText(text: string) {
+  return text
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&(nbsp|#160);/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function inferChapterTheme(content: string) {
+  for (const [pattern, theme] of SUMMARY_THEME_PATTERNS) {
+    if (pattern.test(content)) return theme;
+  }
+  return 'the chapter’s main message and purpose';
+}
+
+function buildChapterSummary(book: string, chapter: number, verses: VerseData[]) {
+  if (!verses.length) {
+    return 'Summary will appear once the chapter is loaded.';
+  }
+
+  const content = verses.map((verse) => normalizeChapterText(verse.text)).join(' ');
+  const theme = inferChapterTheme(content);
+  const firstVerse = normalizeChapterText(verses[0].text).split('. ')[0];
+  const lastVerse = normalizeChapterText(verses[verses.length - 1].text).split('. ')[0];
+
+  return `${book} ${chapter} begins by ${firstVerse.toLowerCase()} and concludes by ${lastVerse.toLowerCase()}. It highlights ${theme}.`;
+}
+
 /* ── Panel ─────────────────────────────────────────────────────────────── */
 export function BiblePanel() {
   const { isOpen, close } = useBiblePanelStore();
@@ -110,8 +151,6 @@ export function BiblePanel() {
   const [readingPlan, setReadingPlan] = useState({ completedToday: false, streak: 0, target: 7 });
   const [mood, setMood] = useState<Mood>('focus');
   const [chapterCache, setChapterCache] = useState<Record<string, VerseData[]>>({});
-  const [chapterSummaries, setChapterSummaries] = useState<Record<string, string>>({});
-  const [summaryLoading, setSummaryLoading] = useState(false);
   const [layoutMode, setLayoutMode] = useState<'comfortable' | 'compact'>((initialPrefs.readingDensity as 'comfortable' | 'compact' | undefined) ?? 'comfortable');
   const [lineSpacing, setLineSpacing] = useState<'comfortable' | 'relaxed'>((initialPrefs.lineSpacing as 'comfortable' | 'relaxed' | undefined) ?? 'comfortable');
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
@@ -143,12 +182,7 @@ export function BiblePanel() {
   );
   const isBookmarked = useMemo(() => bookmarks.includes(chapterKey), [bookmarks, chapterKey]);
   const isFavorite = useMemo(() => favorites.includes(chapterKey), [favorites, chapterKey]);
-  const summary = useMemo(() => {
-    if (chapterSummaries[chapterKey]) {
-      return chapterSummaries[chapterKey];
-    }
-    return `Loading chapter summary from AI...`;
-  }, [chapterKey, chapterSummaries]);
+  const summary = useMemo(() => buildChapterSummary(book, chapter, verses), [book, chapter, verses]);
   const dailyQuote = useMemo(() => DAILY_QUOTES[new Date().getDay() % DAILY_QUOTES.length], []);
   const activeMood = useMemo(() => MOOD_RECOMMENDATIONS[mood], [mood]);
 
@@ -225,34 +259,6 @@ export function BiblePanel() {
   const fetchAbort = useRef<AbortController | null>(null);
   const fetchRequestId = useRef(0);
 
-  const fetchChapterSummary = useCallback(async (translation: Translation, bookIdx: number, chap: number, key: string, force = false) => {
-    if (!force && chapterSummaries[key]) return;
-    setSummaryLoading(true);
-    try {
-      const resp = await fetch('/api/ai/summarize-chapter', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ translation, bookIndex: bookIdx, chapter: chap }),
-      });
-      if (!resp.ok) {
-        const errorData = await resp.json().catch(() => null);
-        const message = errorData?.error || 'Summary request failed';
-        throw new Error(message);
-      }
-      const data = await resp.json();
-      if (data?.summary) {
-        const combined = data.application ? `${data.summary}\n\nApplication: ${data.application}` : data.summary;
-        setChapterSummaries((prev) => ({ ...prev, [key]: combined }));
-      } else {
-        throw new Error('AI did not return a valid summary.');
-      }
-    } catch (err: any) {
-      setChapterSummaries((prev) => ({ ...prev, [key]: `Unable to generate summary: ${err.message ?? 'Unknown error'}` }));
-    } finally {
-      setSummaryLoading(false);
-    }
-  }, [chapterSummaries]);
-
   const fetchChapter = useCallback(async () => {
     if (!isOpen) return;
 
@@ -291,7 +297,6 @@ export function BiblePanel() {
       if (fetchRequestId.current === myId) {
         setVerses(data);
         setChapterCache((prev: Record<string, VerseData[]>) => ({ ...prev, [chapterKey]: data }));
-        void fetchChapterSummary(translation, idx, chapter, chapterKey).catch(() => {});
       }
     } catch (err: any) {
       if (err && err.name === 'AbortError') return;
@@ -303,7 +308,7 @@ export function BiblePanel() {
         setIsLoading(false);
       }
     }
-  }, [isOpen, translation, book, chapter, chapterKey, chapterCache, fetchChapterSummary]);
+  }, [isOpen, translation, book, chapter, chapterKey, chapterCache]);
 
   const syncPreferences = useCallback(() => {
     const latestPrefs = loadPreferences();
@@ -833,22 +838,17 @@ export function BiblePanel() {
                           <h3 className="text-sm font-semibold">Chapter summary</h3>
                         </div>
                         <div className="flex items-start justify-between">
-                          <p className="text-sm leading-6" style={{ color: 'hsl(var(--foreground))' }}>{chapterSummaries[chapterKey] ?? summary}</p>
+                          <p className="text-sm leading-6" style={{ color: 'hsl(var(--foreground))' }}>{summary}</p>
                           <div className="ml-3">
-                            {summaryLoading ? (
-                              <span className="text-xs text-muted-foreground">Generating…</span>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const idx = BIBLE_BOOKS.indexOf(book) + 1;
-                                  if (idx > 0) void fetchChapterSummary(translation, idx, chapter, chapterKey, true);
-                                }}
-                                className="text-xs font-semibold text-brand-blue hover:underline"
-                              >
-                                Regenerate summary
-                              </button>
-                            )}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                // No external call needed, summary recomputes from loaded verse content.
+                              }}
+                              className="text-xs font-semibold text-brand-blue hover:underline"
+                            >
+                              Refresh summary
+                            </button>
                           </div>
                         </div>
                       </div>
