@@ -75,19 +75,13 @@ router.post('/ai/summarize-chapter', async (req: any, res: any) => {
     const prompt = `Summarize the following Bible chapter in 2-3 concise sentences focusing on key events, themes, and the main message. Then provide one short, practical application (one sentence). Return the result as JSON with keys \"summary\" and \"application\".\n\nChapter text:\n${chapterText}`;
 
     const geminiKey = config.ai.geminiApiKey;
-    const openaiKey = config.ai.openaiApiKey;
 
-    if (!geminiKey && !openaiKey) {
-      // Fallback: simple extractive summary
-      const lines = chapterText.split('\n').slice(0, 4).join(' ');
-      return res.json({ summary: `(Auto) ${lines}`, application: 'Reflect on one short action inspired by the chapter.' });
+    if (!geminiKey) {
+      return res.status(503).json({ error: 'Gemini AI key is not configured.' });
     }
 
-    let aiText: string | null = null;
-    if (geminiKey) aiText = await generateWithGemini(geminiKey, prompt);
-    if (!aiText && openaiKey) aiText = await generateWithOpenAI(openaiKey, prompt);
-
-    if (!aiText) return res.status(500).json({ error: 'AI provider failed to produce a summary' });
+    const aiText = await generateWithGemini(geminiKey, prompt);
+    if (!aiText) return res.status(500).json({ error: 'Gemini AI failed to produce a summary.' });
 
     // Try to parse JSON from AI response
     try {

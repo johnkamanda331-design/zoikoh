@@ -53,21 +53,6 @@ const CHAPTER_COUNTS: Record<string, number> = {
 
 type ReadingNote = { text: string; highlighted: boolean; createdAt: string };
 
-const CHAPTER_SUMMARIES: Record<string, Record<number, string>> = {
-  John: {
-    1: 'John chapter 1 introduces the eternal Word and the beginning of Jesus’ ministry among people.',
-    3: 'John chapter 3 focuses on new birth, faith, and the promise of eternal life.',
-    14: 'John chapter 14 is a comfort chapter about Jesus’ presence, peace, and the Father’s house.',
-  },
-  Psalms: {
-    23: 'Psalm 23 is a peaceful meditation on God’s care, guidance, and protection.',
-    91: 'Psalm 91 speaks of refuge, safety, and confidence in God’s presence.',
-  },
-  Genesis: {
-    1: 'Genesis 1 describes the creation of the world and the goodness of God’s design.',
-  },
-};
-
 const DAILY_QUOTES = [
   '“The Lord is near to all who call on Him.” — Psalm 145:18',
   '“Be still, and know that I am God.” — Psalm 46:10',
@@ -159,10 +144,11 @@ export function BiblePanel() {
   const isBookmarked = useMemo(() => bookmarks.includes(chapterKey), [bookmarks, chapterKey]);
   const isFavorite = useMemo(() => favorites.includes(chapterKey), [favorites, chapterKey]);
   const summary = useMemo(() => {
-    const chapterSummary = CHAPTER_SUMMARIES[book]?.[chapter];
-    if (chapterSummary) return chapterSummary;
-    return `Summary for ${book} ${chapter} is not available yet. Read through the chapter and use notes or highlights to capture what stands out most.`;
-  }, [book, chapter]);
+    if (chapterSummaries[chapterKey]) {
+      return chapterSummaries[chapterKey];
+    }
+    return `Loading chapter summary from AI...`;
+  }, [chapterKey, chapterSummaries]);
   const dailyQuote = useMemo(() => DAILY_QUOTES[new Date().getDay() % DAILY_QUOTES.length], []);
   const activeMood = useMemo(() => MOOD_RECOMMENDATIONS[mood], [mood]);
 
@@ -248,14 +234,20 @@ export function BiblePanel() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ translation, bookIndex: bookIdx, chapter: chap }),
       });
-      if (!resp.ok) throw new Error('Summary request failed');
+      if (!resp.ok) {
+        const errorData = await resp.json().catch(() => null);
+        const message = errorData?.error || 'Summary request failed';
+        throw new Error(message);
+      }
       const data = await resp.json();
-      if (data && (data.summary || data.application)) {
+      if (data?.summary) {
         const combined = data.application ? `${data.summary}\n\nApplication: ${data.application}` : data.summary;
         setChapterSummaries((prev) => ({ ...prev, [key]: combined }));
+      } else {
+        throw new Error('AI did not return a valid summary.');
       }
-    } catch (err) {
-      // ignore and keep fallback
+    } catch (err: any) {
+      setChapterSummaries((prev) => ({ ...prev, [key]: `Unable to generate summary: ${err.message ?? 'Unknown error'}` }));
     } finally {
       setSummaryLoading(false);
     }
