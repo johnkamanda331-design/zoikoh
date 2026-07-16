@@ -6,7 +6,7 @@ const router = Router();
 const BIBLE_SOURCE_BASE = 'https://bolls.life';
 
 async function generateWithOpenAI(apiKey: string, prompt: string): Promise<string | null> {
-  const response: any = await fetch("https://api.openai.com/v1/chat/completions", {
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -20,7 +20,7 @@ async function generateWithOpenAI(apiKey: string, prompt: string): Promise<strin
       ],
       temperature: 0.3,
     }),
-  });
+  }) as { ok: boolean; json: () => Promise<any> };
 
   if (!response.ok) return null;
   const data: any = await response.json();
@@ -32,7 +32,7 @@ async function generateWithOpenAI(apiKey: string, prompt: string): Promise<strin
 }
 
 async function generateWithGemini(apiKey: string, prompt: string): Promise<string | null> {
-  const response: any = await fetch(
+  const response = await fetch(
     "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
     {
       method: "POST",
@@ -46,7 +46,7 @@ async function generateWithGemini(apiKey: string, prompt: string): Promise<strin
         generationConfig: { temperature: 0.3, responseMimeType: "text/plain" },
       }),
     }
-  );
+  ) as { ok: boolean; json: () => Promise<any> };
 
   if (!response.ok) return null;
   const data: any = await response.json();
@@ -63,7 +63,7 @@ router.post('/ai/summarize-chapter', async (req: any, res: any) => {
 
     // fetch the chapter text from the public source
     const url = `${BIBLE_SOURCE_BASE}/get-chapter/${translation}/${bookIndex}/${chapter}/`;
-    const resp = await fetch(url);
+    const resp = (await fetch(url)) as { ok: boolean; json: () => Promise<any> };
     if (!resp.ok) {
       return res.status(502).json({ error: 'Failed to fetch chapter text' });
     }
