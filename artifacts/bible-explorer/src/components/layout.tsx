@@ -22,13 +22,14 @@ import { Button } from '@/components/ui/button';
 import { useUser, useClerk } from '@clerk/react';
 
 /* ── Logo ─────────────────────────────────────────────────────────────── */
-export function Logo({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
+export function Logo({ size = 'md', className }: { size?: 'sm' | 'md' | 'lg'; className?: string }) {
   const cls = size === 'sm' ? 'h-6 w-auto' : size === 'lg' ? 'h-12 w-auto' : 'h-8 w-auto';
+  const combined = className ? `${className} object-contain` : `${cls} object-contain`;
   return (
     <img
-      src="/logo.png"
+      src="/logo_edited.png"
       alt="ZOIKOH logo"
-      className={`${cls} object-contain`}
+      className={combined}
       loading="eager"
     />
   );
@@ -155,13 +156,24 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const displayName = user?.firstName || user?.username || user?.emailAddresses?.[0]?.emailAddress?.split('@')[0] || 'You';
 
   return (
-    <div className="flex flex-col min-h-[100dvh] w-full bg-background overflow-x-hidden selection:bg-brand-purple selection:text-white">
+    <div className="relative flex flex-col min-h-[100dvh] w-full bg-background overflow-x-hidden selection:bg-brand-purple selection:text-white">
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage: "url('/logo_edited.png')",
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'center top',
+          backgroundSize: '55%',
+          opacity: 0.06,
+          zIndex: 0,
+        }}
+      />
 
       {/* ── Top bar ──────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-40 flex items-center justify-between h-14 px-3 sm:px-4 border-b border-border bg-card/80 backdrop-blur-md shrink-0">
+      <header className="sticky top-0 z-40 flex items-center justify-between h-20 sm:h-20 md:h-24 px-3 sm:px-4 border-b border-border bg-card/80 backdrop-blur-md shrink-0">
         {/* Logo → navigates home on click */}
         <Link href="/" className="cursor-pointer">
-          <Logo />
+          <Logo className="h-10 sm:h-12 md:h-16 lg:h-20 xl:h-24 w-auto" />
         </Link>
 
         <div className="flex items-center gap-1">

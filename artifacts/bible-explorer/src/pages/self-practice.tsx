@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useLocation } from 'wouter';
 import { Zap, BookOpen } from 'lucide-react';
+import { jsPDF } from 'jspdf';
 import { useGetDailyContent } from '@workspace/api-client-react';
 import { Button } from '@/components/ui/button';
 
@@ -9,6 +10,25 @@ export function SelfPractice() {
   const { data: dailyContent, isLoading, isError } = useGetDailyContent();
   const [journalEntry, setJournalEntry] = useState('');
   const [completed, setCompleted] = useState(false);
+
+  const downloadJournalPdf = () => {
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+    const title = dailyContent?.verseReference
+      ? `Self-Practice Notes - ${dailyContent.verseReference}`
+      : 'Self-Practice Notes';
+
+    doc.setFontSize(18);
+    doc.text(title, 40, 50);
+    doc.setFontSize(12);
+    doc.text(`Verse: ${dailyContent?.verseReference ?? 'N/A'}`, 40, 80);
+    doc.text('Notes:', 40, 110);
+
+    const lines = doc.splitTextToSize(journalEntry.trim() || 'No notes entered.', 520);
+    doc.text(lines, 40, 140);
+
+    const filename = `self-practice-notes-${new Date().toISOString().slice(0, 10)}.pdf`;
+    doc.save(filename);
+  };
 
   const prompt = dailyContent
     ? `Use ${dailyContent.verseReference} as your guided prompt: write a brief encouragement, pray with this verse in mind, or apply it in a simple, practical way.`
@@ -44,7 +64,7 @@ export function SelfPractice() {
         <div className="rounded-3xl border border-border/50 bg-card p-6 mb-8">
           <div className="flex items-center gap-2 mb-4">
             <BookOpen className="w-5 h-5 text-brand-blue" />
-            <h2 className="text-lg font-semibold">Your AI-guided prompt</h2>
+            <h2 className="text-lg font-semibold">Your guided prompt</h2>
           </div>
           {isLoading ? (
             <p className="text-sm text-muted-foreground">Loading your practice prompt…</p>
@@ -59,9 +79,14 @@ export function SelfPractice() {
           <div className="rounded-3xl border border-green-300 bg-green-50 p-6 text-center">
             <h2 className="text-2xl font-heading font-bold text-green-700">Well done!</h2>
             <p className="mt-3 text-sm text-green-900">You’ve completed today’s reflection. Keep this thought close as you move through your day.</p>
-            <Button variant="outline" size="sm" className="mt-6" onClick={() => setCompleted(false)}>
-              Practice again
-            </Button>
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
+              <Button variant="outline" size="sm" className="rounded-full" onClick={downloadJournalPdf} disabled={!journalEntry.trim()}>
+                Download your notes as PDF
+              </Button>
+              <Button variant="outline" size="sm" className="rounded-full" onClick={() => setCompleted(false)}>
+                Practice again
+              </Button>
+            </div>
           </div>
         ) : (
           <>
@@ -85,6 +110,9 @@ export function SelfPractice() {
             <div className="mt-6 flex flex-wrap gap-3">
               <Button size="lg" className="rounded-full" onClick={() => setCompleted(true)} disabled={!journalEntry.trim()}>
                 Mark complete
+              </Button>
+              <Button variant="outline" size="lg" className="rounded-full" onClick={downloadJournalPdf} disabled={!journalEntry.trim()}>
+                Download PDF
               </Button>
               <Button variant="outline" size="lg" className="rounded-full" onClick={() => setJournalEntry('')}>
                 Reset
