@@ -160,10 +160,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
       className="relative flex flex-col min-h-[100dvh] w-full bg-background overflow-x-hidden selection:bg-brand-purple selection:text-white"
       style={{
         backgroundImage: isDark
-          ? "linear-gradient(rgba(255,255,255,0.05), rgba(255,255,255,0.05)), url('/dark_web_logo.png')"
-          : "linear-gradient(rgba(0,0,0,0.04), rgba(0,0,0,0.04)), url('/web_logo.png')",
+          ? "linear-gradient(rgba(255,255,255,0.75), rgba(255,255,255,0.75)), url('/dark_logo.png')"
+          : "linear-gradient(rgba(0,0,0,0.75), rgba(0,0,0,0.75)), url('/logo.png')",
         backgroundRepeat: 'no-repeat',
-        backgroundPosition: 'center center',
+        backgroundPosition: 'center 38%',
         backgroundSize: '70%',
         backgroundAttachment: 'fixed',
         backgroundBlendMode: 'normal',
