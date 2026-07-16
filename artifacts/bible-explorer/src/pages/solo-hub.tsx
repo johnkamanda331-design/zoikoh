@@ -199,17 +199,17 @@ const QUOTES: Array<{ id: number; question: string; quote: string; answer: strin
 ───────────────────────────────────────────────────────────────────────── */
 const MODES = [
   { id: 'daily',        title: 'Daily Challenge',  desc: '15 date-seeded questions that reset every midnight.',             icon: Zap,         gradient: 'from-brand-orange to-red-500',     badge: 'Daily',    badgeVariant: 'orange'    as const, tags: ['15 Questions','Bonus Points'] },
-  { id: 'qa',           title: 'Bible Q&A',         desc: 'Endless trivia across Old & New Testament.',                      icon: Target,      gradient: 'from-brand-purple to-indigo-500',  badge: 'Endless',  badgeVariant: 'purple'    as const, tags: ['Custom Diff','All Topics'] },
+  { id: 'qa',           title: 'Bible Q&A',         desc: '30-question trivia gauntlet across Old & New Testament.',         icon: Target,      gradient: 'from-brand-purple to-indigo-500',  badge: '30 Qs',    badgeVariant: 'purple'    as const, tags: ['30 Questions','Endless Theme'] },
   { id: 'bible-sprint', title: 'Bible Sprint',     desc: 'Race through 15 scripture questions in a fast-paced sprint.',     icon: Zap,         gradient: 'from-red-500 to-orange-500',          badge: 'Sprint',  badgeVariant: 'orange'    as const, tags: ['15 Questions','Speed'] },
   { id: 'flash',        title: 'Flash Cards',       desc: 'Flip through key verses, names, and concepts.',                   icon: Brain,       gradient: 'from-brand-blue to-cyan-500',      badge: 'Practice', badgeVariant: 'blue'      as const, tags: ['Self-paced','Memory'] },
   { id: 'scramble',     title: 'Word Scramble',     desc: 'Unscramble Bible names and places in 45 seconds.',               icon: RotateCcw,   gradient: 'from-brand-green to-emerald-500',  badge: 'Mini-game',badgeVariant: 'green'     as const, tags: ['Speed','45 Seconds'] },
   { id: 'true-false',   title: 'True or False',     desc: 'Quick-fire true/false statements about Bible events.',           icon: Shield,      gradient: 'from-teal-500 to-green-600',       badge: 'Quick',    badgeVariant: 'green'     as const, tags: ['Fast paced','2 choices'] },
-  { id: 'speed-round',  title: 'Speed Round',       desc: 'Answer as many questions as you can in 60 seconds.',            icon: Flame,       gradient: 'from-red-500 to-orange-600',       badge: '60 sec',   badgeVariant: 'orange'    as const, tags: ['60 Seconds','High Score'] },
-  { id: 'time-attack',  title: 'Time Attack',       desc: 'Answer as many questions as possible in 60 seconds.',            icon: Clock,       gradient: 'from-red-500 to-orange-500',       badge: 'Attack',  badgeVariant: 'orange'    as const, tags: ['60 Seconds','High Score'] },
-  { id: 'trivia-madness', title: 'Trivia Madness',   desc: 'Rapid-fire 10-question rounds with a one-time power-up.',        icon: Zap,         gradient: 'from-yellow-500 to-orange-500',   badge: 'Madness', badgeVariant: 'orange'    as const, tags: ['10 Questions','Power-up'] },
-  { id: 'survival-mode', title: 'Survival Mode',    desc: 'Keep going as difficulty rises until you miss one.',              icon: Shield,     gradient: 'from-emerald-500 to-green-600',     badge: 'Survive', badgeVariant: 'green'     as const, tags: ['Endurance','Increasing'] },
+  { id: 'speed-round',  title: 'Speed Round',       desc: 'Answer 30 questions in under 60 seconds.',                     icon: Flame,       gradient: 'from-red-500 to-orange-600',       badge: '30 Qs',    badgeVariant: 'orange'    as const, tags: ['30 Questions','60 Seconds'] },
+  { id: 'survival-mode', title: 'Survival Mode',    desc: '30-question rising difficulty challenge that starts easy and grows harder.', icon: Shield, gradient: 'from-emerald-500 to-green-600', badge: '30 Qs', badgeVariant: 'green'     as const, tags: ['30 Questions','Increasing'] },
+  { id: 'memory-match',  title: 'Memory Match',     desc: 'Flip Scripture cards and match words to their clues.',          icon: RefreshCw,  gradient: 'from-brand-blue to-sky-500',      badge: 'Match',    badgeVariant: 'blue'     as const, tags: ['Pairs','Memory'] },
+  { id: 'word-builder',  title: 'Word Builder',     desc: 'Build Bible words from scrambled letters.',                      icon: Timer,      gradient: 'from-emerald-500 to-teal-500',      badge: 'Builder',  badgeVariant: 'green'    as const, tags: ['Puzzle','Spelling'] },
+  { id: 'verse-order',  title: 'Verse Order',      desc: 'Reassemble famous Scripture lines in the correct order.',        icon: Star,       gradient: 'from-violet-500 to-purple-600',    badge: 'Order',    badgeVariant: 'purple'    as const, tags: ['Sequence','Memory'] },
   { id: 'story-quest',  title: 'Story Quest',       desc: 'Journey through Bible stories in a campaign-style quiz adventure.', icon: Zap,      gradient: 'from-brand-indigo to-violet-500', badge: 'Quest',   badgeVariant: 'purple'    as const, tags: ['Narrative','Campaign'] },
-  { id: 'team-tournament', title: 'Team Tournament', desc: 'Work with friends in a trivia bracket and score as a team.',      icon: Users,      gradient: 'from-brand-blue to-sky-500',      badge: 'Team',    badgeVariant: 'blue'      as const, tags: ['Multiplayer','Co-op'] },
   { id: 'verse-fill',   title: 'Verse Fill-In',     desc: 'Complete the missing word in famous Bible passages.',            icon: BookMarked,  gradient: 'from-pink-500 to-rose-500',        badge: 'Memory',   badgeVariant: 'secondary' as const, tags: ['Fill blanks','Key verses'] },
   { id: 'number-match', title: 'Bible Numbers',     desc: 'Match events, chapters, and counts to the correct number.',     icon: Hash,        gradient: 'from-violet-500 to-purple-600',    badge: 'Numbers',  badgeVariant: 'purple'    as const, tags: ['Trivia','Matching'] },
   { id: 'crossword',    title: 'Bible Crossword',   desc: 'Spell Bible names and places from clues — letter by letter.',  icon: Puzzle,      gradient: 'from-amber-500 to-orange-500',     badge: 'Puzzle',   badgeVariant: 'orange'    as const, tags: ['Themed','Puzzle'] },
@@ -236,7 +236,7 @@ export function SoloHub() {
       <div>
         <h1 className="text-3xl md:text-5xl font-heading font-extrabold mb-2">Solo Play</h1>
         <p className="text-muted-foreground text-base md:text-lg max-w-2xl">
-          Sharpen your scripture knowledge at your own pace. Ten modes to explore.
+          Sharpen your scripture skills with fresh puzzles, speed rounds, and solo challenges.
         </p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -355,7 +355,9 @@ function SoloGameView({ mode, onBack }: { mode: string; onBack: () => void }) {
   if (mode === 'scramble')       return <WordScrambleGame onBack={onBack} />;
   if (mode === 'true-false')     return <TrueFalseGame onBack={onBack} />;
   if (mode === 'speed-round')    return <SpeedRoundGame onBack={onBack} />;
-  if (['time-attack','trivia-madness','survival-mode','story-quest','team-tournament'].includes(mode)) return <QuizGame mode={mode} onBack={onBack} />;
+  if (mode === 'memory-match')   return <MemoryMatchGame onBack={onBack} />;
+  if (mode === 'word-builder')   return <WordBuilderGame onBack={onBack} />;
+  if (mode === 'verse-order')    return <VerseOrderGame onBack={onBack} />;
   if (mode === 'verse-fill')     return <VerseFillGame onBack={onBack} />;
   if (mode === 'number-match')   return <BibleNumbersGame onBack={onBack} />;
   if (mode === 'crossword')      return <CrosswordGame onBack={onBack} />;
@@ -401,6 +403,25 @@ async function awardAndToast(progress: ReturnType<typeof recordGamePlayed>) {
   }
 }
 
+function buildSurvivalQuestionSet(questions: any[]) {
+  const byDifficulty = {
+    easy: questions.filter(q => (q.difficulty || 'medium') === 'easy'),
+    medium: questions.filter(q => (q.difficulty || 'medium') === 'medium'),
+    hard: questions.filter(q => (q.difficulty || 'medium') === 'hard'),
+  };
+
+  const easyQuestions = pickUnseen(byDifficulty.easy, 'survival-mode-easy', 10);
+  const mediumQuestions = pickUnseen(byDifficulty.medium, 'survival-mode-medium', 10);
+  const hardQuestions = pickUnseen(byDifficulty.hard, 'survival-mode-hard', 10);
+  const selected = [...easyQuestions, ...mediumQuestions, ...hardQuestions];
+
+  if (selected.length >= 30) return selected.slice(0, 30);
+
+  const remaining = questions.filter(q => !selected.some(s => s.id === q.id));
+  const fill = pickUnseen(remaining, 'survival-mode-fill', 30 - selected.length);
+  return [...selected, ...fill].slice(0, 30);
+}
+
 /* ─────────────────────────────────────────────────────────────────────────
    Quiz Game (daily + qa)
 ───────────────────────────────────────────────────────────────────────── */
@@ -416,10 +437,13 @@ function QuizGame({ mode, onBack }: { mode: string; onBack: () => void }) {
   const { data: dailyQuestions, isLoading: dailyLoading } = useGetDailyChallenge({
     query: { enabled: mode === 'daily' && isPlaying, queryKey: getGetDailyChallengeQueryKey() },
   });
-  const quizModes = ['qa','bible-sprint','story-quest','team-tournament','time-attack','trivia-madness','survival-mode'] as const;
+  const quizModes = ['qa','bible-sprint','story-quest','survival-mode'] as const;
+  const difficultyModes = ['bible-sprint','story-quest'] as const;
   const shouldFetchQA = quizModes.includes(mode as typeof quizModes[number]);
-  const { data: qaData, isLoading: qaLoading } = useListQuestions({ limit: 60, difficulty } as any, {
-    query: { enabled: shouldFetchQA && isPlaying, queryKey: getListQuestionsQueryKey({ limit: 60, difficulty } as any) },
+  const shouldShowDifficulty = difficultyModes.includes(mode as typeof difficultyModes[number]);
+  const questionRequest = { limit: 60, ...(shouldShowDifficulty ? { difficulty } : {}) } as any;
+  const { data: qaData, isLoading: qaLoading } = useListQuestions(questionRequest, {
+    query: { enabled: shouldFetchQA && isPlaying, queryKey: getListQuestionsQueryKey(questionRequest) },
   });
 
   const allQuestions = mode === 'daily'
@@ -437,7 +461,19 @@ function QuizGame({ mode, onBack }: { mode: string; onBack: () => void }) {
   const [selectedQuestions, setSelectedQuestions] = useState<any[]>([]);
   useEffect(() => {
     if (!isPlaying || selectedQuestions.length > 0 || !allQuestions || allQuestions.length === 0) return;
-    const count = mode === 'daily' ? 15 : ['bible-sprint','story-quest','team-tournament'].includes(mode) ? 15 : 10;
+    if (mode === 'daily') {
+      setSelectedQuestions(pickUnseen(allQuestions as any[], mode, 15));
+      return;
+    }
+    if (mode === 'qa') {
+      setSelectedQuestions(pickUnseen(allQuestions as any[], mode, 30));
+      return;
+    }
+    if (mode === 'survival-mode') {
+      setSelectedQuestions(buildSurvivalQuestionSet(allQuestions as any[]));
+      return;
+    }
+    const count = ['bible-sprint','story-quest'].includes(mode) ? 15 : 10;
     setSelectedQuestions(pickUnseen(allQuestions as any[], mode, count));
   }, [isPlaying, allQuestions, selectedQuestions.length, mode]);
   const questions = selectedQuestions;
@@ -465,13 +501,13 @@ function QuizGame({ mode, onBack }: { mode: string; onBack: () => void }) {
   }, [isFinished, handleFinished]);
 
   if (!isPlaying) {
-    if (['qa','bible-sprint','story-quest','team-tournament','time-attack','trivia-madness','survival-mode'].includes(mode)) {
-        const ctaLabel = mode === 'bible-sprint'
-          ? 'Sprint'
-          : mode === 'story-quest'
-            ? 'Begin Quest'
-            : mode === 'team-tournament'
-              ? 'Join Bracket'
+    if (['qa','bible-sprint','story-quest','survival-mode'].includes(mode)) {
+        const ctaLabel = mode === 'qa'
+          ? 'Start 30 Questions'
+          : mode === 'bible-sprint'
+            ? 'Sprint'
+            : mode === 'story-quest'
+              ? 'Begin Quest'
               : 'Start';
 
         return (
@@ -483,6 +519,7 @@ function QuizGame({ mode, onBack }: { mode: string; onBack: () => void }) {
             </div>
             <h1 className="text-4xl font-heading font-extrabold mb-3">{modeData.title}</h1>
             <p className="text-lg text-muted-foreground max-w-lg mb-6">{modeData.desc}</p>
+            {shouldShowDifficulty && (
             <div className="flex gap-2 mb-8 flex-wrap justify-center">
               {(['easy','medium','hard'] as const).map(d => (
                 <button key={d} onClick={() => setDifficulty(d)}
@@ -491,9 +528,10 @@ function QuizGame({ mode, onBack }: { mode: string; onBack: () => void }) {
                 </button>
               ))}
             </div>
-            <Button size="lg" className={`h-14 px-10 text-lg rounded-full bg-gradient-to-r ${modeData.gradient} text-white shadow-lg`} onClick={() => setIsPlaying(true)}>
-              {ctaLabel} ({difficulty})
-            </Button>
+          )}
+          <Button size="lg" className={`h-14 px-10 text-lg rounded-full bg-gradient-to-r ${modeData.gradient} text-white shadow-lg`} onClick={() => setIsPlaying(true)}>
+            {ctaLabel}{shouldShowDifficulty ? ` (${difficulty})` : ''}
+          </Button>
           </div>
         );
       }
@@ -946,7 +984,7 @@ function SpeedRoundGame({ onBack }: { onBack: () => void }) {
 
   useEffect(() => {
     if (qaData?.questions && isPlaying && questions.length === 0) {
-      setQuestions(shuffle([...qaData.questions as any[]]));
+      setQuestions(shuffle([...qaData.questions as any[]]).slice(0, 30));
     }
   }, [qaData, isPlaying, questions.length]);
 
@@ -958,6 +996,7 @@ function SpeedRoundGame({ onBack }: { onBack: () => void }) {
     return () => clearInterval(t);
   }, [isPlaying, isFinished, questions.length]);
 
+  const maxQuestions = 30;
   const handleAnswer = (opt: string) => {
     if (feedback !== null || isFinished) return;
     const q = questions[idx];
@@ -967,7 +1006,7 @@ function SpeedRoundGame({ onBack }: { onBack: () => void }) {
     if (correct) setScore(s => s + 1);
     setTimeout(() => {
       setFeedback(null);
-      if (idx < questions.length - 1) setIdx(i => i + 1);
+      if (idx < Math.min(questions.length, maxQuestions) - 1) setIdx(i => i + 1);
       else setIsFinished(true);
     }, 600);
   };
@@ -1035,7 +1074,349 @@ function SpeedRoundGame({ onBack }: { onBack: () => void }) {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   Verse Fill-In
+   Memory Match
+───────────────────────────────────────────────────────────────────────── */
+function MemoryMatchGame({ onBack }: { onBack: () => void }) {
+  const modeData = MODES.find(m => m.id === 'memory-match')!;
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [cards, setCards] = useState<Array<{ id: number; pair: number; label: string; revealed: boolean; matched: boolean }>>([]);
+  const [selected, setSelected] = useState<number[]>([]);
+  const [score, setScore] = useState(0);
+  const [moves, setMoves] = useState(0);
+  const [isFinished, setIsFinished] = useState(false);
+
+  const startGame = () => {
+    const chosen = shuffle([...BIBLE_WORDS]).slice(0, 6);
+    const deck = shuffle(chosen.flatMap((item, index) => ([
+      { id: index * 2, pair: index, label: item.word, revealed: false, matched: false },
+      { id: index * 2 + 1, pair: index, label: item.hint, revealed: false, matched: false },
+    ])));
+    setCards(deck);
+    setSelected([]);
+    setScore(0);
+    setMoves(0);
+    setIsFinished(false);
+    setIsPlaying(true);
+  };
+
+  const revealCard = (id: number) => {
+    if (!isPlaying) return;
+    if (selected.length === 2) return;
+    const card = cards.find(c => c.id === id);
+    if (!card || card.revealed || card.matched) return;
+    setCards(prev => prev.map(c => c.id === id ? { ...c, revealed: true } : c));
+    setSelected(prev => [...prev, id]);
+  };
+
+  useEffect(() => {
+    if (selected.length !== 2) return;
+    const [first, second] = selected;
+    const firstCard = cards.find(c => c.id === first);
+    const secondCard = cards.find(c => c.id === second);
+    if (!firstCard || !secondCard) return;
+
+    const handleMatch = () => {
+      if (firstCard.pair === secondCard.pair) {
+        setCards(prev => prev.map(c => c.pair === firstCard.pair ? { ...c, matched: true } : c));
+        setScore(s => s + 1);
+      } else {
+        setCards(prev => prev.map(c => c.id === first || c.id === second ? { ...c, revealed: false } : c));
+      }
+      setMoves(m => m + 1);
+      setSelected([]);
+    };
+
+    const timeout = window.setTimeout(handleMatch, 800);
+    return () => window.clearTimeout(timeout);
+  }, [selected, cards]);
+
+  useEffect(() => {
+    if (isPlaying && cards.length > 0 && cards.every(card => card.matched)) {
+      setIsFinished(true);
+    }
+  }, [cards, isPlaying]);
+
+  if (!isPlaying) return <PreGameScreen modeData={modeData} onStart={startGame} cta="Start Matching" />;
+
+  if (isFinished) {
+    const pct = Math.round((score / (cards.length / 2)) * 100);
+    return (
+      <div className="p-6 max-w-2xl mx-auto min-h-[70vh] flex flex-col items-center justify-center text-center">
+        <RefreshCw className="w-16 h-16 text-sky-500 mb-4" />
+        <h2 className="text-5xl font-heading font-extrabold mb-4">Memory mastered!</h2>
+        <div className="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-b from-brand-blue to-sky-500 mb-2">
+          {score}<span className="text-3xl text-muted-foreground">/{cards.length / 2}</span>
+        </div>
+        <p className="text-muted-foreground mb-8">{pct}% pairs matched in {moves} moves</p>
+        <div className="flex gap-4 flex-wrap justify-center">
+          <Button variant="outline" size="lg" onClick={onBack} className="rounded-full px-8">Hub</Button>
+          <Button variant="purple" size="lg" onClick={startGame} className="rounded-full px-8">Play Again</Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-5 md:p-10 max-w-4xl mx-auto">
+      <div className="flex items-center justify-between mb-6">
+        <BackBtn onBack={onBack} />
+        <span className="font-heading font-bold text-sm text-muted-foreground">Pairs found: {score}/{cards.length / 2}</span>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        {cards.map(card => (
+          <button key={card.id} onClick={() => revealCard(card.id)}
+            disabled={card.revealed || card.matched}
+            className={`min-h-[120px] rounded-3xl border-2 p-4 text-left transition-all duration-200 ${card.matched ? 'bg-brand-blue/10 border-brand-blue text-brand-blue' : card.revealed ? 'bg-card border-border' : 'bg-secondary hover:border-foreground'}`}>
+            <span className="block text-sm font-semibold leading-tight">{card.revealed || card.matched ? card.label : 'Tap to reveal'}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Word Builder
+───────────────────────────────────────────────────────────────────────── */
+function WordBuilderGame({ onBack }: { onBack: () => void }) {
+  const modeData = MODES.find(m => m.id === 'word-builder')!;
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [words, setWords] = useState<typeof BIBLE_WORDS>([]);
+  const [idx, setIdx] = useState(0);
+  const [input, setInput] = useState('');
+  const [feedback, setFeedback] = useState<'correct'|'wrong'|null>(null);
+  const [score, setScore] = useState(0);
+  const [isFinished, setIsFinished] = useState(false);
+
+  const startGame = () => {
+    const chosen = shuffle([...BIBLE_WORDS].filter(item => item.word.length <= 9 && item.word.length >= 4)).slice(0, 10);
+    setWords(chosen);
+    setIdx(0);
+    setInput('');
+    setFeedback(null);
+    setScore(0);
+    setIsFinished(false);
+    setIsPlaying(true);
+  };
+
+  const current = words[idx];
+  const scrambled = current ? shuffle(current.word.split('')).join(' ') : '';
+
+  const handleSubmit = () => {
+    if (!current) return;
+    const correct = input.trim().toLowerCase() === current.word.toLowerCase();
+    setFeedback(correct ? 'correct' : 'wrong');
+    if (correct) setScore(s => s + 1);
+    setTimeout(() => {
+      setFeedback(null);
+      setInput('');
+      if (idx < words.length - 1) setIdx(i => i + 1);
+      else setIsFinished(true);
+    }, 1000);
+  };
+
+  useEffect(() => {
+    if (isFinished) {
+      const p = recordGamePlayed({ mode: 'word-builder', correct: score, total: words.length });
+      awardAndToast(p);
+    }
+  }, [isFinished, score, words.length]);
+
+  if (!isPlaying) return <PreGameScreen modeData={modeData} onStart={startGame} cta="Start Building" />;
+
+  if (isFinished) {
+    const pct = Math.round((score / words.length) * 100);
+    return (
+      <div className="p-6 max-w-2xl mx-auto min-h-[70vh] flex flex-col items-center justify-center text-center">
+        <Timer className="w-16 h-16 text-emerald-500 mb-4" />
+        <h2 className="text-5xl font-heading font-extrabold mb-4">Words completed!</h2>
+        <div className="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-b from-emerald-500 to-teal-500 mb-2">
+          {score}<span className="text-3xl text-muted-foreground">/{words.length}</span>
+        </div>
+        <p className="text-muted-foreground mb-8">{pct}% correct</p>
+        <div className="flex gap-4 flex-wrap justify-center">
+          <Button variant="outline" size="lg" onClick={onBack} className="rounded-full px-8">Hub</Button>
+          <Button variant="purple" size="lg" onClick={startGame} className="rounded-full px-8">Play Again</Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-5 md:p-10 max-w-3xl mx-auto">
+      <div className="flex items-center justify-between mb-6">
+        <BackBtn onBack={onBack} />
+        <span className="font-heading font-bold text-sm text-muted-foreground">{idx + 1} / {words.length}</span>
+        <span className="font-heading font-bold text-sm text-emerald-500">Score: {score}</span>
+      </div>
+      <div className="rounded-3xl bg-secondary/80 p-6 mb-8 border border-border">
+        <p className="text-sm uppercase tracking-[0.18em] text-muted-foreground mb-3">Unscramble this word</p>
+        <p className="text-3xl md:text-4xl font-heading font-bold text-center tracking-[0.14em]">{scrambled}</p>
+      </div>
+      <div className="space-y-4">
+        <Input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') handleSubmit(); }} placeholder="Type the Bible word…" className="h-14 text-lg rounded-3xl" autoFocus />
+        <div className="flex flex-wrap gap-3 justify-center">
+          <Button onClick={handleSubmit} disabled={!input.trim() || !!feedback} size="lg" className="rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white">Submit</Button>
+          <Button variant="outline" size="lg" onClick={() => setInput('')} className="rounded-2xl">Clear</Button>
+        </div>
+        {feedback && (
+          <p className={`text-center font-semibold ${feedback === 'correct' ? 'text-brand-green' : 'text-brand-orange'}`}>
+            {feedback === 'correct' ? 'Correct!' : `Not quite — the word was ${current.word}`}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Verse Order
+───────────────────────────────────────────────────────────────────────── */
+function VerseOrderGame({ onBack }: { onBack: () => void }) {
+  const modeData = MODES.find(m => m.id === 'verse-order')!;
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [rounds, setRounds] = useState<Array<{ id: number; text: string; tokens: string[]; order: string[]; remaining: string[]; reference: string }>>([]);
+  const [idx, setIdx] = useState(0);
+  const [score, setScore] = useState(0);
+  const [feedback, setFeedback] = useState<'correct'|'wrong'|null>(null);
+  const [isFinished, setIsFinished] = useState(false);
+
+  const buildTokens = (text: string) => {
+    const normalized = text.replace(/([.,!?:;])/g, ' $1');
+    return normalized.split(/\s+/).filter(Boolean);
+  };
+
+  const startGame = () => {
+    const selected = shuffle([...FILL_IN_VERSES]).slice(0, 8).map((item, index) => {
+      const full = `${item.before} ${item.word} ${item.after}`;
+      const tokens = buildTokens(full);
+      return {
+        id: index,
+        text: full,
+        tokens,
+        order: [],
+        remaining: shuffle(tokens),
+        reference: item.reference,
+      };
+    });
+    setRounds(selected);
+    setIdx(0);
+    setScore(0);
+    setFeedback(null);
+    setIsFinished(false);
+    setIsPlaying(true);
+  };
+
+  const current = rounds[idx];
+
+  const chooseToken = (token: string, index: number) => {
+    if (!current || feedback !== null) return;
+    const nextOrder = [...current.order, token];
+    const nextRemaining = [...current.remaining];
+    nextRemaining.splice(index, 1);
+    setRounds(prev => prev.map(round => round.id === current.id ? { ...round, order: nextOrder, remaining: nextRemaining } : round));
+  };
+
+  const undoLast = () => {
+    if (!current || current.order.length === 0 || feedback !== null) return;
+    const nextOrder = [...current.order];
+    const token = nextOrder.pop()!;
+    const nextRemaining = [...current.remaining, token];
+    setRounds(prev => prev.map(round => round.id === current.id ? { ...round, order: nextOrder, remaining: nextRemaining } : round));
+  };
+
+  const handleSubmit = () => {
+    if (!current) return;
+    const phrase = current.order.join(' ').replace(/\s+([.,!?:;])/g, '$1');
+    const correct = phrase === current.text;
+    setFeedback(correct ? 'correct' : 'wrong');
+    if (correct) setScore(s => s + 1);
+    setTimeout(() => {
+      setFeedback(null);
+      if (idx < rounds.length - 1) setIdx(i => i + 1);
+      else setIsFinished(true);
+    }, 1200);
+  };
+
+  useEffect(() => {
+    if (isFinished) {
+      const p = recordGamePlayed({ mode: 'verse-order', correct: score, total: rounds.length });
+      awardAndToast(p);
+    }
+  }, [isFinished, score, rounds.length]);
+
+  if (!isPlaying) return <PreGameScreen modeData={modeData} onStart={startGame} cta="Start Ordering" />;
+
+  if (isFinished) {
+    const pct = Math.round((score / rounds.length) * 100);
+    return (
+      <div className="p-6 max-w-2xl mx-auto min-h-[70vh] flex flex-col items-center justify-center text-center">
+        <Star className="w-16 h-16 text-violet-500 mb-4" />
+        <h2 className="text-5xl font-heading font-extrabold mb-4">Verse order complete!</h2>
+        <div className="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-b from-violet-500 to-purple-600 mb-2">
+          {score}<span className="text-3xl text-muted-foreground">/{rounds.length}</span>
+        </div>
+        <p className="text-muted-foreground mb-8">{pct}% correct</p>
+        <div className="flex gap-4 flex-wrap justify-center">
+          <Button variant="outline" size="lg" onClick={onBack} className="rounded-full px-8">Hub</Button>
+          <Button variant="purple" size="lg" onClick={startGame} className="rounded-full px-8">Play Again</Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!current) return null;
+
+  return (
+    <div className="p-5 md:p-10 max-w-4xl mx-auto">
+      <div className="flex items-center justify-between mb-6">
+        <BackBtn onBack={onBack} />
+        <span className="font-heading font-bold text-sm text-muted-foreground">{idx + 1} / {rounds.length}</span>
+        <span className="font-heading font-bold text-sm text-violet-500">Score: {score}</span>
+      </div>
+      <div className="rounded-3xl bg-secondary/80 p-6 mb-8 border border-border">
+        <p className="text-sm uppercase tracking-[0.18em] text-muted-foreground mb-2">Verse reference</p>
+        <p className="text-lg text-center font-semibold">{current.reference}</p>
+      </div>
+      <div className="space-y-5">
+        <div className="rounded-3xl bg-card border border-border p-6 min-h-[170px]">
+          <p className="text-sm uppercase tracking-[0.14em] text-muted-foreground mb-2">Build the verse in order</p>
+          <div className="flex flex-wrap gap-2">
+            {current.order.map((token, index) => (
+              <button key={`${token}-${index}`} onClick={undoLast} type="button"
+                className="rounded-full border border-border bg-secondary px-3 py-2 text-sm text-foreground">
+                {token}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          {current.remaining.map((token, index) => (
+            <button key={`${token}-${index}`} onClick={() => chooseToken(token, index)}
+              className="rounded-2xl border border-border bg-card px-4 py-3 text-sm font-semibold text-left hover:bg-secondary">
+              {token}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <Button onClick={undoLast} disabled={current.order.length === 0 || feedback !== null} size="lg" variant="outline" className="rounded-2xl">Undo Last</Button>
+          <Button onClick={handleSubmit} disabled={current.order.length !== current.tokens.length || feedback !== null} size="lg" className="rounded-2xl bg-gradient-to-r from-violet-500 to-purple-600 text-white">Submit Order</Button>
+        </div>
+
+        {feedback && (
+          <div className={`rounded-3xl border p-4 text-center font-semibold ${feedback === 'correct' ? 'border-brand-green bg-brand-green/10 text-brand-green' : 'border-brand-orange bg-brand-orange/10 text-brand-orange'}`}>
+            {feedback === 'correct' ? 'Perfect order!' : 'Not quite — try the next verse.'}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Bible Numbers
 ───────────────────────────────────────────────────────────────────────── */
 function VerseFillGame({ onBack }: { onBack: () => void }) {
   const modeData = MODES.find(m => m.id === 'verse-fill')!;
