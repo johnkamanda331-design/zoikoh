@@ -207,10 +207,10 @@ export function Home() {
         {/* ── Stats Row ─────────────────────────────────────────────────── */}
         <motion.div variants={fadeUp} className="md:col-span-12 grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { label: "Questions Answered", value: stats?.totalQuestions != null ? String(stats.totalQuestions) : "0", icon: Target, color: "text-brand-purple", bg: "bg-brand-purple/10" },
-            { label: "Sessions Played",    value: stats?.totalSessions != null ? String(stats.totalSessions) : "0",   icon: Gamepad2, color: "text-brand-blue",   bg: "bg-brand-blue/10" },
-            { label: "Players Engaged",    value: stats?.totalPlayers != null ? String(stats.totalPlayers) : "0",     icon: Users,    color: "text-brand-green",  bg: "bg-brand-green/10" },
-            { label: "Avg Score",          value: stats?.averageScore != null ? `${stats.averageScore}%` : "0%",      icon: Trophy,   color: "text-brand-orange", bg: "bg-brand-orange/10" },
+            { label: "Questions Answered", value: String(stats?.totalQuestions ?? 0), icon: Target, color: "text-brand-purple", bg: "bg-brand-purple/10" },
+            { label: "Sessions Played",    value: String(stats?.totalSessions ?? 0),   icon: Gamepad2, color: "text-brand-blue",   bg: "bg-brand-blue/10" },
+            { label: "Players Engaged",    value: String(stats?.totalPlayers ?? 0),     icon: Users,    color: "text-brand-green",  bg: "bg-brand-green/10" },
+            { label: "Avg Score",          value: `${stats?.averageScore ?? 0}%`,      icon: Trophy,   color: "text-brand-orange", bg: "bg-brand-orange/10" },
           ].map((stat, i) => (
             <Card key={i} className="rounded-2xl border-border/50">
               <CardContent className="p-4 md:p-5 flex items-center gap-3">

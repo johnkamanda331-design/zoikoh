@@ -113,6 +113,7 @@ export function BiblePanel() {
   const [selectedVerses, setSelectedVerses] = useState<number[]>([]);
   const [noteDraft, setNoteDraft] = useState('');
   const [notes, setNotes] = useState<Record<string, ReadingNote>>({});
+  const [showSavedNotes, setShowSavedNotes] = useState(false);
   const [bookmarks, setBookmarks] = useState<string[]>([]);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [recentChapters, setRecentChapters] = useState<string[]>([]);
@@ -134,6 +135,16 @@ export function BiblePanel() {
   const selectedNotes = useMemo(
     () => selectedVerseKeys.map((key: string) => notes[key]).filter(Boolean),
     [notes, selectedVerseKeys],
+  );
+  const currentChapterNotes = useMemo(
+    () => Object.entries(notes)
+      .filter(([key]) => key.startsWith(`${chapterKey}:`))
+      .sort(([a], [b]) => {
+        const aVerse = Number(a.split(':').pop() ?? 0);
+        const bVerse = Number(b.split(':').pop() ?? 0);
+        return aVerse - bVerse;
+      }),
+    [notes, chapterKey],
   );
   const notePreview = useMemo(
     () => (selectedVerses.length === 1 ? notes[selectedVerseKeys[0]]?.text ?? '' : ''),
@@ -564,6 +575,15 @@ export function BiblePanel() {
                   </span>
                 </button>
                 <button
+                  onClick={() => setShowSavedNotes((v) => !v)}
+                  className={`h-8 w-8 flex items-center justify-center rounded-md hover:opacity-70 transition-opacity ${showSavedNotes ? 'bg-brand-purple/10' : ''}`}
+                  style={{ background: 'hsl(var(--secondary))' }}
+                  title="View saved notes"
+                  aria-pressed={showSavedNotes}
+                >
+                  <ListChecks className="w-4 h-4" style={{ color: 'hsl(var(--foreground))' }} />
+                </button>
+                <button
                   onClick={() => setShowBookList((v) => !v)}
                   className="h-8 w-8 flex items-center justify-center rounded-md hover:opacity-70 transition-opacity"
                   style={{ background: 'hsl(var(--secondary))' }}
@@ -636,6 +656,39 @@ export function BiblePanel() {
                     <div className="mt-3 text-xs text-muted-foreground">
                       <button onClick={() => { setShowChapterSelector(false); setSelectedBookForSelection(null); }} className="underline">Cancel</button>
                     </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {showSavedNotes && (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="shrink-0 overflow-hidden border-b" style={{ borderColor: 'hsl(var(--border))', background: 'hsl(var(--card))' }}>
+                  <div className="p-3">
+                    <div className="flex items-center justify-between gap-3 mb-3">
+                      <div>
+                        <div className="text-sm font-semibold">Saved notes</div>
+                        <p className="text-xs text-muted-foreground">Notes for this chapter and selected verses.</p>
+                      </div>
+                      <button type="button" onClick={() => setShowSavedNotes(false)} className="text-xs text-brand-purple hover:underline">Close</button>
+                    </div>
+                    {currentChapterNotes.length > 0 ? (
+                      <div className="space-y-2">
+                        {currentChapterNotes.map(([key, note]) => {
+                          const verse = key.split(':').pop();
+                          return (
+                            <div key={key} className="rounded-2xl border p-3 bg-secondary/70" style={{ borderColor: 'hsl(var(--border))' }}>
+                              <div className="flex items-center justify-between gap-2 mb-2">
+                                <span className="text-xs font-semibold text-brand-purple">Verse {verse}</span>
+                                {note.highlighted && <span className="text-[11px] uppercase tracking-[0.18em] text-brand-orange">Highlighted</span>}
+                              </div>
+                              <p className="text-sm leading-6 text-foreground">{note.text}</p>
+                              <p className="mt-2 text-xs text-muted-foreground">Saved {new Date(note.createdAt).toLocaleDateString()}</p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No notes saved for this chapter yet. Select a verse and add one.</p>
+                    )}
                   </div>
                 </motion.div>
               )}
