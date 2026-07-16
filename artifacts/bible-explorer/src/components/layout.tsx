@@ -23,16 +23,14 @@ import { useUser, useClerk } from '@clerk/react';
 
 /* ── Logo ─────────────────────────────────────────────────────────────── */
 export function Logo({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
-  const cls = size === 'sm' ? 'text-xl' : size === 'lg' ? 'text-3xl' : 'text-2xl';
+  const cls = size === 'sm' ? 'h-6 w-auto' : size === 'lg' ? 'h-12 w-auto' : 'h-8 w-auto';
   return (
-    <span className={`zoikoh-logo-text font-heading font-extrabold tracking-tighter ${cls}`}>
-      <span>Z</span>
-      <span>O</span>
-      <span>I</span>
-      <span>K</span>
-      <span>O</span>
-      <span>H</span>
-    </span>
+    <img
+      src="/logo.png"
+      alt="ZOIKOH logo"
+      className={`${cls} object-contain`}
+      loading="eager"
+    />
   );
 }
 

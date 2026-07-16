@@ -161,6 +161,21 @@ const NUMBER_QUESTIONS: Array<{ q: string; options: string[]; answer: string; re
   { q: 'How many years did the Israelites spend in Egypt?',           options: ['430','400','350','500'], answer: '430', reference: 'Exodus 12:40' },
   { q: 'How many commandments did God give Moses?',                   options: ['10','7','12','6'],    answer: '10',  reference: 'Exodus 20' },
   { q: 'How many books does the entire Bible contain?',               options: ['66','39','73','60'],   answer: '66',  reference: 'Protestant canon' },
+  { q: 'How many wise men visited Jesus after his birth?',            options: ['3','2','4','5'],      answer: '3',   reference: 'Matthew 2:1-2' },
+  { q: 'How many times did Jesus feed the 5000?',                     options: ['1','2','3','4'],      answer: '1',   reference: 'John 6' },
+  { q: 'How many books are in the Old Testament?',                    options: ['39','27','66','54'],   answer: '39',  reference: 'OT canon' },
+  { q: 'How many chapters are in the book of Genesis?',               options: ['50','40','45','60'],   answer: '50',  reference: 'Genesis 1' },
+  { q: 'How many men did David bring to fight Goliath?',              options: ['5','3','7','10'],      answer: '5',   reference: '1 Samuel 17:40-50' },
+  { q: 'How many baskets of leftovers were gathered after feeding the 5000?', options: ['12','7','5','10'], answer: '12', reference: 'John 6:13' },
+  { q: 'How many days did it rain during Noah’s flood?',              options: ['40','7','50','20'],    answer: '40',  reference: 'Genesis 7:12' },
+  { q: 'How many disciples were present at the Last Supper besides Jesus?', options: ['12','13','11','14'], answer: '12', reference: 'Matthew 26:20' },
+  { q: 'How many chapters are in the book of Matthew?',                options: ['28','24','30','26'],   answer: '28',  reference: 'Matthew 1–28' },
+  { q: 'How many letters of the New Testament are attributed to Paul?', options: ['13','14','12','11'], answer: '13', reference: 'Romans–Philemon' },
+  { q: 'How many books are in the Pentateuch?',                      options: ['5','7','4','6'],       answer: '5',   reference: 'Genesis–Deuteronomy' },
+  { q: 'How many chapters does the book of Revelation have?',         options: ['22','21','24','20'],   answer: '22',  reference: 'Revelation 1–22' },
+  { q: 'How many days was Jesus on earth after his resurrection before ascending?', options: ['40','30','50','20'], answer: '40', reference: 'Acts 1:3' },
+  { q: 'How many people were in the ark?',                            options: ['8','4','12','6'],      answer: '8',   reference: 'Genesis 7:13' },
+  { q: 'How many prophets are in the major prophet books?',           options: ['5','4','6','7'],       answer: '5',   reference: 'Isaiah, Jeremiah, Lamentations, Ezekiel, Daniel' },
 ];
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -194,26 +209,31 @@ const QUOTES: Array<{ id: number; question: string; quote: string; answer: strin
   { id: 25, question: 'Who said this?',  quote: '"Here am I. Send me!"',                                                                                              answer: 'Isaiah',            options: ['Isaiah','Jeremiah','Ezekiel','Moses'],                                     reference: 'Isaiah 6:8' },
 ];
 
+const BIBLE_WORDS_WITH_ID = BIBLE_WORDS.map((item, index) => ({ id: index + 1, ...item }));
+const FILL_IN_VERSES_WITH_ID = FILL_IN_VERSES.map((item, index) => ({ id: index + 1, ...item }));
+const NUMBER_QUESTIONS_WITH_ID = NUMBER_QUESTIONS.map((item, index) => ({ id: index + 1, ...item }));
+const QUOTES_WITH_ID = QUOTES.map((item, index) => ({ id: index + 1, ...item }));
+
 /* ─────────────────────────────────────────────────────────────────────────
    Mode definitions
 ───────────────────────────────────────────────────────────────────────── */
 const MODES = [
   { id: 'daily',        title: 'Daily Challenge',  desc: '15 date-seeded questions that reset every midnight.',             icon: Zap,         gradient: 'from-brand-orange to-red-500',     badge: 'Daily',    badgeVariant: 'orange'    as const, tags: ['15 Questions','Bonus Points'] },
   { id: 'qa',           title: 'Bible Q&A',         desc: '30-question trivia gauntlet across Old & New Testament.',         icon: Target,      gradient: 'from-brand-purple to-indigo-500',  badge: '30 Qs',    badgeVariant: 'purple'    as const, tags: ['30 Questions','Endless Theme'] },
-  { id: 'bible-sprint', title: 'Bible Sprint',     desc: 'Race through 15 scripture questions in a fast-paced sprint.',     icon: Zap,         gradient: 'from-red-500 to-orange-500',          badge: 'Sprint',  badgeVariant: 'orange'    as const, tags: ['15 Questions','Speed'] },
-  { id: 'flash',        title: 'Flash Cards',       desc: 'Flip through key verses, names, and concepts.',                   icon: Brain,       gradient: 'from-brand-blue to-cyan-500',      badge: 'Practice', badgeVariant: 'blue'      as const, tags: ['Self-paced','Memory'] },
-  { id: 'scramble',     title: 'Word Scramble',     desc: 'Unscramble Bible names and places in 45 seconds.',               icon: RotateCcw,   gradient: 'from-brand-green to-emerald-500',  badge: 'Mini-game',badgeVariant: 'green'     as const, tags: ['Speed','45 Seconds'] },
-  { id: 'true-false',   title: 'True or False',     desc: 'Quick-fire true/false statements about Bible events.',           icon: Shield,      gradient: 'from-teal-500 to-green-600',       badge: 'Quick',    badgeVariant: 'green'     as const, tags: ['Fast paced','2 choices'] },
+  { id: 'bible-sprint', title: 'Bible Sprint',     desc: 'Race through 30 scripture questions in a fast-paced sprint.',     icon: Zap,         gradient: 'from-red-500 to-orange-500',          badge: '30 Qs',  badgeVariant: 'orange'    as const, tags: ['30 Questions','Speed'] },
+  { id: 'flash',        title: 'Flash Cards',       desc: 'Flip through 30 key verses, names, and concepts.',                 icon: Brain,       gradient: 'from-brand-blue to-cyan-500',      badge: '30 Cards', badgeVariant: 'blue'      as const, tags: ['30 Cards','Memory'] },
+  { id: 'scramble',     title: 'Word Scramble',     desc: 'Unscramble Bible names and places in 45 seconds.',               icon: RotateCcw,   gradient: 'from-brand-green to-emerald-500',  badge: '15 Words', badgeVariant: 'green'     as const, tags: ['15 Words','45 Seconds'] },
+  { id: 'true-false',   title: 'True or False',     desc: 'Quick-fire true/false statements about Bible events.',           icon: Shield,      gradient: 'from-teal-500 to-green-600',       badge: '20 Qs',    badgeVariant: 'green'     as const, tags: ['20 Questions','2 choices'] },
   { id: 'speed-round',  title: 'Speed Round',       desc: 'Answer 30 questions in under 60 seconds.',                     icon: Flame,       gradient: 'from-red-500 to-orange-600',       badge: '30 Qs',    badgeVariant: 'orange'    as const, tags: ['30 Questions','60 Seconds'] },
   { id: 'survival-mode', title: 'Survival Mode',    desc: '30-question rising difficulty challenge that starts easy and grows harder.', icon: Shield, gradient: 'from-emerald-500 to-green-600', badge: '30 Qs', badgeVariant: 'green'     as const, tags: ['30 Questions','Increasing'] },
-  { id: 'memory-match',  title: 'Memory Match',     desc: 'Flip Scripture cards and match words to their clues.',          icon: RefreshCw,  gradient: 'from-brand-blue to-sky-500',      badge: 'Match',    badgeVariant: 'blue'     as const, tags: ['Pairs','Memory'] },
-  { id: 'word-builder',  title: 'Word Builder',     desc: 'Build Bible words from scrambled letters.',                      icon: Timer,      gradient: 'from-emerald-500 to-teal-500',      badge: 'Builder',  badgeVariant: 'green'    as const, tags: ['Puzzle','Spelling'] },
-  { id: 'verse-order',  title: 'Verse Order',      desc: 'Reassemble famous Scripture lines in the correct order.',        icon: Star,       gradient: 'from-violet-500 to-purple-600',    badge: 'Order',    badgeVariant: 'purple'    as const, tags: ['Sequence','Memory'] },
-  { id: 'story-quest',  title: 'Story Quest',       desc: 'Journey through Bible stories in a campaign-style quiz adventure.', icon: Zap,      gradient: 'from-brand-indigo to-violet-500', badge: 'Quest',   badgeVariant: 'purple'    as const, tags: ['Narrative','Campaign'] },
-  { id: 'verse-fill',   title: 'Verse Fill-In',     desc: 'Complete the missing word in famous Bible passages.',            icon: BookMarked,  gradient: 'from-pink-500 to-rose-500',        badge: 'Memory',   badgeVariant: 'secondary' as const, tags: ['Fill blanks','Key verses'] },
-  { id: 'number-match', title: 'Bible Numbers',     desc: 'Match events, chapters, and counts to the correct number.',     icon: Hash,        gradient: 'from-violet-500 to-purple-600',    badge: 'Numbers',  badgeVariant: 'purple'    as const, tags: ['Trivia','Matching'] },
-  { id: 'crossword',    title: 'Bible Crossword',   desc: 'Spell Bible names and places from clues — letter by letter.',  icon: Puzzle,      gradient: 'from-amber-500 to-orange-500',     badge: 'Puzzle',   badgeVariant: 'orange'    as const, tags: ['Themed','Puzzle'] },
-  { id: 'quote-match',  title: 'Quote Match',       desc: 'Match famous Bible quotes to their speaker across scripture.',  icon: MessageSquare, gradient: 'from-sky-500 to-blue-600',      badge: 'Matching', badgeVariant: 'blue'      as const, tags: ['Quotes','Attribution'] },
+  { id: 'memory-match',  title: 'Memory Match',     desc: 'Flip Scripture cards and match words to their clues.',          icon: RefreshCw,  gradient: 'from-brand-blue to-sky-500',      badge: '6 Pairs',   badgeVariant: 'blue'     as const, tags: ['6 Pairs','Memory'] },
+  { id: 'word-builder',  title: 'Word Builder',     desc: 'Build Bible words from scrambled letters.',                      icon: Timer,      gradient: 'from-emerald-500 to-teal-500',      badge: '10 Words', badgeVariant: 'green'    as const, tags: ['10 Words','Spelling'] },
+  { id: 'verse-order',  title: 'Verse Order',      desc: 'Reassemble famous Scripture lines in the correct order.',        icon: Star,       gradient: 'from-violet-500 to-purple-600',    badge: '8 Rounds', badgeVariant: 'purple'    as const, tags: ['8 Rounds','Memory'] },
+  { id: 'story-quest',  title: 'Story Quest',       desc: 'Journey through 30 Bible stories in a campaign-style quiz adventure.', icon: Zap,      gradient: 'from-brand-indigo to-violet-500', badge: '30 Qs',   badgeVariant: 'purple'    as const, tags: ['30 Questions','Narrative'] },
+  { id: 'verse-fill',   title: 'Verse Fill-In',     desc: 'Complete the missing word in famous Bible passages.',            icon: BookMarked,  gradient: 'from-pink-500 to-rose-500',        badge: '20 Qs',   badgeVariant: 'secondary' as const, tags: ['20 Questions','Key verses'] },
+  { id: 'number-match', title: 'Bible Numbers',     desc: 'Match events, chapters, and counts to the correct number.',     icon: Hash,        gradient: 'from-violet-500 to-purple-600',    badge: '30 Qs',  badgeVariant: 'purple'    as const, tags: ['30 Questions','Matching'] },
+  { id: 'crossword',    title: 'Bible Crossword',   desc: 'Spell Bible names and places from clues — letter by letter.',  icon: Puzzle,      gradient: 'from-amber-500 to-orange-500',     badge: '20 Qs',   badgeVariant: 'orange'    as const, tags: ['20 Questions','Puzzle'] },
+  { id: 'quote-match',  title: 'Quote Match',       desc: 'Match famous Bible quotes to their speaker across scripture.',  icon: MessageSquare, gradient: 'from-sky-500 to-blue-600',      badge: '30 Qs',   badgeVariant: 'blue'      as const, tags: ['30 Questions','Attribution'] },
 ];
 
 const SUPPORTED = new Set(MODES.map((mode) => mode.id));
@@ -377,10 +397,15 @@ function BackBtn({ onBack, label = 'Quit' }: { onBack: () => void; label?: strin
 }
 
 function PreGameScreen({
-  modeData, onStart, cta = 'Start Game',
-}: { modeData: typeof MODES[0]; onStart: () => void; cta?: string }) {
+  modeData, onStart, onBack, cta = 'Start Game',
+}: { modeData: typeof MODES[0]; onStart: () => void; onBack?: () => void; cta?: string }) {
   return (
     <div className="p-6 max-w-3xl mx-auto min-h-[70vh] flex flex-col items-center justify-center text-center">
+      {onBack && (
+        <Button variant="ghost" onClick={onBack} className="absolute top-4 left-4 gap-1.5 text-muted-foreground">
+          <ChevronLeft className="w-4 h-4" /> Back
+        </Button>
+      )}
       <div className={`w-20 h-20 rounded-3xl bg-gradient-to-br ${modeData.gradient} p-1 mb-7 shadow-xl`}>
         <div className="w-full h-full bg-card rounded-[22px] flex items-center justify-center">
           <modeData.icon className="w-10 h-10 text-foreground" />
@@ -420,6 +445,44 @@ function buildSurvivalQuestionSet(questions: any[]) {
   const remaining = questions.filter(q => !selected.some(s => s.id === q.id));
   const fill = pickUnseen(remaining, 'survival-mode-fill', 30 - selected.length);
   return [...selected, ...fill].slice(0, 30);
+}
+
+const BIBLE_BOOK_ORDER = [
+  'Genesis','Exodus','Leviticus','Numbers','Deuteronomy','Joshua','Judges','Ruth',
+  '1 Samuel','2 Samuel','1 Kings','2 Kings','1 Chronicles','2 Chronicles','Ezra',
+  'Nehemiah','Esther','Job','Psalms','Proverbs','Ecclesiastes','Song of Solomon',
+  'Isaiah','Jeremiah','Lamentations','Ezekiel','Daniel','Hosea','Joel','Amos',
+  'Obadiah','Jonah','Micah','Nahum','Habakkuk','Zephaniah','Haggai','Zechariah',
+  'Malachi','Matthew','Mark','Luke','John','Acts','Romans','1 Corinthians',
+  '2 Corinthians','Galatians','Ephesians','Philippians','Colossians','1 Thessalonians',
+  '2 Thessalonians','1 Timothy','2 Timothy','Titus','Philemon','Hebrews','James',
+  '1 Peter','2 Peter','1 John','2 John','3 John','Jude','Revelation',
+];
+const BIBLE_BOOK_ORDER_INDEX = new Map(BIBLE_BOOK_ORDER.map((book, index) => [book, index]));
+
+function sortByBibleOrder(a: { book?: string | null }, b: { book?: string | null }) {
+  const aIndex = BIBLE_BOOK_ORDER_INDEX.get(a.book ?? '') ?? Number.MAX_SAFE_INTEGER;
+  const bIndex = BIBLE_BOOK_ORDER_INDEX.get(b.book ?? '') ?? Number.MAX_SAFE_INTEGER;
+  return aIndex - bIndex;
+}
+
+function buildStoryQuestQuestionSet(questions: any[]) {
+  const otBooks = new Set(BIBLE_BOOK_ORDER.slice(0, 39));
+  const ntBooks = new Set(BIBLE_BOOK_ORDER.slice(39));
+
+  const otQuestions = questions.filter(q => otBooks.has(q.book ?? ''));
+  const ntQuestions = questions.filter(q => ntBooks.has(q.book ?? ''));
+
+  const selectedOt = pickUnseen(otQuestions, 'story-quest-ot', 18);
+  const selectedNt = pickUnseen(ntQuestions, 'story-quest-nt', 12);
+  let selected = [...selectedOt, ...selectedNt];
+
+  if (selected.length < 30) {
+    const remaining = questions.filter(q => !selected.some(s => s.id === q.id));
+    selected = [...selected, ...pickUnseen(remaining, 'story-quest-fill', 30 - selected.length)];
+  }
+
+  return selected.sort(sortByBibleOrder).slice(0, 30);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -473,7 +536,11 @@ function QuizGame({ mode, onBack }: { mode: string; onBack: () => void }) {
       setSelectedQuestions(buildSurvivalQuestionSet(allQuestions as any[]));
       return;
     }
-    const count = ['bible-sprint','story-quest'].includes(mode) ? 15 : 10;
+    if (mode === 'story-quest') {
+      setSelectedQuestions(buildStoryQuestQuestionSet(allQuestions as any[]));
+      return;
+    }
+    const count = mode === 'bible-sprint' ? 30 : 10;
     setSelectedQuestions(pickUnseen(allQuestions as any[], mode, count));
   }, [isPlaying, allQuestions, selectedQuestions.length, mode]);
   const questions = selectedQuestions;
@@ -512,6 +579,7 @@ function QuizGame({ mode, onBack }: { mode: string; onBack: () => void }) {
 
         return (
           <div className="p-6 max-w-3xl mx-auto min-h-[70vh] flex flex-col items-center justify-center text-center">
+            <BackBtn onBack={onBack} />
             <div className={`w-20 h-20 rounded-3xl bg-gradient-to-br ${modeData.gradient} p-1 mb-7 shadow-xl`}>
               <div className="w-full h-full bg-card rounded-[22px] flex items-center justify-center">
                 <modeData.icon className="w-10 h-10 text-foreground" />
@@ -624,7 +692,7 @@ function FlashCardGame({ onBack }: { onBack: () => void }) {
 
   useEffect(() => {
     if (qaData?.questions && isPlaying && cards.length === 0) {
-      setCards(pickUnseen(qaData.questions as any[], 'flash', 15));
+      setCards(pickUnseen(qaData.questions as any[], 'flash', 30));
     }
   }, [qaData, isPlaying, cards.length]);
 
@@ -645,7 +713,7 @@ function FlashCardGame({ onBack }: { onBack: () => void }) {
     }
   }, [isFinished, known]);
 
-  if (!isPlaying) return <PreGameScreen modeData={modeData} onStart={() => setIsPlaying(true)} cta="Start Flipping" />;
+  if (!isPlaying) return <PreGameScreen modeData={modeData} onStart={() => setIsPlaying(true)} onBack={onBack} cta="Start Flipping" />;
   if (isLoading || cards.length === 0) return <div className="p-10 text-center text-xl font-bold animate-pulse text-muted-foreground">Loading cards…</div>;
 
   if (isFinished) {
@@ -738,7 +806,7 @@ function WordScrambleGame({ onBack }: { onBack: () => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const startGame = () => {
-    const picked = shuffle([...BIBLE_WORDS]).slice(0, 15);
+    const picked = pickUnseen(BIBLE_WORDS_WITH_ID, 'scramble', 15);
     setWords(picked);
     setIsPlaying(true);
     setIdx(0);
@@ -799,7 +867,7 @@ function WordScrambleGame({ onBack }: { onBack: () => void }) {
     }
   }, [isFinished, score]);
 
-  if (!isPlaying) return <PreGameScreen modeData={modeData} onStart={startGame} cta="Start Scramble" />;
+  if (!isPlaying) return <PreGameScreen modeData={modeData} onStart={startGame} onBack={onBack} cta="Start Scramble" />;
 
   if (isFinished) {
     return (
@@ -879,7 +947,7 @@ function TrueFalseGame({ onBack }: { onBack: () => void }) {
   const [isFinished, setIsFinished] = useState(false);
 
   const startGame = () => {
-    setQuestions(shuffle([...TRUE_FALSE_QUESTIONS]).slice(0, 20));
+    setQuestions(pickUnseen(TRUE_FALSE_QUESTIONS, 'true-false', 20));
     setIsPlaying(true); setIdx(0); setScore(0); setFeedback(null); setIsFinished(false);
   };
 
@@ -902,7 +970,7 @@ function TrueFalseGame({ onBack }: { onBack: () => void }) {
     }
   }, [isFinished, score, questions.length]);
 
-  if (!isPlaying) return <PreGameScreen modeData={modeData} onStart={startGame} cta="Start Round" />;
+  if (!isPlaying) return <PreGameScreen modeData={modeData} onStart={startGame} onBack={onBack} cta="Start Round" />;
 
   if (isFinished) {
     const pct = Math.round((score / questions.length) * 100);
@@ -984,7 +1052,7 @@ function SpeedRoundGame({ onBack }: { onBack: () => void }) {
 
   useEffect(() => {
     if (qaData?.questions && isPlaying && questions.length === 0) {
-      setQuestions(shuffle([...qaData.questions as any[]]).slice(0, 30));
+      setQuestions(pickUnseen(qaData.questions as any[], 'speed-round', 30));
     }
   }, [qaData, isPlaying, questions.length]);
 
@@ -1018,7 +1086,7 @@ function SpeedRoundGame({ onBack }: { onBack: () => void }) {
     }
   }, [isFinished, score, total]);
 
-  if (!isPlaying) return <PreGameScreen modeData={modeData} onStart={() => setIsPlaying(true)} cta="Start Timer!" />;
+  if (!isPlaying) return <PreGameScreen modeData={modeData} onStart={() => setIsPlaying(true)} onBack={onBack} cta="Start Timer!" />;
   if (isLoading || questions.length === 0) return <div className="p-10 text-center text-xl font-bold animate-pulse text-muted-foreground">Loading questions…</div>;
 
   if (isFinished) {
@@ -1086,7 +1154,7 @@ function MemoryMatchGame({ onBack }: { onBack: () => void }) {
   const [isFinished, setIsFinished] = useState(false);
 
   const startGame = () => {
-    const chosen = shuffle([...BIBLE_WORDS]).slice(0, 6);
+    const chosen = pickUnseen(BIBLE_WORDS_WITH_ID, 'memory-match', 6);
     const deck = shuffle(chosen.flatMap((item, index) => ([
       { id: index * 2, pair: index, label: item.word, revealed: false, matched: false },
       { id: index * 2 + 1, pair: index, label: item.hint, revealed: false, matched: false },
@@ -1136,7 +1204,7 @@ function MemoryMatchGame({ onBack }: { onBack: () => void }) {
     }
   }, [cards, isPlaying]);
 
-  if (!isPlaying) return <PreGameScreen modeData={modeData} onStart={startGame} cta="Start Matching" />;
+  if (!isPlaying) return <PreGameScreen modeData={modeData} onStart={startGame} onBack={onBack} cta="Start Matching" />;
 
   if (isFinished) {
     const pct = Math.round((score / (cards.length / 2)) * 100);
@@ -1189,7 +1257,8 @@ function WordBuilderGame({ onBack }: { onBack: () => void }) {
   const [isFinished, setIsFinished] = useState(false);
 
   const startGame = () => {
-    const chosen = shuffle([...BIBLE_WORDS].filter(item => item.word.length <= 9 && item.word.length >= 4)).slice(0, 10);
+    const candidates = BIBLE_WORDS_WITH_ID.filter(item => item.word.length <= 9 && item.word.length >= 4);
+    const chosen = pickUnseen(candidates, 'word-builder', 10);
     setWords(chosen);
     setIdx(0);
     setInput('');
@@ -1222,7 +1291,7 @@ function WordBuilderGame({ onBack }: { onBack: () => void }) {
     }
   }, [isFinished, score, words.length]);
 
-  if (!isPlaying) return <PreGameScreen modeData={modeData} onStart={startGame} cta="Start Building" />;
+  if (!isPlaying) return <PreGameScreen modeData={modeData} onStart={startGame} onBack={onBack} cta="Start Building" />;
 
   if (isFinished) {
     const pct = Math.round((score / words.length) * 100);
@@ -1287,7 +1356,7 @@ function VerseOrderGame({ onBack }: { onBack: () => void }) {
   };
 
   const startGame = () => {
-    const selected = shuffle([...FILL_IN_VERSES]).slice(0, 8).map((item, index) => {
+    const selected = pickUnseen(FILL_IN_VERSES_WITH_ID, 'verse-order', 8).map((item, index) => {
       const full = `${item.before} ${item.word} ${item.after}`;
       const tokens = buildTokens(full);
       return {
@@ -1345,7 +1414,7 @@ function VerseOrderGame({ onBack }: { onBack: () => void }) {
     }
   }, [isFinished, score, rounds.length]);
 
-  if (!isPlaying) return <PreGameScreen modeData={modeData} onStart={startGame} cta="Start Ordering" />;
+  if (!isPlaying) return <PreGameScreen modeData={modeData} onStart={startGame} onBack={onBack} cta="Start Ordering" />;
 
   if (isFinished) {
     const pct = Math.round((score / rounds.length) * 100);
@@ -1430,7 +1499,7 @@ function VerseFillGame({ onBack }: { onBack: () => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const startGame = () => {
-    setVerses(shuffle([...FILL_IN_VERSES]).slice(0, 10));
+    setVerses(pickUnseen(FILL_IN_VERSES_WITH_ID, 'verse-fill', 20));
     setIsPlaying(true); setIdx(0); setScore(0); setInput(''); setFeedback(null); setIsFinished(false);
   };
 
@@ -1453,7 +1522,7 @@ function VerseFillGame({ onBack }: { onBack: () => void }) {
     }
   }, [isFinished, score, verses.length]);
 
-  if (!isPlaying) return <PreGameScreen modeData={modeData} onStart={startGame} cta="Start Filling" />;
+  if (!isPlaying) return <PreGameScreen modeData={modeData} onStart={startGame} onBack={onBack} cta="Start Filling" />;
 
   if (isFinished) {
     const pct = Math.round((score / verses.length) * 100);
@@ -1536,7 +1605,7 @@ function BibleNumbersGame({ onBack }: { onBack: () => void }) {
   const [isFinished, setIsFinished] = useState(false);
 
   const startGame = () => {
-    setQuestions(shuffle([...NUMBER_QUESTIONS]).slice(0, 15));
+    setQuestions(pickUnseen(NUMBER_QUESTIONS_WITH_ID, 'number-match', 30));
     setIsPlaying(true); setIdx(0); setScore(0); setSelected(null); setIsFinished(false);
   };
 
@@ -1558,7 +1627,7 @@ function BibleNumbersGame({ onBack }: { onBack: () => void }) {
     }
   }, [isFinished, score, questions.length]);
 
-  if (!isPlaying) return <PreGameScreen modeData={modeData} onStart={startGame} cta="Start Matching" />;
+  if (!isPlaying) return <PreGameScreen modeData={modeData} onStart={startGame} onBack={onBack} cta="Start Matching" />;
 
   if (isFinished) {
     const pct = Math.round((score / questions.length) * 100);
@@ -1634,7 +1703,7 @@ function CrosswordGame({ onBack }: { onBack: () => void }) {
 
   const startGame = () => {
     solvedRef.current = 0;
-    const picked = shuffle([...BIBLE_WORDS]).slice(0, 12);
+    const picked = pickUnseen(BIBLE_WORDS_WITH_ID, 'crossword', 20);
     setWords(picked);
     setIsPlaying(true); setIdx(0); setScore(0); setInput('');
     setFeedback(null); setIsFinished(false);
@@ -1676,7 +1745,7 @@ function CrosswordGame({ onBack }: { onBack: () => void }) {
     }
   }, [isFinished]);
 
-  if (!isPlaying) return <PreGameScreen modeData={modeData} onStart={startGame} cta="Start Crossword" />;
+  if (!isPlaying) return <PreGameScreen modeData={modeData} onStart={startGame} onBack={onBack} cta="Start Crossword" />;
 
   if (isFinished) {
     const pct = Math.round((score / words.length) * 100);
@@ -1785,7 +1854,7 @@ function QuoteMatchGame({ onBack }: { onBack: () => void }) {
   const [timeLeft, setTimeLeft] = useState(20);
 
   const startGame = () => {
-    setQuestions(shuffle([...QUOTES]).slice(0, 10));
+    setQuestions(pickUnseen(QUOTES_WITH_ID, 'quote-match', 30));
     setIsPlaying(true); setIdx(0); setScore(0);
     setSelected(null); setIsFinished(false); setTimeLeft(20);
   };
@@ -1834,7 +1903,7 @@ function QuoteMatchGame({ onBack }: { onBack: () => void }) {
     }
   }, [isFinished, score, questions.length]);
 
-  if (!isPlaying) return <PreGameScreen modeData={modeData} onStart={startGame} cta="Start Matching" />;
+  if (!isPlaying) return <PreGameScreen modeData={modeData} onStart={startGame} onBack={onBack} cta="Start Matching" />;
 
   if (isFinished) {
     const pct = Math.round((score / questions.length) * 100);
