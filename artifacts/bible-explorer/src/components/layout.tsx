@@ -22,12 +22,12 @@ import { Button } from '@/components/ui/button';
 import { useUser, useClerk } from '@clerk/react';
 
 /* ── Logo ─────────────────────────────────────────────────────────────── */
-export function Logo({ size = 'md', className }: { size?: 'sm' | 'md' | 'lg'; className?: string }) {
+export function Logo({ size = 'md', className, src }: { size?: 'sm' | 'md' | 'lg'; className?: string; src?: string }) {
   const cls = size === 'sm' ? 'h-6 w-auto' : size === 'lg' ? 'h-12 w-auto' : 'h-8 w-auto';
-  const combined = className ? `${className} object-contain` : `${cls} object-contain`;
+  const combined = className ? `${className} object-contain max-w-full` : `${cls} object-contain max-w-full`;
   return (
     <img
-      src="/logo.png"
+      src={src ?? '/logo.png'}
       alt="ZOIKOH logo"
       className={combined}
       loading="eager"
@@ -160,7 +160,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <div
         className="pointer-events-none fixed inset-0 bg-center bg-cover -z-10 opacity-5 sm:opacity-10"
         style={{
-          backgroundImage: "url('/logo_edited.png')",
+          backgroundImage: isDark ? "url('/dark_logo.png')" : "url('/logo.png')",
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center',
           backgroundSize: 'cover',
@@ -175,7 +175,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <header className="sticky top-0 z-40 flex items-center justify-between h-20 sm:h-20 md:h-24 px-3 sm:px-4 border-b border-border bg-card/80 backdrop-blur-md shrink-0">
         {/* Logo → navigates home on click */}
         <Link href="/" className="cursor-pointer">
-          <Logo className="h-10 sm:h-12 md:h-16 lg:h-20 xl:h-24 w-auto" />
+          <div className="flex items-center justify-center h-14 sm:h-16 md:h-18 lg:h-20 xl:h-24 w-full">
+            <Logo
+              src={isDark ? '/dark_web_logo.png' : '/web_logo.png'}
+              className="max-h-full w-auto object-contain"
+            />
+          </div>
         </Link>
 
         <div className="flex items-center gap-1">
