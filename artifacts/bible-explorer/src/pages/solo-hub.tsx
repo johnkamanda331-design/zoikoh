@@ -212,7 +212,7 @@ const QUOTES: Array<{ id: number; question: string; quote: string; answer: strin
 const BIBLE_WORDS_WITH_ID = BIBLE_WORDS.map((item, index) => ({ id: index + 1, ...item }));
 const FILL_IN_VERSES_WITH_ID = FILL_IN_VERSES.map((item, index) => ({ id: index + 1, ...item }));
 const NUMBER_QUESTIONS_WITH_ID = NUMBER_QUESTIONS.map((item, index) => ({ id: index + 1, ...item }));
-const QUOTES_WITH_ID = QUOTES.map((item, index) => ({ id: index + 1, ...item }));
+const QUOTES_WITH_ID = QUOTES.map((item, index) => ({ ...item, id: index + 1 }));
 
 /* ─────────────────────────────────────────────────────────────────────────
    Mode definitions
