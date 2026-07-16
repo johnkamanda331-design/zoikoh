@@ -15,6 +15,7 @@ import { loadPreferences, savePreferences } from '@/lib/preferences';
 
 import { Home } from '@/pages/home';
 import { SoloHub } from '@/pages/solo-hub';
+import { SelfPractice } from '@/pages/self-practice';
 import { HostWizard } from '@/pages/host-wizard';
 import { JoinLobby } from '@/pages/join-lobby';
 import { LiveSession } from '@/pages/live-session';
@@ -158,6 +159,7 @@ function Router() {
     <Layout>
       <Switch>
         <Route path="/" component={Home} />
+        <Route path="/self-practice" component={SelfPractice} />
         <Route path="/solo" component={SoloHub} />
         <Route path="/start" component={HostWizard} />
         <Route path="/join" component={JoinLobby} />

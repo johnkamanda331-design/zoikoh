@@ -13,7 +13,7 @@ import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import {
-  useGetDailyContent, useGetDailyChallenge, useListQuestions,
+  useGetDailyChallenge, useListQuestions,
   getGetDailyChallengeQueryKey, getListQuestionsQueryKey,
 } from '@workspace/api-client-react';
 import {
@@ -199,7 +199,6 @@ const QUOTES: Array<{ id: number; question: string; quote: string; answer: strin
 ───────────────────────────────────────────────────────────────────────── */
 const MODES = [
   { id: 'daily',        title: 'Daily Challenge',  desc: '15 date-seeded questions that reset every midnight.',             icon: Zap,         gradient: 'from-brand-orange to-red-500',     badge: 'Daily',    badgeVariant: 'orange'    as const, tags: ['15 Questions','Bonus Points'] },
-  { id: 'self-practice', title: 'Self-Practice',   desc: 'Reflect on today’s verse with an AI-guided life application prompt.', icon: BookMarked,  gradient: 'from-brand-blue to-cyan-500',      badge: 'Practice', badgeVariant: 'blue'      as const, tags: ['Self-study','Daily content'] },
   { id: 'qa',           title: 'Bible Q&A',         desc: 'Endless trivia across Old & New Testament.',                      icon: Target,      gradient: 'from-brand-purple to-indigo-500',  badge: 'Endless',  badgeVariant: 'purple'    as const, tags: ['Custom Diff','All Topics'] },
   { id: 'bible-sprint', title: 'Bible Sprint',     desc: 'Race through 15 scripture questions in a fast-paced sprint.',     icon: Zap,         gradient: 'from-red-500 to-orange-500',          badge: 'Sprint',  badgeVariant: 'orange'    as const, tags: ['15 Questions','Speed'] },
   { id: 'flash',        title: 'Flash Cards',       desc: 'Flip through key verses, names, and concepts.',                   icon: Brain,       gradient: 'from-brand-blue to-cyan-500',      badge: 'Practice', badgeVariant: 'blue'      as const, tags: ['Self-paced','Memory'] },
@@ -300,6 +299,18 @@ export function SoloHub() {
    Game view router
 ───────────────────────────────────────────────────────────────────────── */
 function SoloGameView({ mode, onBack }: { mode: string; onBack: () => void }) {
+  const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    if (mode === 'self-practice') {
+      setLocation('/self-practice');
+    }
+  }, [mode, setLocation]);
+
+  if (mode === 'self-practice') {
+    return null;
+  }
+
   const modeData = MODES.find(m => m.id === mode);
 
   if (!modeData) {
@@ -340,7 +351,6 @@ function SoloGameView({ mode, onBack }: { mode: string; onBack: () => void }) {
     );
   }
 
-  if (mode === 'self-practice') return <SelfPracticeActivity onBack={onBack} />;
   if (mode === 'flash')          return <FlashCardGame onBack={onBack} />;
   if (mode === 'scramble')       return <WordScrambleGame onBack={onBack} />;
   if (mode === 'true-false')     return <TrueFalseGame onBack={onBack} />;
@@ -351,105 +361,6 @@ function SoloGameView({ mode, onBack }: { mode: string; onBack: () => void }) {
   if (mode === 'crossword')      return <CrosswordGame onBack={onBack} />;
   if (mode === 'quote-match')    return <QuoteMatchGame onBack={onBack} />;
   return <QuizGame mode={mode} onBack={onBack} />;
-}
-
-function SelfPracticeActivity({ onBack }: { onBack: () => void }) {
-  const { data: dailyContent, isLoading, isError } = useGetDailyContent();
-  const [started, setStarted] = useState(false);
-  const [journalEntry, setJournalEntry] = useState('');
-  const [completed, setCompleted] = useState(false);
-
-  const prompt = dailyContent
-    ? `AI suggests reflecting on ${dailyContent.verseReference}. Read the verse slowly, then write one short sentence about how this truth could shape your day or encourage someone else.`
-    : 'Reflect on today’s verse in a short note, then share it or pray with someone you trust.';
-
-  if (isLoading) {
-    return <div className="p-10 text-center text-xl font-bold animate-pulse text-muted-foreground">Loading your practice prompt…</div>;
-  }
-
-  if (isError) {
-    return (
-      <div className="p-6 max-w-3xl mx-auto min-h-[70vh] flex flex-col items-center justify-center text-center">
-        <BackBtn onBack={onBack} label="Back" />
-        <div className="mt-10 rounded-3xl border border-red-200 bg-red-50 p-8">
-          <h1 className="text-3xl font-heading font-bold mb-3">Practice prompt unavailable</h1>
-          <p className="text-sm text-red-700">There was a problem loading today’s reflection prompt. Try again later.</p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="p-6 max-w-4xl mx-auto min-h-[70vh]">
-      <div className="mb-8">
-        <BackBtn onBack={onBack} label="Back" />
-      </div>
-      <div className="rounded-3xl border border-border/70 bg-card p-8 shadow-sm">
-        <div className="mb-6">
-          <div className="inline-flex items-center gap-2 rounded-full bg-brand-blue/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-brand-blue">
-            <Zap className="w-4 h-4" /> Self-Practice
-          </div>
-          <h1 className="mt-6 text-4xl font-heading font-bold">AI-guided reflection</h1>
-          <p className="mt-3 text-sm leading-7 text-muted-foreground">
-            Use today’s verse as the starting point for a personal or social practice. This is a real-life reflection prompt, not a quiz.
-          </p>
-        </div>
-
-        <div className="rounded-3xl border border-border/50 bg-secondary/70 p-6 mb-6">
-          <p className="text-sm font-semibold text-foreground">Verse of the Day</p>
-          <p className="mt-2 text-lg font-semibold text-brand-purple">{dailyContent?.verseReference}</p>
-          <blockquote className="mt-4 text-base leading-relaxed text-foreground">"{dailyContent?.verse ?? 'For God so loved the world…'}"</blockquote>
-          <p className="mt-4 text-sm text-muted-foreground">{dailyContent?.summary}</p>
-        </div>
-
-        <div className="rounded-3xl border border-border/50 bg-card p-6 mb-6">
-          <div className="flex items-center gap-2 mb-4">
-            <BookOpen className="w-5 h-5 text-brand-blue" />
-            <h2 className="text-lg font-semibold">Your AI-guided prompt</h2>
-          </div>
-          <p className="text-sm leading-7 text-foreground">{prompt}</p>
-        </div>
-
-        {completed ? (
-          <div className="rounded-3xl border border-green-300 bg-green-50 p-6 text-center">
-            <h2 className="text-2xl font-heading font-bold text-green-700">Well done!</h2>
-            <p className="mt-3 text-sm text-green-900">You’ve completed today’s reflection. Keep this thought in mind as you go about your day.</p>
-            <Button variant="outline" size="sm" className="mt-6" onClick={() => setCompleted(false)}>
-              Practice again
-            </Button>
-          </div>
-        ) : (
-          <>
-            <div className="rounded-3xl border border-border/50 bg-secondary/70 p-6 mb-6">
-              <h3 className="text-lg font-semibold mb-3">How to use this prompt</h3>
-              <ol className="space-y-3 text-sm leading-7 text-foreground list-decimal list-inside">
-                <li>Read the verse slowly and sit with what it says.</li>
-                <li>Write one short reflection or prayer below.</li>
-                <li>Share that thought with someone, or use it in prayer tonight.</li>
-              </ol>
-            </div>
-
-            <textarea
-              value={journalEntry}
-              onChange={(event) => setJournalEntry(event.target.value)}
-              rows={8}
-              placeholder="Write your personal reflection here..."
-              className="w-full rounded-3xl border border-border/50 bg-background p-4 text-sm leading-6 outline-none"
-            />
-
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Button size="lg" className="rounded-full" onClick={() => setStarted(true)}>
-                {started ? 'Continue practice' : 'Start Practice'}
-              </Button>
-              <Button variant="outline" size="lg" className="rounded-full" onClick={() => setCompleted(true)} disabled={!journalEntry.trim()}>
-                Mark complete
-              </Button>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  );
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -506,8 +417,7 @@ function QuizGame({ mode, onBack }: { mode: string; onBack: () => void }) {
     query: { enabled: mode === 'daily' && isPlaying, queryKey: getGetDailyChallengeQueryKey() },
   });
   const quizModes = ['qa','bible-sprint','story-quest','team-tournament','time-attack','trivia-madness','survival-mode'] as const;
-  const isSelfPractice = mode === 'self-practice';
-  const shouldFetchQA = quizModes.includes(mode as typeof quizModes[number]) || isSelfPractice;
+  const shouldFetchQA = quizModes.includes(mode as typeof quizModes[number]);
   const { data: qaData, isLoading: qaLoading } = useListQuestions({ limit: 60, difficulty } as any, {
     query: { enabled: shouldFetchQA && isPlaying, queryKey: getListQuestionsQueryKey({ limit: 60, difficulty } as any) },
   });
@@ -527,7 +437,7 @@ function QuizGame({ mode, onBack }: { mode: string; onBack: () => void }) {
   const [selectedQuestions, setSelectedQuestions] = useState<any[]>([]);
   useEffect(() => {
     if (!isPlaying || selectedQuestions.length > 0 || !allQuestions || allQuestions.length === 0) return;
-    const count = mode === 'daily' || mode === 'self-practice' ? 15 : ['bible-sprint','story-quest','team-tournament'].includes(mode) ? 15 : 10;
+    const count = mode === 'daily' ? 15 : ['bible-sprint','story-quest','team-tournament'].includes(mode) ? 15 : 10;
     setSelectedQuestions(pickUnseen(allQuestions as any[], mode, count));
   }, [isPlaying, allQuestions, selectedQuestions.length, mode]);
   const questions = selectedQuestions;
@@ -555,16 +465,14 @@ function QuizGame({ mode, onBack }: { mode: string; onBack: () => void }) {
   }, [isFinished, handleFinished]);
 
   if (!isPlaying) {
-    if (['qa','bible-sprint','story-quest','team-tournament','time-attack','trivia-madness','survival-mode','self-practice'].includes(mode)) {
+    if (['qa','bible-sprint','story-quest','team-tournament','time-attack','trivia-madness','survival-mode'].includes(mode)) {
         const ctaLabel = mode === 'bible-sprint'
           ? 'Sprint'
           : mode === 'story-quest'
             ? 'Begin Quest'
             : mode === 'team-tournament'
               ? 'Join Bracket'
-              : mode === 'self-practice'
-                ? 'Start Practice'
-                : 'Start';
+              : 'Start';
 
         return (
           <div className="p-6 max-w-3xl mx-auto min-h-[70vh] flex flex-col items-center justify-center text-center">

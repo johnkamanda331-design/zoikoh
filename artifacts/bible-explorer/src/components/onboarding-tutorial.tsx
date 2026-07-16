@@ -113,7 +113,12 @@ export function OnboardingTutorial({ isOpen, onComplete }: OnboardingTutorialPro
     }
 
     const updateRect = () => {
-      const target = document.querySelector<HTMLElement>(step.highlightPath);
+      const highlightPath = step.highlightPath;
+      if (!highlightPath) {
+        setHighlightRect(null);
+        return;
+      }
+      const target = document.querySelector<HTMLElement>(highlightPath);
       if (target) {
         setHighlightRect(target.getBoundingClientRect());
       } else {

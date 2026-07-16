@@ -20,7 +20,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { loadPreferences, savePreferences } from '@/lib/preferences';
-import { fetchBibleChapter, parseVerseContent, TRANSLATIONS, type Translation } from '@/lib/bible';
+import { fetchBibleChapter, parseVerseContent, TRANSLATIONS, type Translation, type VerseData } from '@/lib/bible';
 import { loadJSON, saveJSON } from '@/lib/storage';
 
 /* ── Constants ─────────────────────────────────────────────────────────── */
@@ -114,6 +114,9 @@ export function BiblePanel() {
   const [noteDraft, setNoteDraft] = useState('');
   const [notes, setNotes] = useState<Record<string, ReadingNote>>({});
   const [showSavedNotes, setShowSavedNotes] = useState(false);
+  const [activeVerseMenu, setActiveVerseMenu] = useState<{ verse: number; top: number; left: number } | null>(null);
+  const [showVerseActions, setShowVerseActions] = useState(false);
+  const longPressTimer = useRef<number | null>(null);
   const [bookmarks, setBookmarks] = useState<string[]>([]);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [recentChapters, setRecentChapters] = useState<string[]>([]);
@@ -432,6 +435,55 @@ export function BiblePanel() {
     });
   };
 
+  const openVerseActions = (verse: number, event: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
+    const bounding = (event.currentTarget as HTMLElement).getBoundingClientRect();
+    setActiveVerseMenu({ verse, top: bounding.top + window.scrollY + bounding.height / 2, left: bounding.left + bounding.width / 2 });
+    setShowVerseActions(true);
+  };
+
+  const closeVerseActions = () => {
+    setShowVerseActions(false);
+    setActiveVerseMenu(null);
+  };
+
+  const handleLongPressStart = (verse: number, event: React.TouchEvent<HTMLDivElement>) => {
+    event.persist?.();
+    longPressTimer.current = window.setTimeout(() => openVerseActions(verse, event), 600);
+  };
+
+  const handleLongPressEnd = () => {
+    if (longPressTimer.current !== null) {
+      window.clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  };
+
+  const startLongPress = (verse: number, event: React.MouseEvent<HTMLDivElement>) => {
+    longPressTimer.current = window.setTimeout(() => openVerseActions(verse, event), 600);
+  };
+
+  const handleVerseAction = (verse: number, action: 'note' | 'highlight') => {
+    if (action === 'note') {
+      toggleVerseSelection(verse);
+      setNoteDraft(notes[`${chapterKey}:${verse}`]?.text ?? '');
+    } else {
+      toggleHighlight(verse);
+    }
+    closeVerseActions();
+  };
+
+  const handleClickOutside = (event: MouseEvent) => {
+    if (!activeVerseMenu) return;
+    const target = event.target as HTMLElement;
+    if (!target.closest('[data-verse-action-menu]')) {
+      closeVerseActions();
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener('mousedown', handleClickOutside);
+    return () => window.removeEventListener('mousedown', handleClickOutside);
+  }, [activeVerseMenu]);
 
   const handleSwipeEnd = (endX: number) => {
     if (touchStartX === null) return;
@@ -839,6 +891,16 @@ export function BiblePanel() {
                             tabIndex={-1}
                             className={`rounded-2xl border p-3 transition-all focus-within:ring-2 focus-within:ring-brand-purple/40 ${isHighlighted ? 'border-brand-purple/70' : ''}`}
                             style={{ borderColor: isHighlighted ? 'hsl(var(--brand-purple))' : 'hsl(var(--border))', background: isHighlighted ? 'hsl(var(--brand-purple) / 0.08)' : 'transparent' }}
+                            onTouchStart={(event) => handleLongPressStart(v.verse, event)}
+                            onTouchEnd={handleLongPressEnd}
+                            onTouchCancel={handleLongPressEnd}
+                            onMouseDown={(event) => event.button === 0 && startLongPress(v.verse, event)}
+                            onMouseUp={handleLongPressEnd}
+                            onMouseLeave={handleLongPressEnd}
+                            onContextMenu={(event) => {
+                              event.preventDefault();
+                              openVerseActions(v.verse, event as any);
+                            }}
                           >
                             <div className="flex items-start justify-between gap-2">
                               <div className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1 text-sm leading-relaxed flex-1">
@@ -896,6 +958,36 @@ export function BiblePanel() {
                           </div>
                         );
                       })}
+                      {showVerseActions && activeVerseMenu && (
+                        <div
+                          data-verse-action-menu
+                          className="fixed z-[200] min-w-[220px] rounded-2xl border bg-card p-3 shadow-xl"
+                          style={{ top: activeVerseMenu.top, left: activeVerseMenu.left, transform: 'translate(-50%, -50%)' }}
+                        >
+                          <div className="text-xs font-semibold text-muted-foreground mb-2">Verse {activeVerseMenu.verse}</div>
+                          <button
+                            type="button"
+                            onClick={() => handleVerseAction(activeVerseMenu.verse, 'note')}
+                            className="w-full rounded-2xl border border-border px-3 py-2 text-left text-sm font-medium hover:bg-secondary/70"
+                          >
+                            Add note / edit note
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleVerseAction(activeVerseMenu.verse, 'highlight')}
+                            className="mt-2 w-full rounded-2xl border border-border px-3 py-2 text-left text-sm font-medium hover:bg-secondary/70"
+                          >
+                            Toggle highlight
+                          </button>
+                          <button
+                            type="button"
+                            onClick={closeVerseActions}
+                            className="mt-2 w-full rounded-2xl border border-border px-3 py-2 text-left text-sm text-muted-foreground hover:bg-secondary/70"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex justify-between pt-10 pb-4 border-t mt-10" style={{ borderColor: 'hsl(var(--border))' }}>

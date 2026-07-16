@@ -47,6 +47,15 @@ const fadeUp = {
   show: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 300, damping: 24 } },
 };
 
+function buildSelfPracticePrompt(dailyContent?: { verseReference?: string; summary?: string }) {
+  if (!dailyContent) {
+    return 'Reflect on today’s verse with a short personal action: write a message, pray, or encourage someone using this truth.';
+  }
+
+  const verse = dailyContent.verseReference ?? 'today’s verse';
+  return `AI suggests using ${verse} to do one of these: write a short encouragement, pray for someone, or take a small action that reflects the verse in real life.`;
+}
+
 export function Home() {
   const {
     data: dailyContent,
@@ -73,6 +82,24 @@ export function Home() {
 
   const verseRef = dailyContent?.verseReference ?? "";
   const summary = VERSE_SUMMARIES[verseRef] ?? (dailyContent?.verse ? "Take a moment to meditate on this verse and reflect on how it applies to your day." : "");
+
+  type HomeCard = {
+    title: string;
+    description: string;
+    href?: string;
+    action: string;
+    icon: React.ComponentType<{ className?: string }>;
+    badge?: string;
+    onClick?: () => void;
+  };
+
+  const cards: HomeCard[] = [
+    { title: 'Jump into Solo Modes', description: 'Explore 11 solo challenges from trivia to puzzles.', href: '/solo', action: 'Go Solo', icon: Gamepad2 },
+    { title: 'Host a Group Session', description: 'Invite friends to play Bible trivia together in real time.', href: '/start', action: 'Host Now', icon: Users },
+    { title: 'Try a 1v1 Duel', description: 'Challenge another player in a quick head-to-head match.', href: '/duel', action: 'Duel Now', icon: Zap },
+    { title: 'Join an Active Game', description: 'Jump into a live session already in progress.', href: '/join', action: 'Join Game', icon: Target },
+    { title: 'Open Ice-Breakers', description: 'Discover faith-based activities and conversation starters for your next gathering.', action: 'Explore Ice-Breakers', icon: Sparkles, onClick: () => iceBreakersPanelStore.open() },
+  ];
 
   return (
     <div className="p-4 md:p-8 lg:p-10 max-w-7xl mx-auto space-y-6">
@@ -185,7 +212,7 @@ export function Home() {
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mt-0.5">
                   Self-Practice Challenge
                 </p>
-                <Link href="/solo?mode=self-practice" className="shrink-0">
+                <Link href="/self-practice" className="shrink-0">
                   <Button size="sm" variant="purple" className="rounded-full gap-1.5">
                     <Zap className="w-3.5 h-3.5" /> Practice
                   </Button>
@@ -193,11 +220,11 @@ export function Home() {
               </div>
               {dailyError ? (
                 <div role="alert" className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                  Could not load today's challenge. Please refresh or try again later.
+                  Could not load today's practice prompt. Please refresh or try again later.
                 </div>
               ) : (
                 <p className="text-sm font-medium text-foreground leading-snug">
-                  {dailyContent?.challenge ?? "Practice today's faith prompt at your own pace."}
+                  {dailyContent ? buildSelfPracticePrompt(dailyContent) : "Reflect on today’s verse in a short personal or social activity that connects the scripture to real life."}
                 </p>
               )}
             </CardContent>
@@ -228,13 +255,7 @@ export function Home() {
 
         {/* ── Play more cards ───────────────────────────────────────────── */}
         <motion.div variants={fadeUp} className="md:col-span-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {[
-            { title: 'Jump into Solo Modes', description: 'Explore 11 solo challenges from trivia to puzzles.', href: '/solo', action: 'Go Solo', icon: Gamepad2 },
-            { title: 'Host a Group Session', description: 'Invite friends to play Bible trivia together in real time.', href: '/start', action: 'Host Now', icon: Users },
-            { title: 'Try a 1v1 Duel', description: 'Challenge another player in a quick head-to-head match.', href: '/duel', action: 'Duel Now', icon: Zap },
-            { title: 'Join an Active Game', description: 'Jump into a live session already in progress.', href: '/join', action: 'Join Game', icon: Target },
-            { title: 'Open Ice-Breakers', description: 'Discover faith-based activities and conversation starters for your next gathering.', action: 'Explore Ice-Breakers', icon: Sparkles, onClick: () => iceBreakersPanelStore.open() },
-          ].map((card) => (
+          {cards.map((card) => (
             <Card key={card.title} className="rounded-3xl border-border/50 bg-card transition hover:-translate-y-1 hover:shadow-lg">
               <CardContent className="p-6 space-y-4">
                 <div>

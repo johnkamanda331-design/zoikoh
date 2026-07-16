@@ -69,7 +69,7 @@ export function CategoryFilter({ selected, onChange, categories }: CategoryFilte
           >
             <div className="p-2 max-h-80 overflow-y-auto">
               <motion.button
-                whileHover={{ bg: 'rgba(108, 58, 237, 0.1)' }}
+                whileHover={{ backgroundColor: 'rgba(108, 58, 237, 0.1)' }}
                 onClick={() => {
                   onChange(null);
                   setIsOpen(false);
