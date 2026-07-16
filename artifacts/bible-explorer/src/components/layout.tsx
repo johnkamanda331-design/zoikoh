@@ -158,16 +158,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative flex flex-col min-h-[100dvh] w-full bg-background overflow-x-hidden selection:bg-brand-purple selection:text-white">
       <div
-        className="pointer-events-none fixed inset-0 bg-center bg-cover -z-10 opacity-5 sm:opacity-10"
+        className="pointer-events-none fixed inset-0 bg-center bg-cover -z-10"
         style={{
           backgroundImage: isDark ? "url('/dark_logo.png')" : "url('/logo.png')",
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center',
           backgroundSize: 'cover',
           backgroundAttachment: 'fixed',
-          backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
-          backgroundBlendMode: 'soft-light',
-          filter: 'grayscale(100%) contrast(0.95) brightness(1.1)',
+          backgroundColor: isDark ? 'rgba(0,0,0,0.14)' : 'rgba(255,255,255,0.12)',
+          mixBlendMode: isDark ? 'screen' : 'multiply',
+          filter: 'grayscale(100%) contrast(1.05) brightness(0.95)',
+          opacity: isDark ? 0.18 : 0.16,
         }}
       />
 
