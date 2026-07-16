@@ -156,21 +156,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const displayName = user?.firstName || user?.username || user?.emailAddresses?.[0]?.emailAddress?.split('@')[0] || 'You';
 
   return (
-    <div className="relative flex flex-col min-h-[100dvh] w-full bg-background overflow-x-hidden selection:bg-brand-purple selection:text-white">
-      <div
-        className="pointer-events-none fixed inset-0 bg-center bg-cover -z-10"
-        style={{
-          backgroundImage: isDark ? "url('/dark_logo.png')" : "url('/logo.png')",
-          backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'center',
-          backgroundSize: 'cover',
-          backgroundAttachment: 'fixed',
-          backgroundColor: isDark ? 'rgba(0,0,0,0.14)' : 'rgba(255,255,255,0.12)',
-          mixBlendMode: isDark ? 'screen' : 'multiply',
-          filter: 'grayscale(100%) contrast(1.05) brightness(0.95)',
-          opacity: isDark ? 0.18 : 0.16,
-        }}
-      />
+    <div
+      className="relative flex flex-col min-h-[100dvh] w-full bg-background overflow-x-hidden selection:bg-brand-purple selection:text-white"
+      style={{
+        backgroundImage: isDark
+          ? "linear-gradient(rgba(255,255,255,0.05), rgba(255,255,255,0.05)), url('/logo.png')"
+          : "linear-gradient(rgba(0,0,0,0.04), rgba(0,0,0,0.04)), url('/dark_logo.png')",
+        backgroundRepeat: 'no-repeat',
+        backgroundPosition: 'center center',
+        backgroundSize: '70%',
+        backgroundAttachment: 'fixed',
+        backgroundBlendMode: 'normal',
+      }}
+    >
 
       {/* ── Top bar ──────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-40 flex items-center justify-between h-20 sm:h-20 md:h-24 px-3 sm:px-4 border-b border-border bg-card/80 backdrop-blur-md shrink-0">
