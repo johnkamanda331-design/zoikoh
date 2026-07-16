@@ -23,7 +23,7 @@ async function generateWithOpenAI(apiKey: string, prompt: string): Promise<strin
   });
 
   if (!response.ok) return null;
-  const data = await response.json();
+  const data: any = await response.json();
   try {
     return data.choices?.[0]?.message?.content ?? null;
   } catch {
@@ -49,7 +49,7 @@ async function generateWithGemini(apiKey: string, prompt: string): Promise<strin
   );
 
   if (!response.ok) return null;
-  const data = await response.json();
+  const data: any = await response.json();
   const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
   return text ?? null;
 }
