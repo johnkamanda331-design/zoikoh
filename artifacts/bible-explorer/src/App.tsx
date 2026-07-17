@@ -217,6 +217,19 @@ function ClerkProviderWithRoutes() {
 function AppBody() {
   const [showTutorial, setShowTutorial] = useState(false);
 
+  // Scroll to top when the route changes so navigation starts at the top of the page
+  function ScrollToTop() {
+    const [loc] = useLocation();
+    useEffect(() => {
+      try {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch {
+        window.scrollTo(0, 0);
+      }
+    }, [loc]);
+    return null;
+  }
+
   useEffect(() => {
     setBaseUrl('');
     hydratePlayerFromServer();
@@ -237,6 +250,7 @@ function AppBody() {
 
   return (
     <TooltipProvider>
+      <ScrollToTop />
       <Router />
       <Suspense fallback={<div className="p-3 text-center">Loading panels…</div>}>
         <BiblePanel />
