@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'wouter';
-import { Target, Users, Zap, BookOpen, Flame, Clock, Gamepad2, Trophy, Lightbulb, CalendarDays, Sparkles, ArrowRight } from 'lucide-react';
+import { Target, Users, Zap, BookOpen, Flame, Clock, Gamepad2, Trophy, Lightbulb, CalendarDays, Sparkles, ArrowRight, BellRing, BookmarkCheck, Compass } from 'lucide-react';
 import { useAuth } from '@clerk/react';
 import { useGetDailyContent, useGetStatsOverview, useListRecentSessions } from '@workspace/api-client-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
