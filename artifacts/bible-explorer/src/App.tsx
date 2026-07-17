@@ -8,7 +8,7 @@ import { Route, Switch, useLocation, Router as WouterRouter } from 'wouter';
 import { Layout } from '@/components/layout';
 const BiblePanel = lazy(() => import('@/components/bible-panel').then(m => ({ default: m.BiblePanel })));
 const IceBreakersPanel = lazy(() => import('@/components/ice-breakers-panel').then(m => ({ default: m.IceBreakersPanel })));
-const OnboardingTutorial = lazy(() => import('@/components/onboarding-tutorial').then(m => ({ default: m.OnboardingTutorial })));
+
 import { hydratePlayerFromServer } from '@/hooks/use-achievements';
 import { setBaseUrl } from '@workspace/api-client-react';
 import { loadPreferences, savePreferences } from '@/lib/preferences';
@@ -230,6 +230,9 @@ function AppBody() {
     return null;
   }
 
+  const [panelsLoaded, setPanelsLoaded] = useState(false);
+  const [OnboardingComponent, setOnboardingComponent] = useState<any | null>(null);
+
   useEffect(() => {
     setBaseUrl('');
     hydratePlayerFromServer();
@@ -241,7 +244,27 @@ function AppBody() {
     if (!prefs.tutorialCompleted) {
       setShowTutorial(true);
     }
+
+    // Defer loading heavy panels until after initial paint/idle to speed up time-to-interactive
+    const loadPanels = () => setPanelsLoaded(true);
+    if ('requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(loadPanels, { timeout: 1000 });
+    } else {
+      const t = setTimeout(loadPanels, 600);
+      return () => clearTimeout(t);
+    }
   }, []);
+
+  // When the tutorial needs to show, lazy-load its full component but do it asynchronously
+  useEffect(() => {
+    if (!showTutorial) return;
+    // Small delay to avoid blocking initial paint
+    const id = window.setTimeout(() => {
+      const LazyComp = lazy(() => import('@/components/onboarding-tutorial').then(m => ({ default: m.OnboardingTutorial })));
+      setOnboardingComponent(() => LazyComp);
+    }, 150);
+    return () => clearTimeout(id);
+  }, [showTutorial]);
 
   const handleTutorialComplete = () => {
     savePreferences({ tutorialCompleted: true });
@@ -252,13 +275,25 @@ function AppBody() {
     <TooltipProvider>
       <ScrollToTop />
       <Router />
-      <Suspense fallback={<div className="p-3 text-center">Loading panels…</div>}>
-        <BiblePanel />
-        <IceBreakersPanel />
-      </Suspense>
-      <Suspense fallback={null}>
-        <OnboardingTutorial isOpen={showTutorial} onComplete={handleTutorialComplete} />
-      </Suspense>
+
+      {panelsLoaded && (
+        <Suspense fallback={<div className="p-3 text-center">Loading panels…</div>}>
+          <BiblePanel />
+          <IceBreakersPanel />
+        </Suspense>
+      )}
+
+      {OnboardingComponent ? (
+        <Suspense fallback={<div className="p-3 text-center">Loading tutorial…</div>}>
+          <OnboardingComponent isOpen={showTutorial} onComplete={handleTutorialComplete} />
+        </Suspense>
+      ) : showTutorial ? (
+        // lightweight placeholder so user perceives immediate response while heavy tutorial loads
+        <div aria-live="polite" className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="rounded-lg bg-card p-6 shadow-lg">Loading tutorial…</div>
+        </div>
+      ) : null}
+
       <Toaster position="top-center" />
     </TooltipProvider>
   );

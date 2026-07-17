@@ -148,7 +148,7 @@ export function Home() {
               </span>
             </h1>
             <p className="text-muted-foreground text-base md:text-lg leading-relaxed">
-              Make scripture feel interactive, meaningful, and easy to revisit through guided play and reflection.
+              Make scripture feel interactive, meaningful and easy to revisit through guided play and reflection.
             </p>
           </div>
           <Link href="/solo" className="focus-ring">
