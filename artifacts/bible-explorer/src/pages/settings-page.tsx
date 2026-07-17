@@ -273,23 +273,31 @@ export function SettingsPage() {
 
   return (
     <div className="p-6 md:p-10 max-w-6xl mx-auto space-y-8">
-      <div>
-        <h1 className="text-3xl md:text-5xl font-heading font-extrabold mb-2">Settings</h1>
-        <p className="text-muted-foreground text-lg">Manage your account, questions, and AI generator.</p>
+      <div className="rounded-[28px] border border-border/60 bg-gradient-to-br from-card via-card to-brand-purple/5 p-6 shadow-[0_18px_45px_-24px_rgba(15,23,42,0.35)]">
+        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div>
+            <h1 className="text-3xl md:text-5xl font-heading font-extrabold mb-2">Settings</h1>
+            <p className="text-muted-foreground text-lg">Manage your account, questions, and AI generator from one place.</p>
+          </div>
+          <div className="flex items-center gap-2 rounded-full border border-border/60 bg-background/70 px-3 py-2 text-sm font-medium text-muted-foreground">
+            <SettingsIcon className="h-4 w-4 text-brand-purple" />
+            Fine-tuned for everyday use
+          </div>
+        </div>
       </div>
 
       <Tabs defaultValue="account" className="w-full">
-        <TabsList className="grid w-full max-w-2xl grid-cols-4 mb-8 bg-secondary/50 p-1 rounded-xl h-12">
-          <TabsTrigger value="account"   className="rounded-lg font-bold data-[state=active]:bg-card data-[state=active]:shadow-sm">
+        <TabsList aria-label="Settings sections" className="grid w-full max-w-2xl grid-cols-4 mb-8 bg-secondary/50 p-1 rounded-xl h-12">
+          <TabsTrigger value="account"   className="rounded-lg font-bold data-[state=active]:bg-card data-[state=active]:shadow-sm focus-ring">
             <User className="w-4 h-4 mr-2" /> Account
           </TabsTrigger>
-          <TabsTrigger value="preferences" className="rounded-lg font-bold data-[state=active]:bg-card data-[state=active]:shadow-sm">
+          <TabsTrigger value="preferences" className="rounded-lg font-bold data-[state=active]:bg-card data-[state=active]:shadow-sm focus-ring">
             <SettingsIcon className="w-4 h-4 mr-2" /> Preferences
           </TabsTrigger>
-          <TabsTrigger value="database"  className="rounded-lg font-bold data-[state=active]:bg-card data-[state=active]:shadow-sm">
+          <TabsTrigger value="database"  className="rounded-lg font-bold data-[state=active]:bg-card data-[state=active]:shadow-sm focus-ring">
             <Database className="w-4 h-4 mr-2" /> Database
           </TabsTrigger>
-          <TabsTrigger value="generator" className="rounded-lg font-bold data-[state=active]:bg-card data-[state=active]:shadow-sm">
+          <TabsTrigger value="generator" className="rounded-lg font-bold data-[state=active]:bg-card data-[state=active]:shadow-sm focus-ring">
             <Wand2 className="w-4 h-4 mr-2 text-brand-purple" /> AI Generator
           </TabsTrigger>
         </TabsList>
@@ -316,8 +324,9 @@ export function SettingsPage() {
                 <div className="relative flex-1 md:w-64">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
+                    aria-label="Search questions"
                     placeholder="Search questions…"
-                    className="pl-9 h-10 rounded-full bg-background"
+                    className="focus-ring pl-9 h-10 rounded-full bg-background"
                     value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
                   />
@@ -337,8 +346,12 @@ export function SettingsPage() {
                 <TableBody>
                   {filteredQuestions.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={4} className="h-32 text-center text-muted-foreground">
-                        No questions found.
+                      <TableCell colSpan={4} className="h-40 text-center">
+                        <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
+                          <Search className="h-6 w-6 opacity-60" />
+                          <p className="font-medium text-foreground">No questions match your search.</p>
+                          <p className="text-sm">Try a different keyword or clear the filter.</p>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -414,7 +427,7 @@ export function SettingsPage() {
                 <Button
                   onClick={handleGenerate}
                   disabled={generateQuestions.isPending}
-                  className="w-full bg-gradient-to-r from-brand-purple to-brand-blue hover:opacity-90 font-bold"
+                  className="focus-ring w-full bg-gradient-to-r from-brand-purple to-brand-blue hover:opacity-90 font-bold"
                 >
                   {generateQuestions.isPending ? 'Generating…' : 'Generate Questions'}
                 </Button>
@@ -439,8 +452,11 @@ export function SettingsPage() {
 
               {previewQuestions.length === 0 ? (
                 <div className="h-64 border-2 border-dashed border-border rounded-3xl flex flex-col items-center justify-center text-muted-foreground p-8 text-center bg-card/50">
-                  <Wand2 className="w-12 h-12 opacity-20 mb-4" />
-                  <p>Generated questions will appear here for review before saving.</p>
+                  <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-purple/10">
+                    <Wand2 className="w-7 h-7 text-brand-purple" />
+                  </div>
+                  <p className="text-base font-semibold text-foreground">Ready to generate content</p>
+                  <p className="max-w-md text-sm">Generated questions will appear here for review before they’re saved to your database.</p>
                 </div>
               ) : (
                 <div className="space-y-4">

@@ -9,6 +9,7 @@ export interface UserPreferences {
   theme: 'dark' | 'light' | 'auto';
   difficulty: 'easy' | 'medium' | 'hard' | 'mixed';
   adaptiveDifficulty: boolean;
+  dailyReminder: boolean;
   tutorialCompleted: boolean;
   showExplanations: boolean;
   fontSize: 'small' | 'medium' | 'large';
@@ -26,6 +27,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   theme: 'light',
   difficulty: 'medium',
   adaptiveDifficulty: false,
+  dailyReminder: true,
   tutorialCompleted: false,
   showExplanations: true,
   fontSize: 'medium',

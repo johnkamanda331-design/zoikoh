@@ -16,13 +16,13 @@ interface OnboardingStep {
 const TUTORIAL_STEPS: OnboardingStep[] = [
   {
     title: 'Welcome to ZOIKOH',
-    description: 'Your ultimate Bible trivia adventure! Learn scripture while having fun with multiple game modes.',
+    description: 'Start with one small step: try a daily challenge, open the Bible reader, or begin a quick solo mode.',
     icon: BookOpen,
     tips: [
-      '🎮 10+ game modes available',
-      '📚 Learn from explanations',
-      '🏆 Track your progress',
-      '👥 Challenge friends',
+      '🎮 Start with one quick activity',
+      '📚 Learn from explanations as you go',
+      '🏆 Build a streak with daily momentum',
+      '👥 Choose solo play or a group session',
     ],
   },
   {

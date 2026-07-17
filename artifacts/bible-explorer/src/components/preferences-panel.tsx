@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   Moon, Sun, Settings as SettingsIcon,
-  Type, Eye, Zap, RotateCcw,
+  Type, Eye, Zap, RotateCcw, BellRing,
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,7 @@ export function PreferencesPanel() {
       theme: 'light',
       difficulty: 'medium',
       adaptiveDifficulty: false,
+      dailyReminder: true,
       tutorialCompleted: false,
       showExplanations: true,
       fontSize: 'medium',
@@ -180,6 +181,29 @@ export function PreferencesPanel() {
                   layout
                   className="inline-block h-5 w-5 transform rounded-full bg-white shadow-md"
                   animate={{ x: prefs.showExplanations ? 20 : 2 }}
+                />
+              </motion.button>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-2xl border-border/50">
+            <CardHeader>
+              <CardTitle className="text-lg">Daily Reminders</CardTitle>
+              <CardDescription>Get a gentle nudge to keep your practice streak alive</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <motion.button
+                onClick={() => updatePref('dailyReminder', !prefs.dailyReminder)}
+                className={`
+                  relative inline-flex h-6 w-11 rounded-full transition-colors
+                  ${prefs.dailyReminder ? 'bg-brand-purple' : 'bg-secondary'}
+                `}
+                whileTap={{ scale: 0.95 }}
+              >
+                <motion.span
+                  layout
+                  className="inline-block h-5 w-5 transform rounded-full bg-white shadow-md"
+                  animate={{ x: prefs.dailyReminder ? 20 : 2 }}
                 />
               </motion.button>
             </CardContent>

@@ -1,13 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'wouter';
-import { Target, Users, Zap, BookOpen, Flame, Clock, Gamepad2, Trophy, Lightbulb, CalendarDays, Sparkles } from 'lucide-react';
+import { Target, Users, Zap, BookOpen, Flame, Clock, Gamepad2, Trophy, Lightbulb, CalendarDays, Sparkles, ArrowRight } from 'lucide-react';
 import { useAuth } from '@clerk/react';
 import { useGetDailyContent, useGetStatsOverview, useListRecentSessions } from '@workspace/api-client-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useIceBreakersPanelStore } from '@/hooks/use-icebreakers-panel';
+import { getDailyMomentum, getPersonalizedRecommendations, shouldShowPracticeReminder, markPracticeToday } from '@/lib/personalization';
+import { loadJSON, saveJSON } from '@/lib/storage';
+import { toast } from 'sonner';
 
 /* ── Verse summaries ───────────────────────────────────────────────────── */
 const VERSE_SUMMARIES: Record<string, string> = {
@@ -74,11 +77,21 @@ export function Home() {
   } = useListRecentSessions({ limit: 5 } as any);
 
   const [streak, setStreak] = useState<StreakData>({ lastDate: null, current: 0, longest: 0 });
+  const [showReminder, setShowReminder] = useState(false);
+  const [favoritePassages, setFavoritePassages] = useState<string[]>([]);
+  const [recentPassages, setRecentPassages] = useState<string[]>([]);
   const iceBreakersPanelStore = useIceBreakersPanelStore();
 
   useEffect(() => {
     setStreak(loadStreak());
+    setFavoritePassages(loadJSON<string[]>('zoiko-bible-favorites', []));
+    setRecentPassages(loadJSON<string[]>('zoiko-bible-recent', []));
+    setShowReminder(shouldShowPracticeReminder());
   }, []);
+
+  const momentum = useMemo(() => getDailyMomentum(), []);
+  const recommendations = useMemo(() => getPersonalizedRecommendations(), []);
+  const reminderGoal = Math.min(100, Math.round((momentum.progress.totalAnswers / 12) * 100));
 
   const verseRef = dailyContent?.verseReference ?? "";
   const summary = VERSE_SUMMARIES[verseRef] ?? (dailyContent?.verse ? "Take a moment to meditate on this verse and reflect on how it applies to your day." : "");
@@ -101,17 +114,146 @@ export function Home() {
     { title: 'Open Ice-Breakers', description: 'Discover faith-based activities and conversation starters for your next gathering.', action: 'Explore Ice-Breakers', icon: Sparkles, onClick: () => iceBreakersPanelStore.open() },
   ];
 
+  const handleReminderAction = async (mode: 'practice' | 'later') => {
+    if (mode === 'practice') {
+      markPracticeToday();
+      setShowReminder(false);
+      toast.success('Reminder saved. A short practice session is ready when you are.');
+      return;
+    }
+
+    saveJSON('zoiko_reminder_dismissed', true);
+    setShowReminder(false);
+    toast.success('Reminder hidden for today.');
+  };
+
   return (
     <div className="p-4 md:p-8 lg:p-10 max-w-7xl mx-auto space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl md:text-5xl font-heading font-extrabold tracking-tight mb-1">
-          Welcome to{" "}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-purple to-brand-blue">
-            ZOIKOH
-          </span>
-        </h1>
-        <p className="text-muted-foreground text-base md:text-lg">Where scripture becomes an adventure.</p>
+      <div className="rounded-[28px] border border-border/60 bg-gradient-to-br from-card via-card to-brand-purple/5 p-5 md:p-6 shadow-[0_18px_45px_-24px_rgba(15,23,42,0.35)]">
+        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div className="max-w-2xl">
+            <div className="mb-3 flex flex-wrap items-center gap-2">
+              <Badge variant="purple" className="font-heading tracking-[0.3em] uppercase text-[10px]">
+                Daily practice
+              </Badge>
+              <span className="text-xs font-medium uppercase tracking-[0.3em] text-muted-foreground">
+                Your spiritual rhythm
+              </span>
+            </div>
+            <h1 className="text-3xl md:text-5xl font-heading font-extrabold tracking-tight mb-1">
+              Welcome to{" "}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-purple to-brand-blue">
+                ZOIKOH
+              </span>
+            </h1>
+            <p className="text-muted-foreground text-base md:text-lg leading-relaxed">
+              Make scripture feel interactive, meaningful, and easy to revisit through guided play and reflection.
+            </p>
+          </div>
+          <Link href="/solo" className="focus-ring">
+            <Button size="sm" className="rounded-full px-4 bg-gradient-to-r from-brand-purple to-brand-blue text-white shadow-lg shadow-brand-purple/20">
+              Explore modes
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-[1.3fr_0.9fr] gap-5">
+        <Card className="border-border/60 bg-gradient-to-br from-card via-card to-brand-purple/5 rounded-[28px] p-5 md:p-6 shadow-[0_18px_45px_-24px_rgba(15,23,42,0.35)]">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <Badge variant="purple" className="font-heading tracking-[0.3em] uppercase text-[10px]">Daily momentum</Badge>
+              <h2 className="mt-3 text-2xl font-heading font-bold">Stay on track with a small win today</h2>
+              <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                {momentum.streak.current > 0
+                  ? `You’re on a ${momentum.streak.current}-day streak and only ${momentum.remainingToMilestone} more day${momentum.remainingToMilestone === 1 ? '' : 's'} until your next milestone.`
+                  : 'Start a short session today to build your first streak.'}
+              </p>
+            </div>
+            <div className="rounded-2xl bg-brand-purple/10 p-3 text-brand-purple">
+              <Flame className="h-6 w-6" />
+            </div>
+          </div>
+
+          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            <div className="rounded-2xl border border-border/60 bg-background/70 p-3">
+              <p className="text-2xl font-heading font-bold">{momentum.streak.current}</p>
+              <p className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground">Current streak</p>
+            </div>
+            <div className="rounded-2xl border border-border/60 bg-background/70 p-3">
+              <p className="text-2xl font-heading font-bold">{momentum.accuracy}%</p>
+              <p className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground">Accuracy</p>
+            </div>
+            <div className="rounded-2xl border border-border/60 bg-background/70 p-3">
+              <p className="text-2xl font-heading font-bold">{momentum.progress.totalAnswers}</p>
+              <p className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground">Answers logged</p>
+            </div>
+          </div>
+
+          <div className="mt-5 rounded-2xl border border-border/60 bg-background/70 p-4">
+            <div className="flex items-center justify-between text-sm">
+              <span className="font-medium">Today’s practice goal</span>
+              <span className="text-muted-foreground">{reminderGoal}%</span>
+            </div>
+            <div className="mt-3 h-2 rounded-full bg-secondary">
+              <div className="h-2 rounded-full bg-gradient-to-r from-brand-purple to-brand-blue" style={{ width: `${reminderGoal}%` }} />
+            </div>
+          </div>
+        </Card>
+
+        <Card className="border-border/60 rounded-[28px] p-5 md:p-6 shadow-[0_18px_45px_-24px_rgba(15,23,42,0.35)]">
+          <div className="flex items-center gap-2">
+            <Compass className="h-4 w-4 text-brand-purple" />
+            <h2 className="text-lg font-heading font-bold">Quick actions</h2>
+          </div>
+          <div className="mt-4 grid gap-3">
+            <Link href="/self-practice" className="focus-ring rounded-2xl border border-border/60 bg-background/70 p-3 text-left transition hover:border-brand-purple/30 hover:bg-brand-purple/5">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="font-semibold">Practice today</p>
+                  <p className="text-sm text-muted-foreground">A small reflection or challenge to keep the streak alive.</p>
+                </div>
+                <ArrowRight className="h-4 w-4 text-brand-purple" />
+              </div>
+            </Link>
+            <Link href="/solo" className="focus-ring rounded-2xl border border-border/60 bg-background/70 p-3 text-left transition hover:border-brand-purple/30 hover:bg-brand-purple/5">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="font-semibold">Explore modes</p>
+                  <p className="text-sm text-muted-foreground">Jump into solo play, daily challenges, or quicker rounds.</p>
+                </div>
+                <ArrowRight className="h-4 w-4 text-brand-purple" />
+              </div>
+            </Link>
+            <Link href="/settings" className="focus-ring rounded-2xl border border-border/60 bg-background/70 p-3 text-left transition hover:border-brand-purple/30 hover:bg-brand-purple/5">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="font-semibold">Personalize experience</p>
+                  <p className="text-sm text-muted-foreground">Tune reminders, difficulty pacing, and accessibility helpers.</p>
+                </div>
+                <ArrowRight className="h-4 w-4 text-brand-purple" />
+              </div>
+            </Link>
+          </div>
+
+          {showReminder && (
+            <div className="mt-4 rounded-2xl border border-brand-purple/20 bg-brand-purple/10 p-4">
+              <div className="flex items-start gap-2">
+                <BellRing className="mt-0.5 h-4 w-4 text-brand-purple" />
+                <div className="flex-1">
+                  <p className="text-sm font-semibold">A quick reminder keeps your rhythm strong.</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Take one short action today to protect your streak.</p>
+                </div>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button size="sm" className="rounded-full" onClick={() => handleReminderAction('practice')}>Practice now</Button>
+                <Button size="sm" variant="outline" className="rounded-full" onClick={() => handleReminderAction('later')}>Later</Button>
+              </div>
+            </div>
+          )}
+        </Card>
       </div>
 
       <motion.div
@@ -253,10 +395,71 @@ export function Home() {
           ))}
         </motion.div>
 
+        {/* ── Recommendations & passages ─────────────────────────────── */}
+        <motion.div variants={fadeUp} className="md:col-span-12 grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+          <Card className="rounded-3xl border-border/50 bg-card/90">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Recommended for you</CardTitle>
+              <CardDescription>Suggestions based on your recent activity and current streak.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {recommendations.map((item, index) => (
+                <div key={index} className="rounded-2xl border border-border/60 bg-background/70 p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-semibold text-sm">{item.title}</p>
+                      <p className="mt-1 text-sm text-muted-foreground leading-relaxed">{item.description}</p>
+                    </div>
+                    <div className="rounded-full bg-brand-purple/10 p-2 text-brand-purple">
+                      <Sparkles className="h-4 w-4" />
+                    </div>
+                  </div>
+                  <div className="mt-3">
+                    {item.href ? (
+                      <Link href={item.href} className="text-sm font-semibold text-brand-purple hover:underline">{item.actionLabel}</Link>
+                    ) : (
+                      <span className="text-sm font-semibold text-brand-purple">{item.actionLabel}</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-3xl border-border/50 bg-card/90">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Favorites & recent passages</CardTitle>
+              <CardDescription>Jump back into content you’ve already highlighted or opened.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {favoritePassages.length === 0 && recentPassages.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-border/60 bg-background/40 p-5 text-sm text-muted-foreground">
+                  Save a favorite passage in the Bible reader and it will appear here for quick access.
+                </div>
+              ) : (
+                <>
+                  {favoritePassages.slice(0, 3).map((passage) => (
+                    <div key={`fav-${passage}`} className="flex items-center gap-2 rounded-2xl border border-border/60 bg-background/70 p-3">
+                      <BookmarkCheck className="h-4 w-4 text-brand-purple" />
+                      <span className="text-sm font-medium">{passage}</span>
+                    </div>
+                  ))}
+                  {recentPassages.slice(0, 3).map((passage) => (
+                    <div key={`recent-${passage}`} className="flex items-center gap-2 rounded-2xl border border-border/60 bg-background/70 p-3">
+                      <Clock className="h-4 w-4 text-brand-blue" />
+                      <span className="text-sm font-medium">{passage}</span>
+                    </div>
+                  ))}
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+
         {/* ── Play more cards ───────────────────────────────────────────── */}
         <motion.div variants={fadeUp} className="md:col-span-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {cards.map((card) => (
-            <Card key={card.title} className="rounded-3xl border-border/50 bg-card transition hover:-translate-y-1 hover:shadow-lg">
+            <Card key={card.title} className="group soft-card transition-all duration-200 hover:-translate-y-1 hover:border-brand-purple/30 hover:shadow-[0_18px_36px_-20px_rgba(108,58,237,0.35)]">
               <CardContent className="p-6 space-y-4">
                 <div>
                   <div className="flex items-center gap-2 mb-2">
@@ -271,9 +474,13 @@ export function Home() {
                     {card.icon ? <card.icon className="w-5 h-5 text-brand-purple" /> : null}
                     <h3 className="text-xl font-heading font-bold">{card.title}</h3>
                   </div>
-                  <p className="text-sm text-muted-foreground mt-2">{card.description}</p>
+                  <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{card.description}</p>
                 </div>
-                <Button size="sm" onClick={() => card.onClick ? card.onClick() : window.location.assign(card.href!)} className="rounded-full px-4">
+                <Button
+                  size="sm"
+                  onClick={() => card.onClick ? card.onClick() : window.location.assign(card.href!)}
+                  className="focus-ring rounded-full px-4"
+                >
                   {card.action}
                 </Button>
               </CardContent>
@@ -289,7 +496,7 @@ export function Home() {
                 <CardTitle className="text-base">Recent Sessions</CardTitle>
                 <CardDescription className="text-xs">Jump back into your recent games</CardDescription>
               </div>
-              <Button variant="ghost" size="sm" className="text-xs">View All</Button>
+              <Button variant="ghost" size="sm" className="focus-ring text-xs">View All</Button>
             </CardHeader>
             <CardContent className="p-0">
               {isLoadingRecent ? (
@@ -323,9 +530,14 @@ export function Home() {
                   ))}
                 </div>
               ) : (
-                <div className="p-8 text-center text-muted-foreground flex flex-col items-center gap-2">
-                  <Gamepad2 className="w-8 h-8 opacity-20" />
-                  <p className="text-sm">No sessions yet — host one to get started!</p>
+                <div className="p-8 text-center text-muted-foreground flex flex-col items-center gap-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/70">
+                    <Gamepad2 className="w-6 h-6 opacity-70" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">No sessions yet</p>
+                    <p className="text-sm">Host one to get started and build your next shared experience.</p>
+                  </div>
                 </div>
               )}
             </CardContent>

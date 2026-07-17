@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation, useSearch } from 'wouter';
+import { loadPreferences } from '@/lib/preferences';
 import {
   Target, Zap, RotateCcw, Brain, Clock, ChevronLeft,
   CheckCircle2, XCircle, BookMarked, Hash, Puzzle,
@@ -19,7 +20,7 @@ import {
 import {
   recordGamePlayed, recordFlashCard, recordScramble,
   recordSpeedRound, recordTrueFalse, recordCrossword, recordQuoteMatch,
-  checkAndAward, pickUnseen, shuffle, ACHIEVEMENT_DEFS,
+  checkAndAward, pickUnseen, shuffle, ACHIEVEMENT_DEFS, loadProgress,
 } from '@/hooks/use-achievements';
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -488,8 +489,15 @@ function buildStoryQuestQuestionSet(questions: any[]) {
 /* ─────────────────────────────────────────────────────────────────────────
    Quiz Game (daily + qa)
 ───────────────────────────────────────────────────────────────────────── */
+function resolveAdaptiveDifficulty(selected: 'easy' | 'medium' | 'hard', accuracy: number) {
+  if (accuracy >= 80) return 'hard';
+  if (accuracy <= 45) return 'easy';
+  return selected;
+}
+
 function QuizGame({ mode, onBack }: { mode: string; onBack: () => void }) {
   const modeData = MODES.find(m => m.id === mode)!;
+  const prefs = loadPreferences();
   const [isPlaying, setIsPlaying] = useState(false);
   const [difficulty, setDifficulty] = useState<'easy'|'medium'|'hard'>('medium');
   const [currentQIndex, setCurrentQIndex] = useState(0);
@@ -504,7 +512,10 @@ function QuizGame({ mode, onBack }: { mode: string; onBack: () => void }) {
   const difficultyModes = ['bible-sprint','story-quest'] as const;
   const shouldFetchQA = quizModes.includes(mode as typeof quizModes[number]);
   const shouldShowDifficulty = difficultyModes.includes(mode as typeof difficultyModes[number]);
-  const questionRequest = { limit: 60, ...(shouldShowDifficulty ? { difficulty } : {}) } as any;
+  const progress = loadProgress();
+  const accuracy = progress.totalAnswers > 0 ? Math.round((progress.correctAnswers / progress.totalAnswers) * 100) : 0;
+  const effectiveDifficulty = prefs.adaptiveDifficulty ? resolveAdaptiveDifficulty(difficulty, accuracy) : difficulty;
+  const questionRequest = { limit: 60, ...(shouldShowDifficulty ? { difficulty: effectiveDifficulty } : {}) } as any;
   const { data: qaData, isLoading: qaLoading } = useListQuestions(questionRequest, {
     query: { enabled: shouldFetchQA && isPlaying, queryKey: getListQuestionsQueryKey(questionRequest) },
   });
@@ -559,7 +570,7 @@ function QuizGame({ mode, onBack }: { mode: string; onBack: () => void }) {
   const handleFinished = useCallback(async () => {
     const total = questions?.length || 1;
     const perfect = score === total && total >= 10;
-    const p = recordGamePlayed({ mode, correct: score, total, difficulty, perfect });
+    const p = recordGamePlayed({ mode, correct: score, total, difficulty: effectiveDifficulty, perfect });
     await awardAndToast(p);
   }, [score, questions, mode, difficulty]);
 

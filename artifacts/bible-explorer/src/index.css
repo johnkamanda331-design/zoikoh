@@ -140,11 +140,27 @@
   * {
     @apply border-border;
   }
+  html {
+    scroll-behavior: smooth;
+  }
   body {
     @apply font-sans antialiased bg-background text-foreground;
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-heading tracking-tight;
+  }
+  ::selection {
+    @apply bg-brand-purple/20 text-foreground;
+  }
+}
+
+@layer utilities {
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-purple/70 focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+
+  .soft-card {
+    @apply rounded-3xl border border-border/60 bg-card/90 shadow-[0_10px_30px_-12px_rgba(15,23,42,0.18)] backdrop-blur-sm;
   }
 }
 

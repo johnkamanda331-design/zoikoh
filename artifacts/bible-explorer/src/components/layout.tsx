@@ -25,12 +25,22 @@ import { useUser, useClerk } from '@clerk/react';
 export function Logo({ size = 'md', className, src }: { size?: 'sm' | 'md' | 'lg'; className?: string; src?: string }) {
   const cls = size === 'sm' ? 'h-6 w-auto' : size === 'lg' ? 'h-12 w-auto' : 'h-8 w-auto';
   const combined = className ? `${className} object-contain max-w-full` : `${cls} object-contain max-w-full`;
+
+  useEffect(() => {
+    const image = new Image();
+    image.src = src ?? '/logo.png';
+  }, [src]);
+
   return (
-    <img
+    <motion.img
+      key={src ?? '/logo.png'}
       src={src ?? '/logo.png'}
       alt="ZOIKOH logo"
       className={combined}
       loading="eager"
+      initial={{ opacity: 0, filter: 'blur(2px)' }}
+      animate={{ opacity: 1, filter: 'blur(0px)' }}
+      transition={{ duration: 0.25, ease: 'easeOut' }}
     />
   );
 }
@@ -166,7 +176,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center justify-center h-14 sm:h-16 md:h-18 lg:h-20 xl:h-24 w-full">
             <Logo
               src={isDark ? '/dark_web_logo.png' : '/web_logo.png'}
-              className="max-h-full w-auto object-contain"
+              className="max-h-full w-auto object-contain transition-[opacity,filter] duration-300"
             />
           </div>
         </Link>
