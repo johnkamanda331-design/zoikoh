@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, Suspense, lazy } from 'react';
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import { ClerkProvider, SignIn, SignUp, useClerk } from '@clerk/react';
 import { shadcn } from '@clerk/themes';
@@ -6,9 +6,9 @@ import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Route, Switch, useLocation, Router as WouterRouter } from 'wouter';
 import { Layout } from '@/components/layout';
-import { BiblePanel } from '@/components/bible-panel';
-import { IceBreakersPanel } from '@/components/ice-breakers-panel';
-import { OnboardingTutorial } from '@/components/onboarding-tutorial';
+const BiblePanel = lazy(() => import('@/components/bible-panel').then(m => ({ default: m.BiblePanel })));
+const IceBreakersPanel = lazy(() => import('@/components/ice-breakers-panel').then(m => ({ default: m.IceBreakersPanel })));
+const OnboardingTutorial = lazy(() => import('@/components/onboarding-tutorial').then(m => ({ default: m.OnboardingTutorial })));
 import { hydratePlayerFromServer } from '@/hooks/use-achievements';
 import { setBaseUrl } from '@workspace/api-client-react';
 import { loadPreferences, savePreferences } from '@/lib/preferences';
@@ -237,10 +237,14 @@ function AppBody() {
 
   return (
     <TooltipProvider>
-      <OnboardingTutorial isOpen={showTutorial} onComplete={handleTutorialComplete} />
       <Router />
-      <BiblePanel />
-      <IceBreakersPanel />
+      <Suspense fallback={<div className="p-3 text-center">Loading panels…</div>}>
+        <BiblePanel />
+        <IceBreakersPanel />
+      </Suspense>
+      <Suspense fallback={null}>
+        <OnboardingTutorial isOpen={showTutorial} onComplete={handleTutorialComplete} />
+      </Suspense>
       <Toaster position="top-center" />
     </TooltipProvider>
   );

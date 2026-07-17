@@ -237,3 +237,30 @@ body {
     animation: none !important;
   }
 }
+
+/* UX micro-interactions: subtle motion for clickable elements */
+button,
+[role="button"] {
+  transition: transform 160ms cubic-bezier(.2,.9,.3,1), box-shadow 160ms ease, opacity 120ms ease;
+  will-change: transform;
+}
+
+button:hover,
+[role="button"]:hover {
+  transform: translateY(-2px);
+}
+
+button:active,
+[role="button"]:active {
+  transform: translateY(0) scale(0.995);
+}
+
+/* Lightweight focus ring for keyboard users */
+button:focus-visible,
+[role="button"]:focus-visible {
+  outline: 3px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+/* Utility class to opt-out of interactive motion */
+.no-interaction-motion * { transition: none !important; transform: none !important; }

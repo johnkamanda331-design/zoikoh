@@ -72,6 +72,7 @@ function UserAvatar({ name, imageUrl }: { name: string; imageUrl?: string }) {
         src={imageUrl}
         alt={name}
         className="w-7 h-7 rounded-full object-cover ring-2 ring-brand-purple/40"
+        loading="lazy"
       />
     );
   }
@@ -156,19 +157,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const displayName = user?.firstName || user?.username || user?.emailAddresses?.[0]?.emailAddress?.split('@')[0] || 'You';
 
   return (
-    <div
-      className="relative flex flex-col min-h-[100dvh] w-full bg-background overflow-x-hidden selection:bg-brand-purple selection:text-white"
-      style={{
-        backgroundImage: isDark
-          ? "linear-gradient(rgba(255,255,255,0.75), rgba(255,255,255,0.75)), url('/dark_logo.png')"
-          : "linear-gradient(rgba(0,0,0,0.75), rgba(0,0,0,0.75)), url('/logo.png')",
-        backgroundRepeat: 'no-repeat',
-        backgroundPosition: 'center 38%',
-        backgroundSize: '70%',
-        backgroundAttachment: 'fixed',
-        backgroundBlendMode: 'normal',
-      }}
-    >
+    <div className="relative flex flex-col min-h-[100dvh] w-full bg-background overflow-x-hidden selection:bg-brand-purple selection:text-white">
 
       {/* ── Top bar ──────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-40 flex items-center justify-between h-20 sm:h-20 md:h-24 px-3 sm:px-4 border-b border-border bg-card/80 backdrop-blur-md shrink-0">
